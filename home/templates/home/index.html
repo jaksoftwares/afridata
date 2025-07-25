@@ -1,0 +1,404 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}AfriData - Discover Africa's Data Stories{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'home/css/index.css' %}">
+{% endblock %}
+
+{% block header_content %}
+<div class="text-center mt-8 mb-8">
+  <h2 class="text-4xl md:text-5xl font-bold mb-4">Discover Africa's Data Stories</h2>
+  <p class="text-xl mb-8 max-w-3xl mx-auto">Access thousands of curated datasets for research, machine learning, and data analysis across the African continent.</p>
+  
+  <div class="max-w-4xl mx-auto relative">
+    <input id="searchInput" type="text" placeholder="Search datasets, topics, or countries (e.g., Geological data, climate data)" 
+           class="w-full px-6 py-4 rounded-full shadow-lg text-gray-900 text-lg search-glow focus:outline-none" />
+    <button onclick="performSearch()" class="absolute right-2 top-2 bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition-colors">
+      🔍 Search
+    </button>
+  </div>
+  
+  <!-- Quick Stats -->
+  <div class="flex justify-center space-x-8 mt-8 text-center">
+    <div class="stats-counter">
+      <div class="text-3xl font-bold">{{ total_datasets|default:"0" }}</div>
+      <div class="text-sm opacity-90">Datasets</div>
+    </div>
+    <div class="stats-counter">
+      <div class="text-3xl font-bold">{{ total_countries|default:"54" }}</div>
+      <div class="text-sm opacity-90">Countries</div>
+    </div>
+    <div class="stats-counter">
+      <div class="text-3xl font-bold">{{ total_downloads|default:"0" }}</div>
+      <div class="text-sm opacity-90">Downloads</div>
+    </div>
+    <div class="stats-counter">
+      <div class="text-3xl font-bold">{{ total_researchers|default:"0" }}</div>
+      <div class="text-sm opacity-90">Researchers</div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Trending Section -->
+<section class="max-w-7xl mx-auto px-4 py-12">
+  <div class="text-center mb-10">
+    <h3 class="text-3xl font-bold text-gray-800 mb-2">What's Trending</h3>
+    <p class="text-gray-600">Discover the most popular datasets and topics this week</p>
+  </div>
+  
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Trending Datasets -->
+    <div class="bg-white rounded-xl shadow-lg p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h4 class="text-xl font-semibold text-gray-800 flex items-center">
+          📈 Trending Datasets
+          <span class="pulse-dot ml-2 w-3 h-3 bg-green-500 rounded-full"></span>
+        </h4>
+        <span class="text-sm text-gray-500">Updated hourly</span>
+      </div>
+      
+      <div class="space-y-4">
+        {% for dataset in trending_datasets|slice:":3" %}
+        <div class="trending-card bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border-l-4 border-blue-500 cursor-pointer" onclick="viewDataset('{{ dataset.id }}')">
+          <div class="flex justify-between items-start mb-2">
+            <h5 class="font-semibold text-gray-800">{{ dataset.title|truncatechars:60 }}</h5>
+            <span class="bg-red-500 text-white text-xs px-2 py-1 rounded-full">{{ dataset.author.username }}</span>
+          </div>
+          <p class="text-sm text-gray-600 mb-3">{{ dataset.bio|truncatechars:100 }}</p>
+          <div class="flex justify-between items-center text-xs text-gray-500">
+            <span>📊 {{ dataset.views }} views • ⬇️ {{ dataset.downloads }} downloads</span>
+            <span class="text-green-600 font-medium">⭐ {{ dataset.rating }}/5</span>
+          </div>
+        </div>
+        {% empty %}
+        <div class="trending-card bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border-l-4 border-blue-500">
+          <div class="text-center text-gray-500">
+            <p>No trending datasets available yet.</p>
+            <p class="text-sm mt-2">Check back soon for the latest trends!</p>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      
+      <button class="w-full mt-4 text-blue-600 font-medium hover:text-blue-800 transition-colors" onclick="window.location.href='{% url 'dataset_list' %}'">
+        View All Trending Datasets →
+      </button>
+    </div>
+    
+    <!-- Trending Topics -->
+    <div class="bg-white rounded-xl shadow-lg p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h4 class="text-xl font-semibold text-gray-800 flex items-center">
+          🔥 Trending Topics
+        </h4>
+        <span class="text-sm text-gray-500">Top searches</span>
+      </div>
+      
+      <div class="grid grid-cols-2 gap-3 mb-6">
+        <div class="topic-tag bg-gradient-to-r from-red-400 to-pink-500 text-white p-3 rounded-lg text-center cursor-pointer" onclick="quickSearch('{{ topic_1 }}')">
+          <div class="text-lg font-bold">#1</div>
+          <div class="text-sm">{{ topic_1|default:"Climate Change" }}</div>
+          <div class="text-xs opacity-90">{{ topic_1_searches|default:"15.2K" }} searches</div>
+        </div>
+        <div class="topic-tag bg-gradient-to-r from-blue-400 to-purple-500 text-white p-3 rounded-lg text-center cursor-pointer" onclick="quickSearch('{{ topic_2 }}')">
+          <div class="text-lg font-bold">#2</div>
+          <div class="text-sm">{{ topic_2|default:"Healthcare" }}</div>
+          <div class="text-xs opacity-90">{{ topic_2_searches|default:"12.8K" }} searches</div>
+        </div>
+        <div class="topic-tag bg-gradient-to-r from-green-400 to-blue-500 text-white p-3 rounded-lg text-center cursor-pointer" onclick="quickSearch('{{ topic_3 }}')">
+          <div class="text-lg font-bold">#3</div>
+          <div class="text-sm">{{ topic_3|default:"Economics" }}</div>
+          <div class="text-xs opacity-90">{{ topic_3_searches|default:"9.4K" }} searches</div>
+        </div>
+        <div class="topic-tag bg-gradient-to-r from-yellow-400 to-orange-500 text-white p-3 rounded-lg text-center cursor-pointer" onclick="quickSearch('{{ topic_4 }}')">
+          <div class="text-lg font-bold">#4</div>
+          <div class="text-sm">{{ topic_4|default:"Agriculture" }}</div>
+          <div class="text-xs opacity-90">{{ topic_4_searches|default:"7.9K" }} searches</div>
+        </div>
+      </div>
+      
+      <div class="space-y-3">
+        <h5 class="font-medium text-gray-700 mb-3">Popular Search Terms:</h5>
+        <div class="flex flex-wrap gap-2">
+          <span onclick="quickSearch('{{ term_1 }}')" class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm hover:bg-blue-200 cursor-pointer">{{ term_1|default:"Nigeria GDP" }}</span>
+          <span onclick="quickSearch('{{ term_2 }}')" class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm hover:bg-green-200 cursor-pointer">{{ term_2|default:"Kenya Agriculture" }}</span>
+          <span onclick="quickSearch('{{ term_3 }}')" class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm hover:bg-purple-200 cursor-pointer">{{ term_3|default:"South Africa Mining" }}</span>
+          <span onclick="quickSearch('{{ term_4 }}')" class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm hover:bg-yellow-200 cursor-pointer">{{ term_4|default:"Egypt Tourism" }}</span>
+          <span onclick="quickSearch('{{ term_5 }}')" class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm hover:bg-indigo-200 cursor-pointer">{{ term_5|default:"Ethiopia Demographics" }}</span>
+        </div>
+      </div>
+      
+      <div class="mt-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">AI</div>
+          <div>
+            <div class="font-medium text-gray-800">AI-Powered Topic Discovery</div>
+            <div class="text-sm text-gray-600">Get personalized dataset recommendations</div>
+          </div>
+          <button onclick="showAIRecommendations()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-indigo-700 transition-colors">Try Now</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Featured Datasets -->
+<section class="max-w-7xl mx-auto px-4 py-12">
+  <div class="flex flex-col lg:flex-row gap-8">
+    <!-- Enhanced Sidebar -->
+    <aside class="lg:w-1/4 bg-white rounded-xl shadow-lg p-6">
+      <div class="mb-6">
+        <h4 class="font-semibold mb-4 text-gray-800 flex items-center">
+          🗂️ Browse by Category
+        </h4>
+        <ul class="space-y-2">
+          <li onclick="filterByCategory('all')" class="category-hover p-2 rounded-lg cursor-pointer transition-all">📊 All Categories ({{ total_datasets|default:"0" }})</li>
+          <li onclick="filterByCategory('healthcare')" class="category-hover p-2 rounded-lg cursor-pointer transition-all">🏥 Healthcare & Medicine ({{ category_counts.healthcare|default:"0" }})</li>
+          <li onclick="filterByCategory('climate')" class="category-hover p-2 rounded-lg cursor-pointer transition-all">🌍 Climate & Environment ({{ category_counts.climate|default:"0" }})</li>
+          <li onclick="filterByCategory('economics')" class="category-hover p-2 rounded-lg cursor-pointer transition-all">💰 Economics & Finance ({{ category_counts.economics|default:"0" }})</li>
+          <li onclick="filterByCategory('social')" class="category-hover p-2 rounded-lg cursor-pointer transition-all">👥 Social Sciences ({{ category_counts.social|default:"0" }})</li>
+          <li onclick="filterByCategory('agriculture')" class="category-hover p-2 rounded-lg cursor-pointer transition-all">🌾 Agriculture & Food ({{ category_counts.agriculture|default:"0" }})</li>
+          <li onclick="filterByCategory('education')" class="category-hover p-2 rounded-lg cursor-pointer transition-all">🎓 Education ({{ category_counts.education|default:"0" }})</li>
+          <li onclick="filterByCategory('technology')" class="category-hover p-2 rounded-lg cursor-pointer transition-all">🏢 Technology ({{ category_counts.technology|default:"0" }})</li>
+        </ul>
+      </div>
+      
+      <div class="mb-6">
+        <h4 class="font-semibold mb-4 text-gray-800">📄 File Format</h4>
+        <div class="space-y-2">
+          <label class="flex items-center space-x-2 cursor-pointer">
+            <input type="checkbox" onchange="filterByFormat('csv')" class="text-blue-600"> <span>CSV ({{ format_counts.csv|default:"0" }})</span>
+          </label>
+          <label class="flex items-center space-x-2 cursor-pointer">
+            <input type="checkbox" onchange="filterByFormat('json')" class="text-blue-600"> <span>JSON ({{ format_counts.json|default:"0" }})</span>
+          </label>
+          <label class="flex items-center space-x-2 cursor-pointer">
+            <input type="checkbox" onchange="filterByFormat('excel')" class="text-blue-600"> <span>Excel ({{ format_counts.excel|default:"0" }})</span>
+          </label>
+          <label class="flex items-center space-x-2 cursor-pointer">
+            <input type="checkbox" onchange="filterByFormat('parquet')" class="text-blue-600"> <span>Parquet ({{ format_counts.parquet|default:"0" }})</span>
+          </label>
+        </div>
+      </div>
+      
+      <div class="mb-6">
+        <h4 class="font-semibold mb-4 text-gray-800">⚖️ License Type</h4>
+        <div class="space-y-2">
+          <label class="flex items-center space-x-2 cursor-pointer">
+            <input type="radio" name="license" onchange="filterByLicense('open')" class="text-blue-600"> <span>Open Access</span>
+          </label>
+          <label class="flex items-center space-x-2 cursor-pointer">
+            <input type="radio" name="license" onchange="filterByLicense('cc')" class="text-blue-600"> <span>CC BY</span>
+          </label>
+          <label class="flex items-center space-x-2 cursor-pointer">
+            <input type="radio" name="license" onchange="filterByLicense('public')" class="text-blue-600"> <span>Public Domain</span>
+          </label>
+        </div>
+      </div>
+      
+      <div class="p-4 featured-gradient rounded-lg text-white text-center">
+        <div class="text-2xl mb-2">🎯</div>
+        <div class="font-semibold mb-1">Need Custom Data?</div>
+        <div class="text-sm mb-3">Our team can help curate specific datasets for your research</div>
+        <button onclick="showContactForm()" class="bg-white text-purple-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors">Contact Us</button>
+      </div>
+    </aside>
+
+    <!-- Enhanced Datasets -->
+    <div class="lg:w-3/4">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-2xl font-bold text-gray-800">Featured Datasets</h3>
+        <div class="flex space-x-3">
+          <select onchange="sortDatasets(this.value)" class="px-4 py-2 border rounded-lg">
+            <option value="relevance">Sort by: Relevance</option>
+            <option value="downloads">Most Downloaded</option>
+            <option value="recent">Recently Added</option>
+            <option value="rating">Highest Rated</option>
+          </select>
+        </div>
+      </div>
+      
+      <div id="datasetContainer" class="grid grid-cols-1 gap-6">
+        {% for dataset in featured_datasets %}
+        <div class="dataset-card bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500 hover:shadow-xl transition-shadow">
+          <div class="flex justify-between items-start mb-4">
+            <div class="flex-1">
+              <div class="flex items-center space-x-3 mb-2">
+                <h4 class="text-xl font-semibold text-gray-800">{{ dataset.title }}</h4>
+                <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">{{ dataset.author.username }}</span>
+                {% if dataset.updated_at|timesince == "0 minutes" %}
+                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">Updated Recently</span>
+                {% endif %}
+              </div>
+              <p class="text-gray-600 mb-3">{{ dataset.bio|truncatechars:150 }}</p>
+              <div class="flex items-center space-x-4 text-sm text-gray-500 mb-3">
+                <span class="flex items-center"><span class="text-green-600">📊</span> {{ dataset.get_dataset_type_display }}</span>
+                <span class="flex items-center"><span class="text-blue-600">⬇️</span> {{ dataset.downloads }} downloads</span>
+                <span class="flex items-center"><span class="text-yellow-600">⭐</span> {{ dataset.rating }}/5</span>
+                <span class="flex items-center"><span class="text-purple-600">👁️</span> {{ dataset.views }} views</span>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-2xl mb-2">
+                {% if 'health' in dataset.topics.lower or 'medical' in dataset.topics.lower %}🏥
+                {% elif 'climate' in dataset.topics.lower or 'environment' in dataset.topics.lower %}🌍
+                {% elif 'economic' in dataset.topics.lower or 'finance' in dataset.topics.lower %}💰
+                {% elif 'agriculture' in dataset.topics.lower or 'farming' in dataset.topics.lower %}🌾
+                {% elif 'education' in dataset.topics.lower or 'school' in dataset.topics.lower %}🎓
+                {% else %}📊{% endif %}
+              </div>
+              <button onclick="viewDataset('{{ dataset.id }}')" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">View Dataset</button>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            {% for topic in dataset.get_topics_list|slice:":4" %}
+            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">{{ topic|title }}</span>
+            {% endfor %}
+          </div>
+        </div>
+        {% empty %}
+        <div class="dataset-card bg-white rounded-xl shadow-lg p-6 border-l-4 border-gray-300">
+          <div class="text-center text-gray-500 py-8">
+            <div class="text-4xl mb-4">📊</div>
+            <h4 class="text-xl font-semibold mb-2">No datasets available yet</h4>
+            <p class="mb-4">Be the first to contribute valuable African data to our platform!</p>
+            {% if user.is_authenticated %}
+            <button onclick="window.location.href='{% url 'upload_dataset' %}'" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">Upload Dataset</button>
+            {% else %}
+            <button onclick="window.location.href='{% url 'login_signup' %}'" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">Join AfriData</button>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      
+      {% if featured_datasets %}
+      <div class="text-center mt-8">
+        <button onclick="window.location.href='{% url 'dataset_list' %}'" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all">
+          Explore All Datasets →
+        </button>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Page-specific JavaScript functions
+  function performSearch() {
+    const searchInput = document.getElementById('searchInput').value;
+    if (searchInput.trim()) {
+      // Implement search functionality
+      console.log('Searching for:', searchInput);
+      // You can redirect to search results page or handle search here
+      window.location.href = "{% url 'dataset_list' %}?search=" + encodeURIComponent(searchInput);
+    }
+  }
+
+  function quickSearch(term) {
+    document.getElementById('searchInput').value = term;
+    performSearch();
+  }
+
+  function filterByCategory(category) {
+    console.log('Filtering by category:', category);
+    // Redirect to dataset list with category filter
+    window.location.href = "{% url 'dataset_list' %}?category=" + encodeURIComponent(category);
+  }
+
+  function filterByFormat(format) {
+    console.log('Filtering by format:', format);
+    // Implement format filtering
+    window.location.href = "{% url 'dataset_list' %}?format=" + encodeURIComponent(format);
+  }
+
+  function filterByLicense(license) {
+    console.log('Filtering by license:', license);
+    // Implement license filtering
+    window.location.href = "{% url 'dataset_list' %}?license=" + encodeURIComponent(license);
+  }
+
+  function sortDatasets(sortBy) {
+    console.log('Sorting datasets by:', sortBy);
+    // Implement dataset sorting
+    window.location.href = "{% url 'dataset_list' %}?sort=" + encodeURIComponent(sortBy);
+  }
+
+  function viewDataset(datasetId) {
+    console.log('Viewing dataset:', datasetId);
+    if (datasetId && !isNaN(datasetId)) {
+        // Use 'dataset_id' instead of 'pk' to match your URL pattern
+        window.location.href = "{% url 'dataset_detail' dataset_id=999999 %}".replace('999999', datasetId);
+    } else {
+        console.error('Invalid dataset ID:', datasetId);
+    }
+  }
+
+  function showAIRecommendations() {
+    console.log('Showing AI recommendations');
+    // Implement AI recommendations modal or redirect
+    alert('AI-powered recommendations coming soon! 🤖✨');
+  }
+
+  function showContactForm() {
+    console.log('Showing contact form');
+    // Implement contact form modal or redirect
+    alert('Contact form coming soon! 📧');
+  }
+
+  // Add enter key support for search
+  document.getElementById('searchInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      performSearch();
+    }
+  });
+
+  // Add hover effects for trending cards
+  document.querySelectorAll('.trending-card').forEach(card => {
+    card.addEventListener('mouseenter', function() {
+      this.style.transform = 'translateY(-2px)';
+    });
+    
+    card.addEventListener('mouseleave', function() {
+      this.style.transform = 'translateY(0)';
+    });
+  });
+
+  // Add hover effects for dataset cards
+  document.querySelectorAll('.dataset-card').forEach(card => {
+    card.addEventListener('mouseenter', function() {
+      this.style.transform = 'translateY(-2px)';
+    });
+    
+    card.addEventListener('mouseleave', function() {
+      this.style.transform = 'translateY(0)';
+    });
+  });
+
+  // Add hover effects for category items
+  document.querySelectorAll('.category-hover').forEach(item => {
+    item.addEventListener('mouseenter', function() {
+      this.classList.add('bg-gray-100');
+    });
+    
+    item.addEventListener('mouseleave', function() {
+      this.classList.remove('bg-gray-100');
+    });
+  });
+
+  // Add pulsing effect to trending dot
+  const pulseDot = document.querySelector('.pulse-dot');
+  if (pulseDot) {
+    setInterval(() => {
+      pulseDot.style.opacity = pulseDot.style.opacity === '0.3' ? '1' : '0.3';
+    }, 1000);
+  }
+</script>
+{% endblock %}
+

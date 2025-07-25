@@ -1,0 +1,33 @@
+# Use official Python base image
+FROM python:3.9-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies (for mysqlclient)
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpq-dev \
+    default-libmysqlclient-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --upgrade pip && pip install -r requirements.txt
+
+# Copy project files into container
+COPY . .
+
+# Optional: Collect static files if using Whitenoise
+# RUN python manage.py collectstatic --noinput
+
+# Expose the port
+EXPOSE 8000
+
+# Run migrations and start server
+CMD ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]

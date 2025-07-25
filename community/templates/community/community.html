@@ -1,0 +1,404 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Community Forums{% endblock %}
+
+{% block extra_css %}
+<style>
+    .topic-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    
+    .topic-card:hover {
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    
+    .topic-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+    }
+    
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+    }
+    
+    .activity-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 1.5rem;
+    }
+    
+    .thread-item {
+        border-bottom: 1px solid #f3f4f6;
+        padding: 0.75rem 0;
+    }
+    
+    .thread-item:last-child {
+        border-bottom: none;
+    }
+    
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #3b82f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 0.8rem;
+    }
+    
+    .topic-stats {
+        font-size: 0.85rem;
+        color: #6b7280;
+    }
+    
+    .search-section {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        padding: 3rem 0;
+        margin-bottom: 2rem;
+    }
+    
+    .fade-in {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    
+    .fade-in.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    .quick-actions {
+        position: fixed;
+        bottom: 0;
+        right: 0;
+        padding: 1rem;
+        z-index: 1000;
+    }
+    
+    .color-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 2px;
+        margin-right: 0.5rem;
+    }
+    
+    .topic-badge {
+        opacity: 0.2;
+    }
+
+    .dropdown-menu {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: 100%;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        min-width: 200px;
+        padding: 0.5rem 0;
+        z-index: 1000;
+    }
+    
+    .dropdown-menu.show {
+        display: block;
+    }
+    
+    .dropdown-item {
+        display: block;
+        padding: 0.5rem 1rem;
+        color: #374151;
+        text-decoration: none;
+        transition: background-color 0.2s;
+    }
+    
+    .dropdown-item:hover {
+        background-color: #f3f4f6;
+    }
+</style>
+{% endblock %}
+
+{% block header_content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="text-center">
+    <h1 class="text-4xl md:text-5xl font-bold mb-4">Community Forums</h1>
+    <p class="text-xl text-blue-100 mb-2">Connect, discuss, and share knowledge with our community</p>
+    <!-- Search Form -->
+    <form method="GET" action="{% url 'community:search' %}" class="mb-0">
+        <div class="flex">
+            <input type="text" 
+            class="flex-1 px-4 py-3 text-lg rounded-l-lg border-0 focus:outline-none text-gray-900" 
+            name="q" 
+            placeholder="Search discussions..." 
+            value="{% if request.GET.q %}{{ request.GET.q }}{% endif %}">
+            <button class="bg-white text-gray-900 px-6 py-3 rounded-r-lg hover:bg-gray-100 transition-colors" type="submit">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+
+{% block content %}
+
+<div>
+    
+</div>
+
+<div class="max-w-7xl mx-auto px-4" style="border-top: 20px solid #e5e7eb;">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Content -->
+        <div class="lg:col-span-2">
+            <!-- Forum Statistics -->
+            <div class="stats-card mb-6">
+                <div class="grid grid-cols-3 text-center">
+                    <div>
+                        <h3 class="text-2xl font-bold mb-1">{% if stats.total_threads %}{{ stats.total_threads }}{% else %}0{% endif %}</h3>
+                        <small class="opacity-80">Discussions</small>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold mb-1">{% if stats.total_posts %}{{ stats.total_posts }}{% else %}0{% endif %}</h3>
+                        <small class="opacity-80">Posts</small>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold mb-1">{% if stats.total_members %}{{ stats.total_members }}{% else %}0{% endif %}</h3>
+                        <small class="opacity-80">Members</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Forum Topics -->
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold">Forum Topics</h2>
+            </div>
+            
+            {% for topic in topics %}
+            <div class="topic-card fade-in">
+                <div class="p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="topic-icon" style="background-color: {{ topic.color }};">
+                                {% if topic.icon %}
+                                    <i class="{{ topic.icon }}"></i>
+                                {% else %}
+                                    <i class="fas fa-comments"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="flex-1 ml-4">
+                            <h5 class="text-lg font-semibold mb-1">
+                                <a href="{% url 'community:topic_detail' topic.pk %}" 
+                                   class="text-gray-900 hover:text-blue-600 transition-colors">
+                                    {{ topic.name }}
+                                </a>
+                            </h5>
+                            <p class="text-gray-600 mb-2">{{ topic.description }}</p>
+                            <div class="topic-stats">
+                                <i class="fas fa-comment-dots mr-1"></i>
+                                {% if topic.thread_count %}{{ topic.thread_count }}{% else %}0{% endif %} discussions
+                                <span class="mx-2">•</span>
+                                <i class="fas fa-reply mr-1"></i>
+                                {% if topic.post_count %}{{ topic.post_count }}{% else %}0{% endif %} posts
+                            </div>
+                        </div>
+                        <div class="flex-shrink-0 text-right">
+                            {% if topic.get_latest_post %}
+                                <small class="text-gray-500">
+                                    Latest: {{ topic.get_latest_post.created_at|timesince }} ago
+                                    <br>
+                                    by <strong>{{ topic.get_latest_post.author.get_short_name }}</strong>
+                                </small>
+                            {% else %}
+                                <small class="text-gray-500">No posts yet</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-12">
+                <i class="fas fa-comments text-4xl text-gray-400 mb-4"></i>
+                <h4 class="text-xl font-semibold text-gray-600">No topics available</h4>
+                <p class="text-gray-500">Check back later for new discussion topics.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="lg:col-span-1">
+            <!-- Recent Threads -->
+            <div class="activity-card mb-6">
+                <h5 class="text-lg font-semibold mb-4">
+                    <i class="fas fa-fire text-orange-500 mr-2"></i>
+                    Recent Discussions
+                </h5>
+                {% for thread in recent_threads %}
+                <div class="thread-item">
+                    <div class="flex items-start">
+                        <div class="user-avatar mr-3 flex-shrink-0">
+                            {% if thread.author.get_short_name %}{{ thread.author.get_short_name|first|upper }}{% else %}U{% endif %}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h6 class="font-medium mb-1">
+                                <a href="{% url 'community:thread_detail' thread.pk %}" 
+                                   class="text-gray-900 hover:text-blue-600 transition-colors">
+                                    {{ thread.title|truncatechars:50 }}
+                                </a>
+                            </h6>
+                            <small class="text-gray-500">
+                                in <span class="inline-block px-2 py-1 rounded text-xs topic-badge" 
+                                         style="background-color: {{ thread.topic.color }}20; color: {{ thread.topic.color }};">
+                                    {{ thread.topic.name }}
+                                </span>
+                                • {{ thread.created_at|timesince }} ago
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-gray-500">No recent discussions</p>
+                {% endfor %}
+            </div>
+
+            <!-- Recent Posts -->
+            <div class="activity-card">
+                <h5 class="text-lg font-semibold mb-4">
+                    <i class="fas fa-comment text-blue-500 mr-2"></i>
+                    Latest Replies
+                </h5>
+                {% for post in recent_posts %}
+                <div class="thread-item">
+                    <div class="flex items-start">
+                        <div class="user-avatar mr-3 flex-shrink-0">
+                            {% if post.author.get_short_name %}{{ post.author.get_short_name|first|upper }}{% else %}U{% endif %}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h6 class="font-medium mb-1">
+                                <a href="{% url 'community:thread_detail' post.thread.pk %}" 
+                                   class="text-gray-900 hover:text-blue-600 transition-colors">
+                                    {{ post.thread.title|truncatechars:40 }}
+                                </a>
+                            </h6>
+                            <p class="text-sm text-gray-600 mb-1">{{ post.content|truncatechars:80 }}</p>
+                            <small class="text-gray-500">
+                                by <strong>{{ post.author.get_short_name }}</strong>
+                                • {{ post.created_at|timesince }} ago
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-gray-500">No recent replies</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions for Authenticated Users -->
+{% if user.is_authenticated %}
+<div class="quick-actions">
+    <div class="relative">
+        <button onclick="toggleQuickActions()" 
+                class="bg-blue-600 hover:bg-blue-700 text-white w-14 h-14 rounded-full shadow-lg transition-colors flex items-center justify-center">
+            <i class="fas fa-plus"></i>
+        </button>
+        <div id="quickActionsMenu" class="dropdown-menu">
+            {% for topic in topics %}
+            <a class="dropdown-item" href="{% url 'community:create_thread' topic.pk %}">
+                <div class="color-indicator" style="background-color: {{ topic.color }};"></div>
+                New thread in {{ topic.name }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add smooth scrolling and animations
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animate topic cards on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+        
+        // Apply to topic cards
+        const topicCards = document.querySelectorAll('.topic-card');
+        topicCards.forEach(function(card) {
+            observer.observe(card);
+        });
+        
+        // Search form enhancement
+        const searchInput = document.querySelector('input[name="q"]');
+        if (searchInput) {
+            searchInput.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'scale(1.02)';
+                this.parentElement.style.transition = 'transform 0.2s ease';
+            });
+            
+            searchInput.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'scale(1)';
+            });
+        }
+        
+        // Handle dynamic badge styling
+        const badges = document.querySelectorAll('.topic-badge');
+        badges.forEach(function(badge) {
+            const color = badge.style.color;
+            if (color) {
+                badge.style.backgroundColor = color + '20'; // Add transparency
+            }
+        });
+    });
+
+    function toggleQuickActions() {
+        const menu = document.getElementById('quickActionsMenu');
+        menu.classList.toggle('show');
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+        const quickActions = document.querySelector('.quick-actions');
+        const menu = document.getElementById('quickActionsMenu');
+        
+        if (quickActions && !quickActions.contains(event.target)) {
+            menu.classList.remove('show');
+        }
+    });
+</script>
+{% endblock %}

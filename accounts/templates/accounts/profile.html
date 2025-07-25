@@ -1,0 +1,622 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ user.get_full_name }}'s Profile - AfriData{% endblock %}
+
+{% block extra_css %}
+<!-- Link to user_profile.css -->
+<link rel="stylesheet" href="{% static 'styles/user_profile.css' %}">
+{% endblock %}
+
+{% block header_content %}
+<div class="text-center py-8">
+  <h1 class="text-4xl font-bold mb-2">User Profile</h1>
+  <p class="text-xl opacity-90">Manage your AfriData presence</p>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto p-6">
+  <!-- Profile Header -->
+  <div class="bg-white p-8 rounded-xl shadow-lg mb-6">
+    <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-4 lg:space-y-0">
+      <div class="flex items-center space-x-6">
+        <div class="relative">
+          {% if user.profile_picture %}
+            <img src="{{ user.profile_picture.url }}" alt="{{ user.get_full_name }}" class="w-20 h-20 rounded-full object-cover">
+          {% else %}
+            <div class="w-20 h-20 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+              {{ user.get_full_name|slice:":2"|upper|default:"U" }}
+            </div>
+          {% endif %}
+          <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white"></div>
+        </div>
+        <div>
+          <h2 class="text-3xl font-bold text-gray-800">{{ user.get_full_name|default:user.username }}</h2>
+          <p class="text-gray-600 text-lg">
+            {% if profile.job_title %}{{ profile.job_title }}{% endif %}
+            {% if profile.job_title and profile.location %} | {% endif %}
+            {% if profile.location %}{{ profile.location }}{% endif %}
+            {% if not profile.job_title and not profile.location %}Data Enthusiast{% endif %}
+          </p>
+          <div class="flex items-center space-x-4 mt-2">
+            <div class="flex items-center space-x-1">
+              <span class="star-filled text-xl">★</span>
+              <span class="star-filled text-xl">★</span>
+              <span class="star-filled text-xl">★</span>
+              <span class="star-filled text-xl">★</span>
+              <span class="star-empty text-xl">★</span>
+              <span class="text-gray-600 font-medium">{{ user_stats.average_rating|floatformat:1 }} ({{ user_stats.total_reviews }} reviews)</span>
+            </div>
+            <span class="text-gray-400">•</span>
+            <span class="text-blue-600 font-medium">{{ user_stats.total_downloads }} total downloads</span>
+          </div>
+        </div>
+      </div>
+      <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+        <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors" onclick="toggleEditMode()">Edit Profile</button>
+        <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg transition-colors" onclick="shareProfile()">Share Profile</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats and Contact Row -->
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Profile Stats -->
+    <div class="bg-gradient-to-br from-blue-500 to-purple-600 text-white p-6 rounded-xl shadow-lg">
+      <h3 class="text-lg font-semibold mb-4 flex items-center">
+        <span class="text-2xl mr-2">📊</span>
+        Profile Statistics
+      </h3>
+      <div class="space-y-3">
+        <div class="flex justify-between items-center">
+          <span>Datasets Uploaded:</span>
+          <span class="font-bold text-xl">{{ user_stats.datasets_uploaded }}</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span>Total Downloads:</span>
+          <span class="font-bold text-xl">{{ user_stats.total_downloads }}</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span>Profile Views:</span>
+          <span class="font-bold text-xl">{{ user_stats.profile_views }}</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span>Stars Collected:</span>
+          <span class="font-bold text-xl text-yellow-300">★ {{ user_stats.stars_collected }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Token Balance -->
+    <div class="bg-gradient-to-br from-yellow-500 to-orange-600 text-white p-6 rounded-xl shadow-lg">
+      <h3 class="text-lg font-semibold mb-4 flex items-center">
+        <span class="text-2xl mr-2">🪙</span>
+        Token Balance
+      </h3>
+      <div class="space-y-3">
+        <div class="text-center">
+          <span class="font-bold text-3xl">{{ profile.token_balance }}</span>
+          <p class="text-sm text-yellow-200 mt-1">Available Tokens</p>
+        </div>
+        <div class="flex justify-between items-center text-sm">
+          <span>Monthly Used:</span>
+          <span class="font-medium">{{ profile.monthly_downloads }}</span>
+        </div>
+        <div class="flex justify-between items-center text-sm">
+          <span>Monthly Limit:</span>
+          <span class="font-medium">{{ profile.monthly_download_limit }}</span>
+        </div>
+        <div class="w-full bg-yellow-600 rounded-full h-2 mt-2">
+          <div class="bg-white h-2 rounded-full" style="width: {% widthratio profile.monthly_downloads profile.monthly_download_limit 100 %}%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Information -->
+    <div class="bg-gradient-to-br from-green-500 to-teal-600 text-white p-6 rounded-xl shadow-lg">
+      <h3 class="text-lg font-semibold mb-4 flex items-center">
+        <span class="text-2xl mr-2">📞</span>
+        Contact Information
+      </h3>
+      <div class="space-y-3">
+        <div class="flex items-center space-x-3">
+          <span class="text-xl">📧</span>
+          <span class="text-sm break-all">{{ user.email }}</span>
+        </div>
+        {% if user.phone_number %}
+        <div class="flex items-center space-x-3">
+          <span class="text-xl">📱</span>
+          <span>{{ user.phone_number }}</span>
+        </div>
+        {% endif %}
+        {% if profile.linkedin_url %}
+        <div class="flex items-center space-x-3">
+          <span class="text-xl">🔗</span>
+          <a href="{{ profile.linkedin_url }}" target="_blank" class="hover:underline text-blue-200">LinkedIn Profile</a>
+        </div>
+        {% endif %}
+        {% if profile.twitter_handle %}
+        <div class="flex items-center space-x-3">
+          <span class="text-xl">🐦</span>
+          <span>{{ profile.twitter_handle }}</span>
+        </div>
+        {% endif %}
+        {% if profile.website %}
+        <div class="flex items-center space-x-3">
+          <span class="text-xl">🌐</span>
+          <a href="{{ profile.website }}" target="_blank" class="hover:underline text-blue-200">Website</a>
+        </div>
+        {% endif %}
+        {% if not user.phone_number and not profile.linkedin_url and not profile.twitter_handle and not profile.website %}
+        <div class="text-center py-4 text-blue-200">
+          <p class="text-sm">No additional contact info added</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Achievements -->
+    <div class="bg-white p-6 rounded-xl shadow-lg">
+      <h3 class="text-lg font-semibold text-gray-700 mb-4 flex items-center">
+        <span class="text-2xl mr-2">🏆</span>
+        Achievements
+      </h3>
+      <div class="space-y-3">
+        {% if user.is_verified %}
+        <div class="bg-green-100 text-green-800 px-3 py-2 rounded-lg text-sm flex items-center">
+          <span class="mr-2">✅</span>
+          Verified User
+        </div>
+        {% endif %}
+        {% if user_stats.datasets_uploaded >= 10 %}
+        <div class="bg-purple-100 text-purple-800 px-3 py-2 rounded-lg text-sm flex items-center">
+          <span class="mr-2">🏆</span>
+          Top Contributor 2024
+        </div>
+        {% endif %}
+        {% if user_stats.total_downloads >= 100 %}
+        <div class="bg-yellow-100 text-yellow-800 px-3 py-2 rounded-lg text-sm flex items-center">
+          <span class="mr-2">⭐</span>
+          100+ Downloads Club
+        </div>
+        {% endif %}
+        {% if profile.job_title and 'scientist' in profile.job_title.lower %}
+        <div class="bg-green-100 text-green-800 px-3 py-2 rounded-lg text-sm flex items-center">
+          <span class="mr-2">🔬</span>
+          Verified Data Scientist
+        </div>
+        {% endif %}
+        {% if user_stats.average_rating >= 4.5 %}
+        <div class="bg-purple-100 text-purple-800 px-3 py-2 rounded-lg text-sm flex items-center">
+          <span class="mr-2">🎯</span>
+          Quality Data Badge
+        </div>
+        {% endif %}
+        {% if referrals_count >= 5 %}
+        <div class="bg-indigo-100 text-indigo-800 px-3 py-2 rounded-lg text-sm flex items-center">
+          <span class="mr-2">👥</span>
+          Referral Master ({{ referrals_count }}+ referrals)
+        </div>
+        {% endif %}
+        {% if user_stats.datasets_uploaded == 0 and user_stats.total_downloads == 0 %}
+        <div class="bg-blue-100 text-blue-800 px-3 py-2 rounded-lg text-sm flex items-center">
+          <span class="mr-2">🚀</span>
+          Getting Started
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Referral Program Section -->
+  {% if referrals_count > 0 or user.referred_by %}
+  <div class="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-6 rounded-xl shadow-lg mb-6">
+    <h3 class="text-lg font-semibold mb-4 flex items-center">
+      <span class="text-2xl mr-2">👥</span>
+      Referral Program
+    </h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <h4 class="font-medium mb-2">Your Referrals</h4>
+        <p class="text-2xl font-bold">{{ referrals_count }}</p>
+        <p class="text-sm text-purple-200">Users you've referred</p>
+        {% if referrals_count > 0 %}
+          <p class="text-xs text-purple-100 mt-1">Earned tokens: {{ referrals_count|floatformat:0 }}0</p>
+        {% endif %}
+      </div>
+      {% if user.referred_by %}
+      <div>
+        <h4 class="font-medium mb-2">Referred By</h4>
+        <p class="text-lg">{{ user.referred_by.get_full_name|default:user.referred_by.username }}</p>
+        <p class="text-sm text-purple-200">Your referrer</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Profile Bio Section -->
+  {% if user.bio %}
+  <div class="bg-white p-6 rounded-xl shadow-lg mb-6">
+    <h3 class="text-lg font-semibold text-gray-700 mb-3 flex items-center">
+      <span class="text-2xl mr-2">👤</span>
+      About
+    </h3>
+    <p class="text-gray-600 leading-relaxed">{{ user.bio }}</p>
+    {% if profile.organization %}
+    <p class="text-sm text-gray-500 mt-2">
+      <span class="font-medium">Works at:</span> {{ profile.organization }}
+    </p>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- Tabs -->
+  <div class="mb-6 border-b border-gray-200 bg-white rounded-t-xl">
+    <nav class="flex space-x-8 px-6 text-gray-600 overflow-x-auto">
+      <button id="datasets-tab" class="py-4 font-medium border-b-2 border-blue-600 text-blue-600 whitespace-nowrap">My Datasets ({{ user_stats.datasets_uploaded }})</button>
+      <button id="upload-tab" class="py-4 hover:text-blue-600 transition-colors whitespace-nowrap">Upload Dataset</button>
+      <button id="activity-tab" class="py-4 hover:text-blue-600 transition-colors whitespace-nowrap">Activity</button>
+      <button id="tokens-tab" class="py-4 hover:text-blue-600 transition-colors whitespace-nowrap">Tokens & Transactions</button>
+      <button id="purchases-tab" class="py-4 hover:text-blue-600 transition-colors whitespace-nowrap">Token Purchases</button>
+      <button id="reviews-tab" class="py-4 hover:text-blue-600 transition-colors whitespace-nowrap">Reviews ({{ user_stats.total_reviews }})</button>
+    </nav>
+  </div>
+
+  <!-- Tab Content -->
+  <div id="tab-content" class="bg-white rounded-b-xl shadow-lg">
+    
+    <!-- Datasets Section -->
+    <section id="datasets-content" class="p-6">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-xl font-semibold text-gray-700">Uploaded Datasets</h3>
+        <div class="flex space-x-3">
+          <select class="px-4 py-2 border rounded-lg">
+            <option>Sort by: Most Recent</option>
+            <option>Sort by: Most Downloaded</option>
+            <option>Sort by: Highest Rated</option>
+          </select>
+          <button class="bg-gray-100 px-4 py-2 rounded-lg">🔍 Filter</button>
+        </div>
+      </div>
+      
+      {% if user_datasets %}
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        {% for dataset in user_datasets %}
+        <div class="dataset-card bg-gray-50 p-6 shadow-md rounded-xl border-l-4 border-blue-500 hover:shadow-lg transition-shadow">
+          <div class="flex justify-between items-start mb-3">
+            <h4 class="font-semibold text-gray-800 text-lg">{{ dataset.title }}</h4>
+            <div class="flex items-center space-x-1">
+              <span class="star-filled text-yellow-500">★</span>
+              <span class="text-sm text-gray-600">{{ dataset.rating|floatformat:1|default:"0.0" }}</span>
+            </div>
+          </div>
+          <p class="text-gray-600 text-sm mb-4">
+            {{ dataset.description|truncatewords:20 }}
+          </p>
+          <div class="flex justify-between items-center text-sm text-gray-500 mb-4">
+            <span>📥 {{ dataset.downloads }} downloads</span>
+            <span>📅 {{ dataset.created_at|timesince }} ago</span>
+          </div>
+          <div class="flex flex-wrap gap-2 mb-4">
+            {% if dataset.category %}
+            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">{{ dataset.category }}</span>
+            {% endif %}
+            {% if dataset.tags %}
+            <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">{{ dataset.tags }}</span>
+            {% endif %}
+          </div>
+          <div class="flex space-x-2">
+            <a href="{% url 'dataset_detail' dataset.id %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-colors flex-1 text-center">
+              View Dataset
+            </a>
+            <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm transition-colors" onclick="shareDataset('{{ dataset.id }}')">
+              📤
+            </button>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="text-center py-12">
+        <div class="text-6xl mb-4">📊</div>
+        <h3 class="text-xl font-semibold text-gray-700 mb-2">No datasets uploaded yet</h3>
+        <p class="text-gray-600 mb-4">Start sharing your data with the community!</p>
+        <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors" onclick="document.getElementById('upload-tab').click()">
+          Upload Your First Dataset
+        </button>
+      </div>
+      {% endif %}
+    </section>
+
+    <!-- Upload Section -->
+    <section id="upload-content" class="p-6 hidden">
+      <div class="flex justify-center space-x-4">
+        <button 
+          type="button" 
+          onclick="redirectToUpload()"
+          class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg transition-colors">
+          Upload Dataset
+        </button>
+      </div>
+    </section>
+
+    <!-- Activity Section -->
+    <section id="activity-content" class="p-6 hidden">
+      <h3 class="text-xl font-semibold text-gray-700 mb-6">Recent Activity</h3>
+      <div class="space-y-4">
+        <div class="flex items-start space-x-4 p-4 bg-blue-50 rounded-lg">
+          <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">👤</div>
+          <div class="flex-1">
+            <p class="text-gray-700"><strong>Joined</strong> AfriData Platform</p>
+            <p class="text-sm text-gray-500">{{ user.date_joined|date:"F d, Y" }}</p>
+          </div>
+        </div>
+        
+        {% if user.last_login %}
+        <div class="flex items-start space-x-4 p-4 bg-green-50 rounded-lg">
+          <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">🔓</div>
+          <div class="flex-1">
+            <p class="text-gray-700"><strong>Last Login</strong></p>
+            <p class="text-sm text-gray-500">{{ user.last_login|date:"F d, Y g:i A" }}</p>
+          </div>
+        </div>
+        {% endif %}
+        
+        <div class="flex items-start space-x-4 p-4 bg-purple-50 rounded-lg">
+          <div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold">📊</div>
+          <div class="flex-1">
+            <p class="text-gray-700"><strong>Profile Statistics</strong></p>
+            <p class="text-sm text-gray-500">{{ user_stats.datasets_uploaded }} datasets uploaded, {{ user_stats.total_downloads }} total downloads</p>
+          </div>
+        </div>
+
+        {% if referrals_count > 0 %}
+        <div class="flex items-start space-x-4 p-4 bg-pink-50 rounded-lg">
+          <div class="w-10 h-10 bg-pink-500 rounded-full flex items-center justify-center text-white font-bold">👥</div>
+          <div class="flex-1">
+            <p class="text-gray-700"><strong>Referral Program</strong></p>
+            <p class="text-sm text-gray-500">{{ referrals_count }} users referred, earning bonus tokens</p>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </section>
+
+    <!-- Tokens & Transactions Section -->
+    <section id="tokens-content" class="p-6 hidden">
+      <h3 class="text-xl font-semibold text-gray-700 mb-6">Token Transactions</h3>
+      
+      <!-- Token Summary -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="bg-gradient-to-r from-yellow-400 to-orange-500 text-white p-4 rounded-lg">
+          <h4 class="font-semibold mb-2">Current Balance</h4>
+          <p class="text-2xl font-bold">{{ profile.token_balance }} 🪙</p>
+        </div>
+        <div class="bg-gradient-to-r from-green-400 to-teal-500 text-white p-4 rounded-lg">
+          <h4 class="font-semibold mb-2">Monthly Downloads</h4>
+          <p class="text-2xl font-bold">{{ profile.monthly_downloads }}/{{ profile.monthly_download_limit }}</p>
+        </div>
+        <div class="bg-gradient-to-r from-blue-400 to-purple-500 text-white p-4 rounded-lg">
+          <h4 class="font-semibold mb-2">Total Referrals</h4>
+          <p class="text-2xl font-bold">{{ referrals_count }}</p>
+        </div>
+      </div>
+
+      <!-- Recent Transactions -->
+      {% if recent_transactions %}
+      <div class="space-y-3">
+        <h4 class="text-lg font-semibold text-gray-700">Recent Transactions</h4>
+        {% for transaction in recent_transactions %}
+        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center text-white
+              {% if transaction.transaction_type == 'earned' %}bg-green-500
+              {% elif transaction.transaction_type == 'spent' %}bg-red-500
+              {% elif transaction.transaction_type == 'purchased' %}bg-blue-500
+              {% else %}bg-gray-500{% endif %}">
+              {% if transaction.transaction_type == 'earned' %}+
+              {% elif transaction.transaction_type == 'spent' %}-
+              {% elif transaction.transaction_type == 'purchased' %}💰
+              {% else %}?{% endif %}
+            </div>
+            <div>
+              <p class="font-medium text-gray-800">
+                {% if transaction.transaction_type == 'earned' %}Earned Tokens
+                {% elif transaction.transaction_type == 'spent' %}Dataset Download
+                {% elif transaction.transaction_type == 'purchased' %}Token Purchase
+                {% else %}{{ transaction.transaction_type|title }}{% endif %}
+              </p>
+              <p class="text-sm text-gray-500">{{ transaction.description }}</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <p class="font-bold 
+              {% if transaction.transaction_type == 'earned' %}text-green-600
+              {% elif transaction.transaction_type == 'spent' %}text-red-600
+              {% else %}text-blue-600{% endif %}">
+              {% if transaction.transaction_type == 'spent' %}-{% elif transaction.transaction_type == 'earned' %}+{% endif %}{{ transaction.amount }} 🪙
+            </p>
+            <p class="text-sm text-gray-500">{{ transaction.created_at|date:"M d, Y" }}</p>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="text-center py-12">
+        <div class="text-6xl mb-4">🪙</div>
+        <h3 class="text-xl font-semibold text-gray-700 mb-2">No transactions yet</h3>
+        <p class="text-gray-600">Your token transactions will appear here</p>
+      </div>
+      {% endif %}
+    </section>
+
+    <!-- Token Purchases Section -->
+    <section id="purchases-content" class="p-6 hidden">
+      <h3 class="text-xl font-semibold text-gray-700 mb-6">Token Purchase History</h3>
+      
+      {% if recent_purchases %}
+      <div class="space-y-3">
+        {% for purchase in recent_purchases %}
+        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border-l-4 border-green-500">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">💰</div>
+            <div>
+              <p class="font-medium text-gray-800">Token Purchase</p>
+              <p class="text-sm text-gray-500">{{ purchase.tokens_purchased }} tokens purchased</p>
+              <p class="text-xs text-gray-400">Transaction ID: {{ purchase.payment_reference|slice:":8" }}...</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <p class="font-bold text-green-600">${{ purchase.amount_paid|floatformat:2 }}</p>
+            <p class="text-sm text-gray-500">{{ purchase.created_at|date:"M d, Y g:i A" }}</p>
+            <span class="inline-block px-2 py-1 text-xs bg-green-100 text-green-800 rounded">{{ purchase.payment_status|title }}</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="text-center py-12">
+        <div class="text-6xl mb-4">💳</div>
+        <h3 class="text-xl font-semibold text-gray-700 mb-2">No purchases yet</h3>
+        <p class="text-gray-600 mb-4">Purchase tokens to download premium datasets</p>
+        <button class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition-colors" onclick="buyTokens()">
+          Buy Tokens
+        </button>
+      </div>
+      {% endif %}
+    </section>
+
+    <!-- Reviews Section -->
+    <section id="reviews-content" class="p-6 hidden">
+      <h3 class="text-xl font-semibold text-gray-700 mb-6">User Reviews</h3>
+      {% if user_stats.total_reviews > 0 %}
+      <div class="space-y-4">
+        <!-- You can add real reviews here if you have a reviews model -->
+        <div class="text-center py-8">
+          <p class="text-gray-600">Reviews functionality will be implemented soon.</p>
+        </div>
+      </div>
+      {% else %}
+      <div class="text-center py-12">
+        <div class="text-6xl mb-4">💬</div>
+        <h3 class="text-xl font-semibold text-gray-700 mb-2">No reviews yet</h3>
+        <p class="text-gray-600">Upload datasets to start receiving reviews from the community!</p>
+      </div>
+      {% endif %}
+    </section>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Tab switching functionality
+  const tabs = ['datasets', 'upload', 'activity', 'tokens', 'purchases', 'reviews'];
+  
+  tabs.forEach(tab => {
+    document.getElementById(`${tab}-tab`).addEventListener('click', () => {
+      // Hide all content sections
+      tabs.forEach(t => {
+        document.getElementById(`${t}-content`).classList.add('hidden');
+        document.getElementById(`${t}-tab`).classList.remove('border-blue-600', 'text-blue-600');
+        document.getElementById(`${t}-tab`).classList.add('text-gray-600', 'hover:text-blue-600');
+      });
+      
+      // Show selected content and highlight tab
+      document.getElementById(`${tab}-content`).classList.remove('hidden');
+      document.getElementById(`${tab}-tab`).classList.add('border-blue-600', 'text-blue-600');
+      document.getElementById(`${tab}-tab`).classList.remove('text-gray-600', 'hover:text-blue-600');
+    });
+  });
+
+  function redirectToUpload() {
+    window.location.href = "{% url 'upload_dataset' %}";
+  }
+
+  // File upload preview (optional if file input exists)
+  const fileInput = document.getElementById('file-upload');
+  if (fileInput) {
+    fileInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const label = e.target.nextElementSibling;
+        label.innerHTML = `
+          <div class="text-green-600">
+            <span class="text-2xl">✅</span>
+            <p class="mt-2 font-medium">${file.name}</p>
+            <p class="text-sm text-gray-400">${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+          </div>
+        `;
+      }
+    });
+  }
+
+  // Profile functions
+  function toggleEditMode() {
+    // This would redirect to an edit profile page
+    window.location.href = "{% url 'edit_profile' %}";
+  }
+
+  function shareProfile() {
+    const profileUrl = window.location.href;
+    if (navigator.share) {
+      navigator.share({
+        title: "{{ user.get_full_name }}'s Profile",
+        text: "Check out {{ user.get_full_name }}'s data contributions on AfriData",
+        url: profileUrl
+      });
+    } else {
+      // Fallback - copy to clipboard
+      navigator.clipboard.writeText(profileUrl).then(() => {
+        alert('Profile URL copied to clipboard!');
+      });
+    }
+  }
+
+  function shareDataset(datasetId) {
+    const datasetUrl = `${window.location.origin}/dataset/${datasetId}/`;
+    if (navigator.share) {
+      navigator.share({
+        title: "Dataset from AfriData",
+        text: "Check out this dataset on AfriData",
+        url: datasetUrl
+      });
+    } else {
+      // Fallback - copy to clipboard
+      navigator.clipboard.writeText(datasetUrl).then(() => {
+        alert('Dataset URL copied to clipboard!');
+      });
+    }
+  }
+
+  // Token-related functions
+  function buyTokens() {
+    // Redirect to token purchase page
+    //alert("Button clicked");
+    window.location.href = "{% url 'token_purchase' %}";
+  }
+
+  function viewReferralDetails() {
+    // Show referral modal or redirect to referral page
+    alert('Referral details functionality coming soon!');
+  }
+
+  // Copy referral link
+  function copyReferralLink() {
+    const referralUrl = `${window.location.origin}/register?ref={{ user.username }}`;
+    navigator.clipboard.writeText(referralUrl).then(() => {
+      alert('Referral link copied to clipboard!');
+    }).catch(err => {
+      console.error('Failed to copy: ', err);
+    });
+  }
+
+  // Initialize tooltips or any additional UI components
+  document.addEventListener('DOMContentLoaded', function() {
+    // Add any initialization code here
+    console.log('Profile page loaded successfully');
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,328 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load dict_extras %}
+
+{% block title %}
+  {% if dataset %}{{ dataset.title }}{% else %}Dataset Page{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+  <div class="max-w-6xl mx-auto p-6">
+    <!-- Error Message Display -->
+    {% if error_message %}
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+      <strong>Error:</strong> {{ error_message }}
+    </div>
+    {% endif %}
+
+    <!-- Dataset Header -->
+    <div class="bg-white p-6 rounded shadow mb-6">
+      <h1 class="text-2xl font-bold text-gray-800 mb-2">
+        {% if dataset %}{{ dataset.title }}{% else %}Sample Dataset{% endif %}
+      </h1>
+      <p class="text-gray-600 mb-4">
+        {% if dataset %}{{ dataset.bio }}{% else %}This is a sample dataset page. Replace this content with dynamic data from your Django views.{% endif %}
+      </p>
+      <div class="flex flex-wrap items-center text-sm text-gray-500 space-x-4">
+        <span>👤 {% if author_name %}{{ author_name }}{% else %}Sample Author{% endif %}</span>
+        <span>📥 {% if dataset %}{{ dataset.downloads }}{% else %}0{% endif %} Downloads</span>
+        <span>👁️ {% if dataset %}{{ dataset.views }}{% else %}0{% endif %} Views</span>
+        <span class="star-filled">★</span>
+        <span class="text-sm text-gray-600">{% if dataset %}{{ dataset.rating|floatformat:1 }}{% else %}4.5{% endif %}</span>
+        
+        <!-- Download Button Logic -->
+        {% if dataset %}
+          {% if user.is_authenticated %}
+            {% if can_download %}
+              <a href="{% url 'download_dataset' dataset.id %}" class="ml-auto bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
+                {% if dataset.is_premium %}
+                  Download Premium {% if dataset.dataset_type == 'csv' %}CSV{% elif dataset.dataset_type == 'excel' %}Excel{% else %}File{% endif %}
+                {% else %}
+                  Download {% if dataset.dataset_type == 'csv' %}CSV{% elif dataset.dataset_type == 'excel' %}Excel{% else %}File{% endif %}
+                  {% if dataset.token_cost > 0 %}({{ dataset.token_cost }} tokens){% endif %}
+                {% endif %}
+              </a>
+            {% else %}
+              <div class="ml-auto">
+                {% if insufficient_tokens %}
+                  <div class="text-center">
+                    <button class="bg-gray-400 text-white px-4 py-2 rounded cursor-not-allowed" disabled>
+                      Insufficient Tokens
+                    </button>
+                    <p class="text-xs text-red-600 mt-1">
+                      Need {{ dataset.token_cost }} tokens, you have {{ user_token_balance }}
+                    </p>
+                  </div>
+                {% elif monthly_limit_exceeded %}
+                  <div class="text-center">
+                    <button class="bg-gray-400 text-white px-4 py-2 rounded cursor-not-allowed" disabled>
+                      Monthly Limit Reached
+                    </button>
+                    <p class="text-xs text-red-600 mt-1">Download limit exceeded this month</p>
+                  </div>
+                {% else %}
+                  <button class="bg-gray-400 text-white px-4 py-2 rounded cursor-not-allowed" disabled>
+                    Cannot Download
+                  </button>
+                {% endif %}
+              </div>
+            {% endif %}
+          {% else %}
+            <a href="{% url 'login_signup' %}" class="ml-auto bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
+              Login to Download
+            </a>
+          {% endif %}
+        {% else %}
+          <button class="ml-auto bg-blue-600 text-white px-4 py-2 rounded" disabled>Download CSV</button>
+        {% endif %}
+      </div>
+      
+      <!-- Token Balance Display for Authenticated Users -->
+      {% if user.is_authenticated and dataset %}
+      <div class="mt-3 text-sm text-gray-600">
+        Your token balance: <span class="font-semibold">{{ user_token_balance }}</span>
+        {% if dataset.is_premium %}
+          <span class="ml-2 bg-yellow-200 text-yellow-800 px-2 py-1 rounded text-xs">PREMIUM DATASET</span>
+        {% elif dataset.token_cost > 0 %}
+          <span class="ml-2">This dataset costs: <span class="font-semibold">{{ dataset.token_cost }} tokens</span></span>
+        {% else %}
+          <span class="ml-2 text-green-600">Free dataset</span>
+        {% endif %}
+      </div>
+      {% endif %}
+      
+      <!-- Topics -->
+      {% if dataset and topics %}
+      <div class="mt-4">
+        <span class="text-sm text-gray-500">Topics: </span>
+        {% for topic in topics %}
+        <span class="inline-block bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded mr-2">{{ topic }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Data Table Preview -->
+    <div class="bg-white p-4 rounded shadow mb-6 overflow-x-auto">
+      <h2 class="text-lg font-semibold text-gray-700 mb-3">Dataset Preview</h2>
+      {% if preview_data and columns %}
+      <div class="mb-3 text-sm text-gray-600">
+        Showing first 10 rows of {{ columns|length }} columns
+      </div>
+      <table class="min-w-full text-sm text-left text-gray-600">
+        <thead class="bg-gray-100 text-xs uppercase">
+          <tr>
+            {% for column in columns %}
+            <th class="py-2 px-4">{{ column }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in preview_data %}
+          <tr class="{% cycle 'bg-white' 'bg-gray-50' %}">
+            {% for column in columns %}
+            <td class="py-2 px-4">
+              {% if row|default_if_none:"" %}
+                {{ row|default_if_none:""|get_item:column|default:"N/A"|truncatechars:50 }}
+              {% else %}
+                N/A
+              {% endif %}
+            </td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% if dataset %}
+      <div class="mt-3 text-right">
+        <a href="{% url 'dataset_preview' dataset.id %}" class="text-blue-600 hover:underline text-sm">View Full Preview</a>
+      </div>
+      {% endif %}
+      {% else %}
+      <div class="text-gray-500 text-center py-8">
+        {% if error_message %}
+          <p>Unable to load dataset preview</p>
+          <p class="text-sm">There was an error reading the dataset file</p>
+        {% else %}
+          <p>No data preview available</p>
+          {% if dataset %}
+          <a href="{% url 'dataset_preview' dataset.id %}" class="text-blue-600 hover:underline">Load Preview</a>
+          {% else %}
+          <p class="text-sm">Upload a dataset to see preview here</p>
+          {% endif %}
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Graph Section -->
+    <div class="bg-white p-4 rounded shadow mb-6">
+      <h2 class="text-lg font-semibold text-gray-700 mb-3">Data Visualization</h2>
+      {% if graph_data %}
+      <div class="mb-2 text-sm text-gray-600">
+        {% with first_dataset=graph_data.datasets|first %}
+          Showing visualization for: <span class="font-semibold">{{ first_dataset.label|default:"First numeric column" }}</span>
+        {% endwith %}
+      </div>
+      <canvas id="dataChart" height="120"></canvas>
+      {% else %}
+      <div class="text-gray-500 text-center py-12">
+        <p>No chart data available</p>
+        <p class="text-sm">Charts will appear here when dataset contains numerical data</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Comments Section -->
+    <div class="bg-white p-6 rounded shadow mb-6">
+      <h2 class="text-lg font-semibold text-gray-700 mb-4">Comments</h2>
+      <div class="space-y-4 mb-4">
+        {% if comments %}
+        <div class="mb-4 text-sm text-gray-600">
+          Showing top 5 comments (sorted by upvotes)
+        </div>
+        {% for comment in comments %}
+        <div class="border-b border-gray-200 pb-3">
+          <p class="font-semibold text-gray-800">
+            {% if comment.author %}
+              {{ comment.author.get_full_name|default:comment.author.username }}
+            {% else %}
+              Anonymous
+            {% endif %}
+          </p>
+          <p class="text-gray-600 text-sm mb-2">{{ comment.content }}</p>
+          <div class="flex items-center text-xs text-gray-500">
+            <span>{{ comment.created_at|date:"M d, Y" }}</span>
+            <span class="ml-4">👍 {{ comment.upvotes }} Upvotes</span>
+            {% if user.is_authenticated and comment.id %}
+            <form method="post" action="{% url 'upvote_comment' comment.id %}" class="ml-4">
+              {% csrf_token %}
+              <button type="submit" class="text-blue-600 hover:underline">Upvote</button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+        {% if dataset %}
+        <div class="text-center mt-4">
+          <a href="{% url 'dataset_comments' dataset.id %}" class="text-blue-600 hover:underline">View All Comments</a>
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="text-gray-500 text-center py-4">
+          <p>No comments yet</p>
+          <p class="text-sm">Be the first to comment on this dataset</p>
+        </div>
+        {% endif %}
+      </div>
+      
+      {% if user.is_authenticated and dataset %}
+      <form method="post" action="{% url 'post_comment' dataset.id %}" class="space-y-3">
+        {% csrf_token %}
+        <textarea name="content" placeholder="Share your thoughts about this dataset..." rows="3" class="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required></textarea>
+        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors">Post Comment</button>
+      </form>
+      {% elif not user.is_authenticated %}
+      <div class="text-center text-gray-500 bg-gray-50 p-4 rounded">
+        <p>Please <a href="{% url 'login_signup' %}" class="text-blue-600 hover:underline font-semibold">login</a> to post comments and interact with the community</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Related Datasets -->
+    <div class="bg-white p-4 rounded shadow">
+      <h2 class="text-lg font-semibold text-gray-700 mb-3">Related Datasets</h2>
+      {% if related_datasets %}
+      <div class="grid gap-3">
+        {% for related in related_datasets %}
+        <div class="border-l-4 border-blue-500 pl-4 py-2">
+          <a href="{% url 'dataset_detail' related.id %}" class="text-blue-600 hover:underline font-medium">{{ related.title }}</a>
+          {% if related.bio %}
+          <p class="text-sm text-gray-600 mt-1">{{ related.bio|truncatechars:100 }}</p>
+          {% endif %}
+          <div class="text-xs text-gray-500 mt-1">
+            {{ related.downloads }} downloads • {{ related.views }} views
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="text-gray-500 text-center py-4">
+        <p>No related datasets found</p>
+        <p class="text-sm">Explore more datasets in our catalog</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    {% if graph_data %}
+    // Initialize chart with dynamic data
+    const ctx = document.getElementById('dataChart').getContext('2d');
+    new Chart(ctx, {
+      type: '{{ graph_data.chart_type|default:"line" }}',
+      data: {
+        labels: {{ graph_data.labels|safe }},
+        datasets: {{ graph_data.datasets|safe }}
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { 
+            position: 'bottom',
+            labels: {
+              padding: 20
+            }
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(0,0,0,0.1)'
+            }
+          },
+          x: {
+            grid: {
+              color: 'rgba(0,0,0,0.1)'
+            }
+          }
+        },
+        interaction: {
+          mode: 'nearest',
+          axis: 'x',
+          intersect: false
+        }
+      }
+    });
+    {% else %}
+    // No chart data available
+    console.log('Dataset page loaded - no chart data available');
+    {% endif %}
+
+    // Add smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+  </script>
+{% endblock %}

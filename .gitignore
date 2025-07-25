@@ -1,0 +1,64 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django stuff
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+db.sqlite3
+db.sqlite3-journal
+
+# Django migrations (optional)
+**/migrations/*.py
+!**/migrations/__init__.py
+
+# Environment variables
+.env
+.env.*
+
+# Media/static (optional — only if generated files)
+media/
+staticfiles/
+static_root/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Docker
+*.pid
+*.seed
+*.bak
+*.tar
+*.tgz
+*.gz
+__MACOSX/
+docker-compose.override.yml
+# Uncomment below if your images/volumes/cache dirs shouldn't be tracked
+# docker-data/
+# .docker/
+# build/
+# dist/
+
+# VSCode / PyCharm / other IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# System
+.DS_Store
+Thumbs.db
+
+# Testing / Coverage
+htmlcov/
+.coverage
+.pytest_cache/
+nosetests.xml
+test-results/
