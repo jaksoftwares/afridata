@@ -1,6 +1,6 @@
 asgiref==3.7.2
 attrs==24.2.0
-backports.zoneinfo==0.2.1
+# backports.zoneinfo==0.2.1
 certifi==2025.7.14
 charset-normalizer==3.4.2
 dj-database-url==0.5.0
