@@ -19,6 +19,7 @@ db.sqlite3-journal
 # Environment variables
 .env
 .env.*
+!.env.example
 
 # Media/static (optional — only if generated files)
 media/

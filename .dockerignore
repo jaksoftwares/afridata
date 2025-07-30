@@ -9,3 +9,6 @@ venv/
 staticfiles/
 media/
 .git/
+env/
+*.log
+
