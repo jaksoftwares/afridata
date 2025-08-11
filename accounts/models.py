@@ -22,7 +22,6 @@ class CustomUser(AbstractUser):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     last_login_ip = models.GenericIPAddressField(blank=True, null=True)
-    #referral_code = models.CharField(max_length=10, null=True, blank=True)  # Remove unique=True for now
     referral_code = models.CharField(max_length=10, unique=True, blank=True, null=True, help_text="Unique referral code for the user")
     referred_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='referred_users')
     # Override email as the username field
@@ -69,8 +68,8 @@ class UserProfile(models.Model):
     twitter_handle = models.CharField(max_length=50, blank=True)
     
     # Token-related fields
-    token_balance = models.PositiveIntegerField(default=50, help_text="Current token balance")
-    total_tokens_earned = models.PositiveIntegerField(default=50, help_text="Total tokens earned over time")
+    token_balance = models.PositiveIntegerField(default=0, help_text="Current token balance")
+    total_tokens_earned = models.PositiveIntegerField(default=0, help_text="Total tokens earned over time")
     total_tokens_spent = models.PositiveIntegerField(default=0, help_text="Total tokens spent on downloads")
     signup_bonus_awarded = models.BooleanField(default=False)
     

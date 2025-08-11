@@ -102,6 +102,7 @@ def stk(request):
         # Validate inputs
         if not phone or not amount or not package_type:
             return JsonResponse({'success': False, 'message': 'Missing required fields'}, status=400)
+            return JsonResponse({'success': False, 'message': 'Missing required fields'}, status=400)
         
         # Validate package
         if package_type not in TOKEN_PACKAGES:
@@ -112,7 +113,9 @@ def stk(request):
         # Validate amount matches package
         if int(amount) != package_info['kes_amount']:
             return JsonResponse({'success': False, 'message': 'Amount does not match selected package'}, status=400)
+            return JsonResponse({'success': False, 'message': 'Amount does not match selected package'}, status=400)
         
+        # Format phone number
         # Format phone number
         if phone.startswith('0'):
             phone = '254' + phone[1:]
@@ -122,6 +125,7 @@ def stk(request):
             phone = '254' + phone
         
         if not phone.isdigit() or len(phone) != 12:
+            return JsonResponse({'success': False, 'message': 'Invalid phone number format. Use format: 0712345678'}, status=400)
             return JsonResponse({'success': False, 'message': 'Invalid phone number format. Use format: 0712345678'}, status=400)
         
         # Create pending purchase record
@@ -141,7 +145,7 @@ def stk(request):
         
         # Prepare STK Push request
         api_url = config['stk_push_url']
-        headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
+        headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json", "Content-Type": "application/json"}
         
         account_reference = f"TOKENS-{token_purchase.id}"
         
@@ -161,7 +165,18 @@ def stk(request):
         logger.debug("STK Payload: %s", json.dumps(payload))
         logger.debug("Headers: %s", headers)
 
+
+        logger.debug("STK Payload: %s", json.dumps(payload))
+        logger.debug("Headers: %s", headers)
+
         response = requests.post(api_url, json=payload, headers=headers, timeout=30)
+
+        try:
+            response_data = response.json()
+        except ValueError:
+            logger.error("Invalid JSON from Safaricom: %s", response.text)
+            return JsonResponse({'success': False, 'message': 'Invalid response from M-Pesa'}, status=500)
+
 
         try:
             response_data = response.json()
@@ -192,28 +207,60 @@ def stk(request):
             'merchant_request_id': response_data.get('MerchantRequestID')
         })
 
+
+        # Handle failed STK push
+        if response.status_code != 200 or response_data.get('ResponseCode') != '0':
+            token_purchase.payment_status = 'failed'
+            token_purchase.save(update_fields=['payment_status'])
+            return JsonResponse({
+                'success': False,
+                'message': response_data.get('errorMessage') or response_data.get('ResponseDescription') or 'STK push failed',
+                'details': response_data
+            }, status=400)
+
+        # STK push successful
+        token_purchase.stripe_payment_intent_id = response_data.get('CheckoutRequestID')
+        token_purchase.save(update_fields=['stripe_payment_intent_id'])
+
+        return JsonResponse({
+            'success': True,
+            'message': 'STK push sent successfully. Please check your phone.',
+            'checkout_request_id': response_data.get('CheckoutRequestID'),
+            'merchant_request_id': response_data.get('MerchantRequestID')
+        })
+
     except requests.exceptions.RequestException as e:
         logger.error(f"STK Push request error: {e}")
+        return JsonResponse({'success': False, 'message': 'Network error. Please try again.'}, status=500)
         return JsonResponse({'success': False, 'message': 'Network error. Please try again.'}, status=500)
         
     except Exception as e:
         logger.error(f"STK Push error: {e}")
+        return JsonResponse({'success': False, 'message': 'An error occurred. Please try again.'}, status=500)
         return JsonResponse({'success': False, 'message': 'An error occurred. Please try again.'}, status=500)
 
 @csrf_exempt
 @require_http_methods(["POST"])
 def mpesa_callback(request):
     """Handle M-Pesa payment callback from Safaricom"""
+    """Handle M-Pesa payment callback from Safaricom"""
     try:
         # Decode JSON payload
+        # Decode JSON payload
         callback_data = json.loads(request.body.decode('utf-8'))
+        logger.info(f"M-Pesa callback received: {json.dumps(callback_data, indent=2)}")
         logger.info(f"M-Pesa callback received: {json.dumps(callback_data, indent=2)}")
         
         stk_callback = callback_data.get('Body', {}).get('stkCallback', {})
         result_code = stk_callback.get('ResultCode')
         checkout_request_id = stk_callback.get('CheckoutRequestID')
 
+
         if not checkout_request_id:
+            logger.error("Callback missing CheckoutRequestID")
+            return HttpResponse(status=200)
+
+        # Find pending purchase
             logger.error("Callback missing CheckoutRequestID")
             return HttpResponse(status=200)
 
@@ -229,8 +276,17 @@ def mpesa_callback(request):
 
         if result_code == 0:
             # Successful payment
+            logger.warning(f"No matching purchase found for CheckoutRequestID: {checkout_request_id}")
+            return HttpResponse(status=200)
+
+        if result_code == 0:
+            # Successful payment
             with transaction.atomic():
                 token_purchase.payment_status = 'completed'
+                token_purchase.completed_at = timezone.now()
+                token_purchase.save(update_fields=['payment_status', 'completed_at'])
+
+                # Add tokens to user profile
                 token_purchase.completed_at = timezone.now()
                 token_purchase.save(update_fields=['payment_status', 'completed_at'])
 
@@ -243,7 +299,10 @@ def mpesa_callback(request):
                 )
 
                 logger.info(f"Tokens added for {token_purchase.user.username} ({token_purchase.tokens_purchased})")
+
+                logger.info(f"Tokens added for {token_purchase.user.username} ({token_purchase.tokens_purchased})")
         else:
+            # Failed payment
             # Failed payment
             token_purchase.payment_status = 'failed'
             token_purchase.save(update_fields=['payment_status'])
@@ -251,11 +310,18 @@ def mpesa_callback(request):
 
         return HttpResponse(status=200)
 
+        logger.info(f"Payment failed for user {token_purchase.user.username} | ResultCode: {result_code}")
+
+        return HttpResponse(status=200)
+
     except json.JSONDecodeError as e:
         logger.error(f"Invalid JSON in callback: {e}")
         return HttpResponse("Invalid JSON", status=400)
 
+
     except Exception as e:
+        logger.exception(f"Unhandled error processing callback: {e}")
+        return HttpResponse("Server Error", status=500)
         logger.exception(f"Unhandled error processing callback: {e}")
         return HttpResponse("Server Error", status=500)
 

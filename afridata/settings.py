@@ -26,7 +26,7 @@ if os.environ.get('GITHUB_ACTIONS') != 'true':
 SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env.bool('DEBUG', default=True)
+DEBUG = env.bool('DEBUG', default=False)
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
 
@@ -186,19 +186,20 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
+        'file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'errors.log'),
         },
     },
     'loggers': {
-        'accounts': {  # Custom logger for the accounts app
-            'handlers': ['console'],
-            'level': 'DEBUG',
+        'django': {
+            'handlers': ['file'],
+            'level': 'ERROR',
             'propagate': True,
         },
     },
 }
-
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
