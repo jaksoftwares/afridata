@@ -3,157 +3,250 @@
 
 {% block title %}Create New Thread - {{ topic.name }}{% endblock %}
 
-{% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <!-- Breadcrumb -->
-            <nav aria-label="breadcrumb" class="mb-4">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{% url 'community:community' %}">Community</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'community:topic_detail' topic.pk %}">{{ topic.name }}</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Create Thread</li>
-                </ol>
-            </nav>
-
-            <!-- Page Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h1 class="h3 mb-1">Create New Thread</h1>
-                    <p class="text-muted mb-0">Starting a new discussion in <strong>{{ topic.name }}</strong></p>
-                </div>
-                <a href="{% url 'community:topic_detail' topic.pk %}" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-left me-2"></i>Back to {{ topic.name }}
-                </a>
-            </div>
-
-            <!-- Thread Creation Form -->
-            <div class="row justify-content-center">
-                <div class="col-lg-8">
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="card-title mb-0">
-                                New Thread
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <form method="post" novalidate>
-                                {% csrf_token %}
-                                
-                                <!-- Title Field -->
-                                <div class="mb-4">
-                                    <label for="{{ form.title.id_for_label }}" class="form-label fw-bold">
-                                        {{ form.title.label }}
-                                        <span class="text-danger">*</span>
-                                    </label>
-                                    {{ form.title }}
-                                    {% if form.title.help_text %}
-                                        <div class="form-text">{{ form.title.help_text }}</div>
-                                    {% endif %}
-                                    {% if form.title.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {% for error in form.title.errors %}
-                                                {{ error }}
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-
-                                <!-- Content Field -->
-                                <div class="mb-4">
-                                    <label for="{{ form.content.id_for_label }}" class="form-label fw-bold">
-                                        {{ form.content.label }}
-                                        <span class="text-danger">*</span>
-                                    </label>
-                                    {{ form.content }}
-                                    {% if form.content.help_text %}
-                                        <div class="form-text">{{ form.content.help_text }}</div>
-                                    {% endif %}
-                                    {% if form.content.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {% for error in form.content.errors %}
-                                                {{ error }}
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-
-                                <!-- Form Actions -->
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div class="text-muted small">
-                                        
-                                        Please follow community guidelines when posting
-                                    </div>
-                                    <div>
-                                        <a href="{% url 'community:topic_detail' topic.pk %}" class="btn btn-outline-secondary me-2">
-                                            Cancel
-                                        </a>
-                                        <button type="submit" class="btn btn-primary">
-                                            Create Thread
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-
-                    <!-- Guidelines Card -->
-                    <div class="card mt-4 border-info">
-                        <div class="card-header bg-info text-white">
-                            <h6 class="card-title mb-0">
-                                Posting Guidelines
-                            </h6>
-                        </div>
-                        <div class="card-body">
-                            <ul class="mb-0 small">
-                                <li>Choose a clear, descriptive title that summarizes your topic</li>
-                                <li>Provide enough detail in your post to help others understand the context</li>
-                                <li>Search existing threads to avoid duplicates</li>
-                                <li>Be respectful and constructive in your discussions</li>
-                                <li>Follow the community rules and guidelines</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
+{% block header_class %}bg-gradient-to-r from-blue-600 to-indigo-700{% endblock %}
+{% block header_content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 text-white">
+    <div class="flex items-center gap-4">
+        <div class="flex-shrink-0 w-16 h-16 rounded-2xl shadow-lg flex items-center justify-center text-2xl text-white transform rotate-3" style="background-color: {{ topic.color }};">
+            {% if topic.icon %}
+                <i class="{{ topic.icon }}"></i>
+            {% else %}
+                <i class="fas fa-edit"></i>
+            {% endif %}
+        </div>
+        <div>
+            <h1 class="text-3xl md:text-4xl font-bold mb-1">Create New Thread</h1>
+            <p class="text-blue-100 opacity-90">Starting a new discussion in <strong class="text-white">{{ topic.name }}</strong></p>
         </div>
     </div>
 </div>
 {% endblock %}
 
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 -mt-6">
+    
+    <!-- Breadcrumb & Back action -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <nav class="flex text-sm font-medium bg-white px-5 py-3 rounded-xl shadow-sm border border-gray-100 w-fit" aria-label="Breadcrumb">
+            <ol class="flex items-center space-x-2">
+                <li><a href="{% url 'community:community' %}" class="text-gray-500 hover:text-blue-600 transition-colors">Forums</a></li>
+                <li><span class="text-gray-300 mx-1">/</span></li>
+                <li><a href="{% url 'community:topic_detail' topic.pk %}" class="text-gray-500 hover:text-blue-600 transition-colors">{{ topic.name }}</a></li>
+                <li><span class="text-gray-300 mx-1">/</span></li>
+                <li class="text-gray-900" aria-current="page">Create Thread</li>
+            </ol>
+        </nav>
+        
+        <a href="{% url 'community:topic_detail' topic.pk %}" class="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 font-semibold py-2.5 px-5 rounded-xl shadow-sm transition-all flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Back to {{ topic.name }}
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Form Container (col 1 and 2) -->
+        <div class="lg:col-span-2 space-y-6">
+            <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden relative">
+                <div class="absolute top-0 left-0 w-2 h-full bg-blue-500"></div>
+                
+                <div class="p-6 md:p-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                        <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        Thread Details
+                    </h2>
+                    
+                    <form method="post" novalidate class="space-y-6">
+                        {% csrf_token %}
+                        
+                        <!-- Title Field -->
+                        <div>
+                            <label for="{{ form.title.id_for_label }}" class="block text-sm font-bold text-gray-700 mb-2">
+                                {{ form.title.label }} <span class="text-red-500">*</span>
+                            </label>
+                            <div class="bg-gray-50 border {% if form.title.errors %}border-red-300{% else %}border-gray-200 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200{% endif %} rounded-xl transition-all">
+                                {{ form.title }}
+                            </div>
+                            
+                            <!-- Counter and Help Text Container -->
+                            <div class="flex justify-between items-start mt-2 px-1">
+                                <div class="text-xs text-gray-500">
+                                    {% if form.title.help_text %}
+                                        {{ form.title.help_text }}
+                                    {% else %}
+                                        Make it clear and descriptive.
+                                    {% endif %}
+                                </div>
+                                <div id="title-counter" class="text-xs font-mono text-gray-400">0/100</div>
+                            </div>
+
+                            {% if form.title.errors %}
+                                <div class="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded-lg flex items-start gap-2">
+                                    <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+                                    <div>
+                                        {% for error in form.title.errors %}
+                                            <p>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Content Field -->
+                        <div>
+                            <label for="{{ form.content.id_for_label }}" class="block text-sm font-bold text-gray-700 mb-2">
+                                {{ form.content.label }} <span class="text-red-500">*</span>
+                            </label>
+                            <div class="bg-gray-50 border {% if form.content.errors %}border-red-300{% else %}border-gray-200 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200{% endif %} rounded-xl transition-all">
+                                {{ form.content }}
+                            </div>
+                            
+                            {% if form.content.help_text %}
+                                <p class="mt-2 text-xs text-gray-500 px-1">{{ form.content.help_text }}</p>
+                            {% endif %}
+
+                            {% if form.content.errors %}
+                                <div class="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded-lg flex items-start gap-2">
+                                    <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+                                    <div>
+                                        {% for error in form.content.errors %}
+                                            <p>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="pt-6 mt-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div class="text-sm text-gray-500 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Please follow community guidelines
+                            </div>
+                            
+                            <div class="flex gap-3 w-full sm:w-auto">
+                                <a href="{% url 'community:topic_detail' topic.pk %}" class="flex-1 sm:flex-none text-center bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-bold py-3 px-6 rounded-xl transition-colors shadow-sm">
+                                    Cancel
+                                </a>
+                                <button type="submit" class="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl shadow-md transition-colors border border-blue-700">
+                                    Create Thread
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Guidelines Sidebar (col 3) -->
+        <div class="lg:col-span-1 space-y-6">
+            <div class="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl shadow-sm border border-blue-100 p-6 relative overflow-hidden">
+                <!-- Background decoration -->
+                <svg class="absolute top-0 right-0 transform translate-x-1/3 -translate-y-1/3 text-blue-200 opacity-50 w-32 h-32" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
+                
+                <h3 class="font-bold text-blue-900 mb-4 flex items-center gap-2 relative z-10">
+                    <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Posting Guidelines
+                </h3>
+                
+                <ul class="space-y-4 text-sm text-blue-800 relative z-10">
+                    <li class="flex gap-3">
+                        <span class="bg-blue-200 text-blue-700 w-6 h-6 rounded-full flex items-center justify-center font-bold flex-shrink-0">1</span>
+                        <span><strong>Choose a clear title.</strong> Summarize your specific topic so members know exactly what you're discussing.</span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="bg-blue-200 text-blue-700 w-6 h-6 rounded-full flex items-center justify-center font-bold flex-shrink-0">2</span>
+                        <span><strong>Provide detail.</strong> Give the community enough context and background information to answer effectively.</span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="bg-blue-200 text-blue-700 w-6 h-6 rounded-full flex items-center justify-center font-bold flex-shrink-0">3</span>
+                        <span><strong>Search first.</strong> Check if your question has already been answered to avoid duplicate threads.</span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="bg-blue-200 text-blue-700 w-6 h-6 rounded-full flex items-center justify-center font-bold flex-shrink-0">4</span>
+                        <span><strong>Be respectful.</strong> Help us maintain a constructive and professional African data community.</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Auto-style the form fields via CSS since they are rendered via Django tags */
+form input[type="text"],
+form input[type="email"],
+form input[type="password"] {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: transparent;
+    border: none;
+    outline: none;
+    box-shadow: none;
+}
+form input:focus {
+    box-shadow: none;
+    outline: none;
+}
+
+form textarea {
+    width: 100%;
+    padding: 1rem;
+    background: transparent;
+    border: none;
+    min-height: 250px;
+    resize: vertical;
+    outline: none;
+}
+form textarea:focus {
+    box-shadow: none;
+    outline: none;
+}
+</style>
+{% endblock %}
+
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Auto-resize textarea
-    const textarea = document.querySelector('textarea[name="content"]');
-    if (textarea) {
-        textarea.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = this.scrollHeight + 'px';
-        });
-    }
     
-    // Character counter for title
-    const titleInput = document.querySelector('input[name="title"]');
+    // Title Input Styling & Counter Logic
+    // Grab the inputs by inspecting what django generally generates (id="id_title", etc.)
+    const titleInput = document.getElementById('id_title') || document.querySelector('input[name="title"]');
     if (titleInput) {
-        const maxLength = titleInput.getAttribute('maxlength');
-        if (maxLength) {
-            const counter = document.createElement('div');
-            counter.className = 'form-text text-end';
-            counter.id = 'title-counter';
-            titleInput.parentNode.appendChild(counter);
-            
+        titleInput.classList.add('w-full', 'px-4', 'py-3', 'bg-transparent', 'border-0', 'focus:ring-0', 'text-gray-900', 'font-medium');
+        
+        const maxLength = titleInput.getAttribute('maxlength') || 100;
+        const counter = document.getElementById('title-counter');
+        
+        if (counter) {
             function updateCounter() {
-                const remaining = maxLength - titleInput.value.length;
-                counter.textContent = `${titleInput.value.length}/${maxLength} characters`;
-                counter.className = remaining < 20 ? 'form-text text-end text-warning' : 'form-text text-end text-muted';
+                const len = titleInput.value.length;
+                counter.textContent = `${len}/${maxLength}`;
+                
+                if (len >= maxLength * 0.9) {
+                    counter.classList.add('text-red-500', 'font-bold');
+                    counter.classList.remove('text-gray-400');
+                } else {
+                    counter.classList.remove('text-red-500', 'font-bold');
+                    counter.classList.add('text-gray-400');
+                }
             }
-            
             titleInput.addEventListener('input', updateCounter);
-            updateCounter();
+            updateCounter(); // init
         }
+    }
+
+    // Content Textarea Styling
+    const contentTextarea = document.getElementById('id_content') || document.querySelector('textarea[name="content"]');
+    if (contentTextarea) {
+        contentTextarea.classList.add('w-full', 'p-4', 'bg-transparent', 'border-0', 'focus:ring-0', 'min-h-[250px]', 'text-gray-900');
+        
+        // Auto-resize
+        contentTextarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
     }
 });
 </script>
 {% endblock %}
-

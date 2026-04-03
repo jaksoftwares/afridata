@@ -3,226 +3,157 @@
 
 {% block title %}{{ topic.name }} - Community Forums{% endblock %}
 
-{% block extra_css %}
-<style>
-    .topic-header {
-        background: linear-gradient(135deg, {{ topic.color }}15 0%, {{ topic.color }}25 100%);
-        border-left: 4px solid {{ topic.color }};
-        border-radius: 8px;
-        padding: 2rem;
-        margin-bottom: 2rem;
-    }
-    
-    .thread-card {
-        border: 1px solid #e9ecef;
-        border-radius: 8px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-        background: white;
-        transition: all 0.3s ease;
-    }
-    
-    .thread-card:hover {
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        transform: translateY(-1px);
-    }
-    
-    .thread-pinned {
-        border-left: 4px solid #ffc107;
-        background: #fff8e1;
-    }
-    
-    .thread-locked {
-        opacity: 0.7;
-        background: #f8f9fa;
-    }
-    
-    .user-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: #007bff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: bold;
-    }
-    
-    .thread-stats {
-        font-size: 0.9rem;
-        color: #6c757d;
-    }
-    
-    .search-bar {
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-</style>
+{% block header_class %}bg-gradient-to-r from-blue-600 to-indigo-700{% endblock %}
+{% block header_content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="flex flex-col md:flex-row items-center gap-6">
+        <div class="flex-shrink-0 w-24 h-24 rounded-2xl shadow-lg flex items-center justify-center text-4xl text-white transform -rotate-3" style="background-color: {{ topic.color }};">
+            {% if topic.icon %}
+                <i class="{{ topic.icon }}"></i>
+            {% else %}
+                <i class="fas fa-comments"></i>
+            {% endif %}
+        </div>
+        <div class="flex-1 text-center md:text-left text-white">
+            <h1 class="text-4xl md:text-5xl font-bold mb-2">{{ topic.name }}</h1>
+            <p class="text-xl text-blue-100 opacity-90 max-w-2xl">{{ topic.description }}</p>
+        </div>
+        {% if user.is_authenticated %}
+        <div class="mt-6 md:mt-0 flex-shrink-0">
+            <a href="{% url 'community:create_thread' topic.pk %}" class="bg-white text-blue-600 hover:bg-gray-50 focus:ring-4 focus:ring-blue-300 font-bold rounded-xl px-6 py-3 shadow-lg transition-all inline-flex items-center gap-2 transform hover:-translate-y-1">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                New Discussion
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 -mt-6">
+    
     <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb" class="mb-3">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item">
-                <a href="{% url 'community:community' %}">Forums</a>
-            </li>
-            <li class="breadcrumb-item active">{{ topic.name }}</li>
+    <nav class="flex mb-6 text-sm font-medium bg-white px-5 py-3 rounded-xl shadow-sm border border-gray-100 w-fit" aria-label="Breadcrumb">
+        <ol class="flex items-center space-x-2">
+            <li><a href="{% url 'community:community' %}" class="text-gray-500 hover:text-blue-600 transition-colors">Forums</a></li>
+            <li><span class="text-gray-300 mx-1">/</span></li>
+            <li class="text-gray-900" aria-current="page">{{ topic.name }}</li>
         </ol>
     </nav>
 
-    <!-- Topic Header -->
-    <div class="topic-header">
-        <div class="row align-items-center">
-            <div class="col-auto">
-                <div class="topic-icon" style="background-color: {{ topic.color }}; width: 60px; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.8rem;">
-                    {% if topic.icon %}
-                        <i class="{{ topic.icon }}"></i>
-                    {% else %}
-                        
-                    {% endif %}
-                </div>
-            </div>
-            <div class="col">
-                <h1 class="mb-2">{{ topic.name }}</h1>
-                <p class="mb-0 text-muted">{{ topic.description }}</p>
-            </div>
-            <div class="col-auto">
-                {% if user.is_authenticated %}
-                    <a href="{% url 'community:create_thread' topic.pk %}" 
-                       class="btn btn-primary">
-                        New Discussion
-                    </a>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-lg-8">
-            <!-- Search and Filters -->
-            <div class="search-bar p-3 mb-4">
-                <form method="GET" class="row g-3">
-                    <div class="col-md-8">
-                        <input type="text" class="form-control" name="search" 
-                               placeholder="Search discussions in {{ topic.name }}..." 
-                               value="{{ search_query }}">
-                    </div>
-                    <div class="col-md-4">
-                        <button type="submit" class="btn btn-outline-primary w-100">
-                            <i class="fas fa-search me-2"></i>Search
-                        </button>
-                    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Main Content (Threads) -->
+        <div class="lg:col-span-2 space-y-6">
+            
+            <!-- Search Bar -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-2 pl-4 flex items-center">
+                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <form method="GET" class="w-full ml-3 flex">
+                    <input type="text" name="search" value="{{ search_query|default:'' }}" placeholder="Search discussions in {{ topic.name }}..." class="w-full border-none focus:ring-0 py-3 text-lg text-gray-700 bg-transparent placeholder-gray-400">
+                    <button type="submit" class="bg-blue-50 hover:bg-blue-100 text-blue-600 font-semibold px-6 py-2 rounded-xl transition-colors ml-2">Search</button>
                 </form>
             </div>
 
             <!-- Threads List -->
             {% if threads %}
-                {% for thread in threads %}
-                <div class="thread-card {% if thread.is_pinned %}thread-pinned{% endif %} {% if thread.is_locked %}thread-locked{% endif %}">
-                    <div class="row align-items-start">
-                        <div class="col-auto">
-                            <div class="user-avatar">
-                                {{ thread.author.get_short_name|first|upper }}
-                            </div>
-                        </div>
-                        <div class="col">
-                            <div class="d-flex align-items-center mb-2">
-                                {% if thread.is_pinned %}
-                                    
-                                {% endif %}
-                                {% if thread.is_locked %}
-                                    
-                                {% endif %}
-                                <h5 class="mb-0">
-                                    <a href="{% url 'community:thread_detail' thread.pk %}" 
-                                       class="text-decoration-none text-dark">
-                                        {{ thread.title }}
-                                    </a>
-                                </h5>
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-100">
+                    {% for thread in threads %}
+                        <div class="p-6 transition-colors hover:bg-gray-50 flex gap-4 {% if thread.is_pinned %}bg-yellow-50/30{% endif %}">
+                            <!-- Avatar Column -->
+                            <div class="flex-shrink-0">
+                                <a href="{% url 'community:user_profile' thread.author.username %}" class="block">
+                                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-sm border-2 border-white">
+                                        {{ thread.author.get_short_name|first|upper }}
+                                    </div>
+                                </a>
                             </div>
                             
-                            <p class="mb-2 text-muted">{{ thread.content|truncatechars:150 }}</p>
-                            
-                            <div class="thread-stats">
-                                <span class="me-3">
-                                    
-                                    <strong>{{ thread.author.get_short_name }}</strong>
-                                </span>
-                                <span class="me-3">
-                                    
-                                    {{ thread.created_at|timesince }} ago
-                                </span>
-                                <span class="me-3">
-                                    <i class="fas fa-eye me-1"></i>
-                                    {{ thread.views }} views
-                                </span>
-                                <span>
-                                    
-                                    {{ thread.post_count }} replies
-                                </span>
+                            <!-- Content Column -->
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1">
+                                    {% if thread.is_pinned %}
+                                        <span class="bg-yellow-100 text-yellow-800 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full flex items-center gap-1">
+                                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"></path></svg>
+                                            Pinned
+                                        </span>
+                                    {% endif %}
+                                    {% if thread.is_locked %}
+                                        <span class="bg-gray-200 text-gray-700 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full flex items-center gap-1">
+                                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>
+                                            Locked
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                
+                                <h3 class="text-xl font-bold text-gray-900 mb-2 leading-tight">
+                                    <a href="{% url 'community:thread_detail' thread.pk %}" class="hover:text-blue-600 transition-colors">{{ thread.title }}</a>
+                                </h3>
+                                
+                                <p class="text-gray-600 text-sm mb-3 line-clamp-2">
+                                    {{ thread.content|truncatechars:180 }}
+                                </p>
+                                
+                                <div class="flex flex-wrap items-center text-xs text-gray-500 font-medium gap-4">
+                                    <span class="flex items-center gap-1.5 hover:text-gray-700">
+                                        <div class="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center text-[10px] text-gray-600">{{ thread.author.get_short_name|first|upper }}</div>
+                                        <a href="{% url 'community:user_profile' thread.author.username %}">{{ thread.author.username }}</a>
+                                    </span>
+                                    <span class="flex items-center gap-1">
+                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        {{ thread.created_at|timesince }} ago
+                                    </span>
+                                    <span class="flex items-center gap-1">
+                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                        {{ thread.views|default:"0" }} views
+                                    </span>
+                                    <span class="flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-0.5 rounded-lg ml-auto">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                                        {{ thread.post_count|default:"0" }} replies
+                                    </span>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-auto text-end">
-                            {% if thread.get_latest_post %}
-                                <small class="text-muted">
-                                    Last reply:<br>
-                                    {{ thread.get_latest_post.created_at|timesince }} ago<br>
-                                    by <strong>{{ thread.get_latest_post.author.get_short_name }}</strong>
-                                </small>
-                            {% endif %}
-                        </div>
-                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
 
                 <!-- Pagination -->
                 {% if page_obj.has_other_pages %}
-                <nav aria-label="Thread pagination" class="mt-4">
-                    <ul class="pagination justify-content-center">
-                        {% if page_obj.has_previous %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}">First</a>
-                            </li>
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Previous</a>
-                            </li>
-                        {% endif %}
-
-                        <li class="page-item active">
-                            <span class="page-link">
+                    <div class="mt-8 flex justify-center">
+                        <nav aria-label="Pagination" class="inline-flex rounded-xl shadow-sm -space-x-px">
+                            {% if page_obj.has_previous %}
+                                <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}" class="px-4 py-2 border border-gray-200 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-l-xl">First</a>
+                                <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="px-4 py-2 border border-gray-200 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">Prev</a>
+                            {% endif %}
+                            
+                            <span class="px-4 py-2 border border-blue-500 bg-blue-50 text-sm font-medium text-blue-600 z-10">
                                 Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
                             </span>
-                        </li>
-
-                        {% if page_obj.has_next %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Next</a>
-                            </li>
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}">Last</a>
-                            </li>
-                        {% endif %}
-                    </ul>
-                </nav>
+                            
+                            {% if page_obj.has_next %}
+                                <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="px-4 py-2 border border-gray-200 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">Next</a>
+                                <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}" class="px-4 py-2 border border-gray-200 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-r-xl">Last</a>
+                            {% endif %}
+                        </nav>
+                    </div>
                 {% endif %}
+
             {% else %}
-                <div class="text-center py-5">
-                    
-                    <h4>No discussions found</h4>
+                <!-- Empty State -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+                    <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-5 text-gray-400">
+                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">No discussions found</h3>
                     {% if search_query %}
-                        <p class="text-muted">No discussions match your search for "{{ search_query }}"</p>
-                        <a href="{% url 'community:topic_detail' topic.pk %}" class="btn btn-outline-primary">
-                            View all discussions
-                        </a>
+                        <p class="text-gray-500 mb-6">We couldn't find anything matching "{{ search_query }}" in this topic.</p>
+                        <a href="{% url 'community:topic_detail' topic.pk %}" class="text-blue-600 font-semibold hover:text-blue-800 transition-colors">Clear search results</a>
                     {% else %}
-                        <p class="text-muted">Be the first to start a discussion in this topic!</p>
+                        <p class="text-gray-500 mb-6">It's quiet in here. Be the first to start a discussion!</p>
                         {% if user.is_authenticated %}
-                            <a href="{% url 'community:create_thread' topic.pk %}" class="btn btn-primary">
-                                Start New Discussion
+                            <a href="{% url 'community:create_thread' topic.pk %}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-colors shadow-sm inline-block">
+                                Start a Discussion
                             </a>
                         {% endif %}
                     {% endif %}
@@ -230,25 +161,53 @@
             {% endif %}
         </div>
 
-        <!-- Sidebar -->
-        <div class="col-lg-4">
-            <div class="card">
-                <div class="card-header">
-                    <h6 class="mb-0">Topic Information</h6>
+        <!-- Sidebar Information (Col 3) -->
+        <div class="lg:col-span-1 space-y-6">
+            
+            <!-- Stats Card -->
+            <div class="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-xl overflow-hidden text-white border border-gray-700">
+                <div class="p-5 border-b border-gray-700/50 bg-white/5">
+                    <h3 class="font-bold flex items-center gap-2">
+                        <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                        Topic Data
+                    </h3>
                 </div>
-                <div class="card-body">
-                    <div class="row text-center">
-                        <div class="col-6">
-                            <h4 class="text-primary mb-1">{{ topic.get_thread_count }}</h4>
-                            <small class="text-muted">Discussions</small>
+                <div class="p-6">
+                    <div class="grid grid-cols-2 gap-4 text-center">
+                        <div class="bg-black/20 rounded-xl p-4 border border-white/5 backdrop-blur-sm">
+                            <div class="text-3xl font-bold text-blue-400 mb-1">{{ topic.get_thread_count|default:"0" }}</div>
+                            <div class="text-xs text-gray-400 uppercase tracking-wide font-semibold">Discussions</div>
                         </div>
-                        <div class="col-6">
-                            <h4 class="text-success mb-1">{{ topic.get_post_count }}</h4>
-                            <small class="text-muted">Posts</small>
+                        <div class="bg-black/20 rounded-xl p-4 border border-white/5 backdrop-blur-sm">
+                            <div class="text-3xl font-bold text-teal-400 mb-1">{{ topic.get_post_count|default:"0" }}</div>
+                            <div class="text-xs text-gray-400 uppercase tracking-wide font-semibold">Total Replies</div>
                         </div>
                     </div>
                 </div>
             </div>
+            
+            <!-- Quick Tips Card -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <span class="bg-yellow-100 text-yellow-600 rounded-full w-8 h-8 flex items-center justify-center text-lg">💡</span>
+                    Pro Tips
+                </h3>
+                <ul class="text-sm text-gray-600 space-y-3">
+                    <li class="flex items-start gap-2">
+                        <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        Use descriptive titles so people know what your thread is about.
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        Search before asking to prevent duplicate threads.
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        Stay respectful. We're a professional African data community.
+                    </li>
+                </ul>
+            </div>
+            
         </div>
     </div>
 </div>
