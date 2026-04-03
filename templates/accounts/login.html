@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AfriData - Sign In</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #4f46e5 0%, #7e22ce 100%);
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: radial-gradient(circle at 15% 50%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
+                              radial-gradient(circle at 85% 30%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .glass-card {
+            background: #ffffff;
+            border: 1px solid rgba(229, 231, 235, 1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        }
+        
+        .input-focus-effect {
+            transition: all 0.2s ease;
+        }
+        
+        .input-focus-effect:focus-within {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .btn-primary {
+            background-color: #2563eb;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+            transform: translateY(-1px);
+        }
+        
+        .floating-label-group {
+            position: relative;
+        }
+        
+        .floating-label-group input {
+            padding: 1.25rem 1rem 0.5rem 1rem;
+            outline: none;
+        }
+        
+        .floating-label-group label {
+            position: absolute;
+            top: 0.35rem;
+            left: 1rem;
+            font-size: 0.75rem;
+            color: #6b7280;
+            pointer-events: none;
+            transition: all 0.2s ease;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <!-- Top Left Logo -->
+    <div class="absolute top-6 left-6 md:top-8 md:left-10 z-50">
+        <a href="/" class="hover:-translate-y-0.5 transition-all block bg-white/95 backdrop-blur-sm rounded-full px-5 py-2 shadow-xl border border-white/50">
+            <img src="/static/images/afridata-logo.svg" alt="AfriData Logo" class="h-8 md:h-10 w-auto object-contain" style="transform: scale(1.15); transform-origin: center;">
+        </a>
+    </div>
+
+    <!-- Messages Container -->
+    <div id="messages-container" class="fixed top-4 right-4 z-50 space-y-2">
+        {% if messages %}
+            {% for message in messages %}
+            <div class="p-4 rounded-lg shadow-lg max-w-sm mb-2 {% if message.tags == 'error' %}bg-red-50 text-red-700 border-l-4 border-red-500{% else %}bg-green-50 text-green-700 border-l-4 border-green-500{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Login Container -->
+    <div class="glass-card w-full max-w-md rounded-2xl overflow-hidden relative z-10">
+        
+        <!-- Header -->
+        <div class="px-8 pt-10 pb-8 text-center border-b border-gray-100">
+            <a href="/">
+                <img src="/static/images/afridata-logo.svg" alt="AfriData Logo" class="h-16 w-auto mx-auto mb-6 object-contain" style="transform: scale(1.1);">
+            </a>
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">Welcome Back</h2>
+            <p class="text-gray-500 text-sm">Sign in to your AfriData account.</p>
+        </div>
+
+        <div class="p-8">
+            <!-- Login Form -->
+            <form id="loginForm" method="POST" action="/accounts/login/" class="space-y-5">
+                {% csrf_token %}
+                <input type="hidden" name="next" id="loginNext" value="{{ request.GET.next|default:'/' }}">
+
+                <div class="floating-label-group input-focus-effect rounded-xl border border-gray-300 bg-white">
+                    <input type="email" name="email" id="loginEmail" class="w-full bg-transparent text-gray-900 rounded-xl" placeholder=" " required />
+                    <label for="loginEmail">Email Address</label>
+                </div>
+
+                <div class="floating-label-group input-focus-effect rounded-xl border border-gray-300 bg-white relative">
+                    <input type="password" name="password" id="loginPassword" class="w-full bg-transparent text-gray-900 rounded-xl pr-10" placeholder=" " required />
+                    <label for="loginPassword">Password</label>
+                    <button type="button" class="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600 focus:outline-none" onclick="togglePassword('loginPassword', 'loginPasswordEye')">
+                        <i class="fas fa-eye" id="loginPasswordEye"></i>
+                    </button>
+                </div>
+
+                <div class="flex items-center justify-between pt-2">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" name="remember_me" class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <span class="text-sm text-gray-600">Remember me</span>
+                    </label>
+                    <a href="/accounts/password-reset/" class="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="w-full btn-primary text-white py-3.5 rounded-xl font-semibold shadow-sm mt-6 flex justify-center items-center">
+                    Sign In
+                </button>
+            </form>
+            
+            <div class="mt-8 text-center text-sm text-gray-600">
+                Don't have an account? <a href="?mode=signup" class="font-bold text-blue-600 hover:text-blue-800 transition-colors">Create an account</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword(inputId, eyeId) {
+            const input = document.getElementById(inputId);
+            const eye = document.getElementById(eyeId);
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                eye.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = 'password';
+                eye.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+        
+        // Form loading state
+        document.getElementById('loginForm').addEventListener('submit', function() {
+            const btn = this.querySelector('button[type="submit"]');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Signing In...';
+            btn.style.opacity = '0.8';
+            btn.style.pointerEvents = 'none';
+        });
+
+        // Hide messages after 5 seconds
+        setTimeout(() => {
+            const container = document.getElementById('messages-container');
+            if(container) {
+                container.style.opacity = '0';
+                container.style.transition = 'opacity 0.5s ease';
+                setTimeout(() => container.remove(), 500);
+            }
+        }, 5000);
+    </script>
+</body>
+</html>

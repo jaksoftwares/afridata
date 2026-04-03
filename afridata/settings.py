@@ -87,7 +87,7 @@ ROOT_URLCONF = 'afridata.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -111,18 +111,26 @@ if os.environ.get('RENDER'):
         'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
     }
 else:
-    # Local development database
+    # Local development database (SQLite) - MySQL commented out for local dev
+    # DATABASES = {
+    #     'default': {
+    #         'ENGINE': 'django.db.backends.mysql',
+    #         'NAME':env('DB_NAME', default='afridata'),  # your local db name
+    #         'USER':env('DB_USER'),
+    #         'PASSWORD':env('DB_PASSWORD'),
+    #         'HOST':env('DB_HOST', default='localhost'),  # your local db host
+    #         'PORT':env('DB_PORT', default=3306),
+    #         'OPTIONS':{
+    #             'charset':'utf8mb4',
+    #         },
+    #     }
+    # }
+    
+    # SQLite for local development
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME':env('DB_NAME', default='afridata'),  # your local db name
-            'USER':env('DB_USER'),
-            'PASSWORD':env('DB_PASSWORD'),
-            'HOST':env('DB_HOST', default='localhost'),  # your local db host
-            'PORT':env('DB_PORT', default=3306),
-            'OPTIONS':{
-                'charset':'utf8mb4',
-                },
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
 
@@ -162,6 +170,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  
 
 

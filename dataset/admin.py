@@ -84,7 +84,7 @@ class DatasetAdmin(admin.ModelAdmin):
     
     def rating_display(self, obj):
         """Display rating with stars"""
-        stars = '★' * int(obj.rating) + '☆' * (5 - int(obj.rating))
+        stars = '' * int(obj.rating) + '' * (5 - int(obj.rating))
         return format_html(
             '<span title="{}/5">{}</span>',
             obj.rating,
@@ -119,7 +119,7 @@ class DatasetAdmin(admin.ModelAdmin):
         """Display download link for the file"""
         if obj.file:
             return format_html(
-                '<a href="{}" target="_blank">📁 Download</a>',
+                '<a href="{}" target="_blank"> Download</a>',
                 obj.file.url
             )
         return "No file"
@@ -220,7 +220,7 @@ class CommentAdmin(admin.ModelAdmin):
         """Display upvotes with thumbs up icon"""
         if obj.upvotes > 0:
             return format_html(
-                '<span style="color: green;">👍 {}</span>',
+                '<span style="color: green;"> {}</span>',
                 obj.upvotes
             )
         return "0"

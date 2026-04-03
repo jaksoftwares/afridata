@@ -46,6 +46,17 @@ class Dataset(models.Model):
     has_documentation = models.BooleanField(default=False)
     metadata_quality_score = models.PositiveIntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])
     
+    # Detailed Metadata Fields
+    original_author = models.CharField(max_length=255, blank=True, null=True, help_text="The original person or organization who created the dataset")
+    data_source = models.CharField(max_length=255, blank=True, null=True, help_text="Where the data was obtained from")
+    collection_date = models.DateField(blank=True, null=True, help_text="When the data was collected")
+    language = models.CharField(max_length=100, default='English', blank=True, null=True)
+    dataset_license = models.CharField(max_length=255, default='Open Database License (ODbL)', blank=True, null=True)
+    update_frequency = models.CharField(max_length=100, blank=True, null=True, help_text="e.g., Daily, Monthly, One-time")
+    geographic_coverage = models.CharField(max_length=255, blank=True, null=True, help_text="Region or country covered by data")
+    temporal_coverage = models.CharField(max_length=255, blank=True, null=True, help_text="Time period covered (e.g., 2020-2023)")
+    usage_notes = models.TextField(blank=True, null=True, help_text="Instructions or notes on how to use the dataset")
+    
     def __str__(self):
         return self.title
     

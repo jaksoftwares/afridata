@@ -19,7 +19,7 @@ DATASET_TYPE_CHOICES = [
 class DatasetUploadForm(forms.ModelForm):
     class Meta:
         model = Dataset
-        fields = ['title', 'file', 'dataset_type', 'bio', 'topics']
+        fields = ['title', 'file', 'dataset_type', 'bio', 'topics', 'original_author', 'data_source', 'collection_date', 'language', 'dataset_license', 'update_frequency', 'geographic_coverage', 'temporal_coverage', 'usage_notes']
         widgets = {
             'title': forms.TextInput(attrs={
                 'class': 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
@@ -46,13 +46,54 @@ class DatasetUploadForm(forms.ModelForm):
                 'placeholder': 'machine learning, data science, statistics, finance',
                 'maxlength': '500'
             }),
+            'original_author': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                'placeholder': 'The person or organization who created it'
+            }),
+            'data_source': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                'placeholder': 'Source URL or organization'
+            }),
+            'collection_date': forms.DateInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                'type': 'date'
+            }),
+            'language': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                'placeholder': 'e.g., English, Swahili'
+            }),
+            'dataset_license': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                'placeholder': 'e.g., CC-BY-SA, MIT'
+            }),
+            'update_frequency': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                'placeholder': 'e.g., Monthly, Daily, One-time'
+            }),
+            'geographic_coverage': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                'placeholder': 'e.g., East Africa, Global'
+            }),
+            'temporal_coverage': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                'placeholder': 'e.g., 2015-2022'
+            }),
+            'usage_notes': forms.Textarea(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-vertical',
+                'rows': 3,
+                'placeholder': 'Any specific instructions for users...'
+            }),
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Make all fields required
-        for field in self.fields:
-            self.fields[field].required = True
+        # Make core fields required, metadata fields optional
+        core_fields = ['title', 'file', 'dataset_type', 'bio', 'topics']
+        for field_name in self.fields:
+            if field_name in core_fields:
+                self.fields[field_name].required = True
+            else:
+                self.fields[field_name].required = False
     
     def clean_title(self):
         title = self.cleaned_data.get('title', '').strip()

@@ -1,0 +1,479 @@
+{% extends 'admin_dashboard/base.html' %}
+
+{% block title %}System Settings - Admin Dashboard{% endblock %}
+{% block page_title %}System Settings{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'admin_dashboard:dashboard_home' %}">Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page">System Settings</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- Current Settings -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Current Settings</h5>
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addSettingModal">
+                    Add Setting
+                </button>
+            </div>
+            <div class="card-body">
+                {% if settings %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Key</th>
+                                    <th>Value</th>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                    <th>Updated By</th>
+                                    <th>Updated At</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for setting in settings %}
+                                <tr>
+                                    <td>
+                                        <code>{{ setting.key }}</code>
+                                    </td>
+                                    <td>
+                                        {% if setting.setting_type == 'boolean' %}
+                                            {% if setting.value == 'true' %}
+                                                <span class="badge bg-success">True</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">False</span>
+                                            {% endif %}
+                                        {% elif setting.setting_type == 'json' %}
+                                            <code class="small">{{ setting.value|truncatechars:50 }}</code>
+                                        {% else %}
+                                            {{ setting.value|truncatechars:50 }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ setting.get_setting_type_display }}</span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ setting.description|default:"No description" }}</small>
+                                    </td>
+                                    <td>
+                                        <small>{{ setting.updated_by.email|default:"System" }}</small>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ setting.updated_at|timesince }} ago</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary" 
+                                                    onclick="editSetting('{{ setting.key }}', '{{ setting.value }}', '{{ setting.setting_type }}', '{{ setting.description }}')"
+                                                    data-bs-toggle="modal" data-bs-target="#editSettingModal">
+                                                
+                                            </button>
+                                            <button class="btn btn-outline-danger" 
+                                                    onclick="deleteSetting('{{ setting.key }}')">
+                                                
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        
+                        <h5 class="text-muted">No Settings Found</h5>
+                        <p class="text-muted">Add your first system setting to get started.</p>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSettingModal">
+                            Add Setting
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Predefined Settings Categories -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Quick Setup - Common Settings</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>General Settings</h6>
+                        <div class="list-group list-group-flush">
+                            <button class="list-group-item list-group-item-action" 
+                                    onclick="quickAddSetting('site_name', 'string', 'Name of the website')">
+                                Site Name
+                            </button>
+                            <button class="list-group-item list-group-item-action" 
+                                    onclick="quickAddSetting('site_description', 'text', 'Description of the website')">
+                                Site Description
+                            </button>
+                            <button class="list-group-item list-group-item-action" 
+                                    onclick="quickAddSetting('items_per_page', 'integer', 'Number of items to display per page')">
+                                Items Per Page
+                            </button>
+                            <button class="list-group-item list-group-item-action" 
+                                    onclick="quickAddSetting('maintenance_mode', 'boolean', 'Enable maintenance mode')">
+                                Maintenance Mode
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Security Settings</h6>
+                        <div class="list-group list-group-flush">
+                            <button class="list-group-item list-group-item-action" 
+                                    onclick="quickAddSetting('max_login_attempts', 'integer', 'Maximum login attempts before lockout')">
+                                Max Login Attempts
+                            </button>
+                            <button class="list-group-item list-group-item-action" 
+                                    onclick="quickAddSetting('session_timeout', 'integer', 'Session timeout in hours')">
+                                Session Timeout
+                            </button>
+                            <button class="list-group-item list-group-item-action" 
+                                    onclick="quickAddSetting('require_email_verification', 'boolean', 'Require email verification for new users')">
+                                Email Verification
+                            </button>
+                            <button class="list-group-item list-group-item-action" 
+                                    onclick="quickAddSetting('api_rate_limit', 'integer', 'API requests per hour limit')">
+                                API Rate Limit
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Settings Info & Actions -->
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Settings Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    
+                    <strong>Note:</strong> Settings changes take effect immediately. Some changes may require application restart.
+                </div>
+                
+                <div class="alert alert-warning">
+                    
+                    <strong>Caution:</strong> Incorrect settings may affect system functionality.
+                </div>
+
+                <div class="card border-0 bg-light">
+                    <div class="card-body">
+                        <h6>Setting Types:</h6>
+                        <ul class="list-unstyled small">
+                            <li><span class="badge bg-info me-2">String</span>Text value</li>
+                            <li><span class="badge bg-info me-2">Integer</span>Numeric value</li>
+                            <li><span class="badge bg-info me-2">Float</span>Decimal value</li>
+                            <li><span class="badge bg-info me-2">Boolean</span>True/False</li>
+                            <li><span class="badge bg-info me-2">Text</span>Long text</li>
+                            <li><span class="badge bg-info me-2">JSON</span>JSON object</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary" onclick="exportSettings()">
+                        Export Settings
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="importSettings()">
+                        Import Settings
+                    </button>
+                    <button class="btn btn-outline-warning" onclick="resetToDefaults()">
+                        Reset to Defaults
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Statistics</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="h4 mb-0">{{ settings|length }}</div>
+                        <small class="text-muted">Total Settings</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="h4 mb-0">{{ settings|length }}</div>
+                        <small class="text-muted">Active Settings</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Setting Modal -->
+<div class="modal fade" id="addSettingModal" tabindex="-1" aria-labelledby="addSettingModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addSettingModalLabel">Add New Setting</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'admin_dashboard:system_settings' %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="add_key" class="form-label">Setting Key</label>
+                        <input type="text" class="form-control" id="add_key" name="key" required>
+                        <div class="form-text">Use lowercase with underscores (e.g., site_name)</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="add_setting_type" class="form-label">Setting Type</label>
+                        <select class="form-select" id="add_setting_type" name="setting_type" required>
+                            {% for type_key, type_label in setting_types %}
+                                <option value="{{ type_key }}">{{ type_label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="add_value" class="form-label">Value</label>
+                        <textarea class="form-control" id="add_value" name="value" rows="3" required></textarea>
+                        <div class="form-text">Enter the setting value. For boolean, use 'true' or 'false'.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="add_description" class="form-label">Description</label>
+                        <input type="text" class="form-control" id="add_description" name="description">
+                        <div class="form-text">Optional description of what this setting controls</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Setting</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Setting Modal -->
+<div class="modal fade" id="editSettingModal" tabindex="-1" aria-labelledby="editSettingModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editSettingModalLabel">Edit Setting</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'admin_dashboard:system_settings' %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="edit_key" class="form-label">Setting Key</label>
+                        <input type="text" class="form-control" id="edit_key" name="key" readonly>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit_setting_type" class="form-label">Setting Type</label>
+                        <select class="form-select" id="edit_setting_type" name="setting_type" required>
+                            {% for type_key, type_label in setting_types %}
+                                <option value="{{ type_key }}">{{ type_label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit_value" class="form-label">Value</label>
+                        <textarea class="form-control" id="edit_value" name="value" rows="3" required></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit_description" class="form-label">Description</label>
+                        <input type="text" class="form-control" id="edit_description" name="description">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">Update Setting</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Import Settings Modal -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importModalLabel">Import Settings</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'admin_dashboard:system_settings' %}" enctype="multipart/form-data">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="import">
+                    <div class="mb-3">
+                        <label for="settings_file" class="form-label">Select Settings File</label>
+                        <input type="file" class="form-control" id="settings_file" name="settings_file" accept=".json" required>
+                        <div class="form-text">Upload a JSON file with settings configuration.</div>
+                    </div>
+                    <div class="alert alert-warning">
+                        
+                        This will override existing settings with the same keys.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Import Settings</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function editSetting(key, value, type, description) {
+    document.getElementById('edit_key').value = key;
+    document.getElementById('edit_value').value = value;
+    document.getElementById('edit_setting_type').value = type;
+    document.getElementById('edit_description').value = description || '';
+}
+
+function quickAddSetting(key, type, description) {
+    document.getElementById('add_key').value = key;
+    document.getElementById('add_setting_type').value = type;
+    document.getElementById('add_description').value = description;
+    
+    // Set default values based on type
+    let defaultValue = '';
+    switch(type) {
+        case 'boolean':
+            defaultValue = 'false';
+            break;
+        case 'integer':
+            defaultValue = '0';
+            break;
+        case 'float':
+            defaultValue = '0.0';
+            break;
+        case 'json':
+            defaultValue = '{}';
+            break;
+        default:
+            defaultValue = '';
+    }
+    document.getElementById('add_value').value = defaultValue;
+    
+    new bootstrap.Modal(document.getElementById('addSettingModal')).show();
+}
+
+function deleteSetting(key) {
+    if (confirm(`Are you sure you want to delete the setting "${key}"? This action cannot be undone.`)) {
+        // Create a form to submit the delete request
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{% url "admin_dashboard:system_settings" %}';
+        
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        form.innerHTML = `
+            <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="key" value="${key}">
+        `;
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function exportSettings() {
+    const settings = {};
+    {% for setting in settings %}
+        settings['{{ setting.key }}'] = {
+            value: '{{ setting.value|escapejs }}',
+            type: '{{ setting.setting_type }}',
+            description: '{{ setting.description|escapejs }}'
+        };
+    {% endfor %}
+    
+    const exportData = {
+        exported_at: new Date().toISOString(),
+        settings: settings
+    };
+    
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], {type: 'application/json'});
+    
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(dataBlob);
+    link.download = 'system_settings.json';
+    link.click();
+}
+
+function importSettings() {
+    new bootstrap.Modal(document.getElementById('importModal')).show();
+}
+
+function resetToDefaults() {
+    if (confirm('Are you sure you want to reset all settings? This will delete all current settings. This action cannot be undone.')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{% url "admin_dashboard:system_settings" %}';
+        
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        form.innerHTML = `
+            <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+            <input type="hidden" name="action" value="reset">
+        `;
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Form submission loading states
+document.addEventListener('DOMContentLoaded', function() {
+    const forms = document.querySelectorAll('form');
+    forms.forEach(form => {
+        form.addEventListener('submit', function() {
+            const btn = form.querySelector('button[type="submit"]');
+            if (btn) {
+                const originalText = btn.innerHTML;
+                btn.innerHTML = 'Processing...';
+                btn.disabled = true;
+            }
+        });
+    });
+    
+    // Auto-resize textarea based on content
+    const textareas = document.querySelectorAll('textarea');
+    textareas.forEach(textarea => {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+    });
+});
+</script>
+{% endblock %}

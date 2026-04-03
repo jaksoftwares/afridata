@@ -201,13 +201,13 @@ class ThreadAdmin(admin.ModelAdmin):
         """Display thread status with icons"""
         status = []
         if obj.is_pinned:
-            status.append('<span style="color: orange;" title="Pinned">📌</span>')
+            status.append('<span style="color: orange;" title="Pinned"></span>')
         if obj.is_locked:
-            status.append('<span style="color: red;" title="Locked">🔒</span>')
+            status.append('<span style="color: red;" title="Locked"></span>')
         if not obj.is_active:
-            status.append('<span style="color: gray;" title="Inactive">❌</span>')
+            status.append('<span style="color: gray;" title="Inactive"></span>')
         if not status:
-            status.append('<span style="color: green;" title="Active">✅</span>')
+            status.append('<span style="color: green;" title="Active"></span>')
         return format_html(' '.join(status))
     status_display.short_description = 'Status'
     
@@ -310,11 +310,11 @@ class PostAdmin(admin.ModelAdmin):
         score = upvotes - downvotes
         
         if score > 0:
-            return format_html('<span style="color: green;">+{} (👍{} 👎{})</span>', score, upvotes, downvotes)
+            return format_html('<span style="color: green;">+{} ({} {})</span>', score, upvotes, downvotes)
         elif score < 0:
-            return format_html('<span style="color: red;">{} (👍{} 👎{})</span>', score, upvotes, downvotes)
+            return format_html('<span style="color: red;">{} ({} {})</span>', score, upvotes, downvotes)
         else:
-            return format_html('<span style="color: gray;">0 (👍{} 👎{})</span>', upvotes, downvotes)
+            return format_html('<span style="color: gray;">0 ({} {})</span>', upvotes, downvotes)
     vote_score_display.short_description = 'Vote Score'
     
     actions = ['activate_posts', 'deactivate_posts']
@@ -361,9 +361,9 @@ class PostVoteAdmin(admin.ModelAdmin):
     def vote_display(self, obj):
         """Display vote with visual indicator"""
         if obj.vote == 1:
-            return format_html('<span style="color: green;">👍 Upvote</span>')
+            return format_html('<span style="color: green;"> Upvote</span>')
         else:
-            return format_html('<span style="color: red;">👎 Downvote</span>')
+            return format_html('<span style="color: red;"> Downvote</span>')
     vote_display.short_description = 'Vote'
     vote_display.admin_order_field = 'vote'
     
@@ -424,13 +424,13 @@ class UserActivityAdmin(admin.ModelAdmin):
         """Calculate and display activity level"""
         total_activity = obj.post_count + obj.thread_count
         if total_activity > 100:
-            return format_html('<span style="color: gold;">🌟 Very Active</span>')
+            return format_html('<span style="color: gold;"> Very Active</span>')
         elif total_activity > 50:
-            return format_html('<span style="color: green;">🔥 Active</span>')
+            return format_html('<span style="color: green;"> Active</span>')
         elif total_activity > 10:
-            return format_html('<span style="color: blue;">📝 Moderate</span>')
+            return format_html('<span style="color: blue;"> Moderate</span>')
         else:
-            return format_html('<span style="color: gray;">😴 Low</span>')
+            return format_html('<span style="color: gray;"> Low</span>')
     activity_level.short_description = 'Activity Level'
     
     actions = ['reset_reputation', 'update_statistics']

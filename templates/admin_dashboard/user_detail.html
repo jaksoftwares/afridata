@@ -1,0 +1,1051 @@
+{% extends 'admin_dashboard/base.html' %}
+
+{% block title %}{{ user_obj.full_name|default:user_obj.username }} - User Details{% endblock %}
+{% block page_title %}User Details{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'admin_dashboard:dashboard_home' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'admin_dashboard:user_management' %}">Users</a></li>
+                <li class="breadcrumb-item active">{{ user_obj.full_name|default:user_obj.username }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <!-- User Profile Card -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="mb-4">
+                    {% if user_obj.profile_picture %}
+                        <img src="{{ user_obj.profile_picture.url }}" 
+                             class="rounded-circle mb-3" width="120" height="120" alt="Profile Picture">
+                    {% else %}
+                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" 
+                             style="width: 120px; height: 120px;">
+                            <span class="text-white fw-bold fs-1">
+                                {{ user_obj.full_name|default:user_obj.username|first|upper }}
+                            </span>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <h4 class="mb-1">{{ user_obj.full_name|default:user_obj.username }}</h4>
+                <p class="text-muted mb-3">@{{ user_obj.username }}</p>
+                
+                <div class="d-flex justify-content-center gap-2 mb-4">
+                    {% if user_obj.is_active %}
+                        <span class="badge bg-success">Active</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Inactive</span>
+                    {% endif %}
+                    {% if user_obj.is_verified %}
+                        <span class="badge bg-info">Verified</span>
+                    {% endif %}
+                    {% if user_obj.is_superuser %}
+                        <span class="badge bg-warning">Admin</span>
+                    {% endif %}
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editUserModal">
+                         Edit User
+                    </button>
+                    <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#tokenAdjustmentModal">
+                         Adjust Tokens
+                    </button>
+                    <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#moderationModal">
+                         Moderation Action
+                    </button>
+                    <form method="post" action="{% url 'admin_dashboard:toggle_user_status' user_obj.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn {% if user_obj.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %} w-100"
+                                onclick="return confirm('Are you sure?')">
+                            {% if user_obj.is_active %}
+                                 Deactivate User
+                            {% else %}
+                                 Activate User
+                            {% endif %}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Stats -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">User Statistics</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <h4 class="text-primary">{{ user_datasets.count }}</h4>
+                            <p class="text-muted mb-0">Datasets</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-success">{{ user_api_keys.count }}</h4>
+                        <p class="text-muted mb-0">API Keys</p>
+                    </div>
+                </div>
+                <hr>
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <h4 class="text-info">{{ user_threads.count }}</h4>
+                            <p class="text-muted mb-0">Threads</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-warning">{{ user_posts.count }}</h4>
+                        <p class="text-muted mb-0">Posts</p>
+                    </div>
+                </div>
+                <hr>
+                <div class="text-center">
+                    <h4 class="{% if total_token_adjustments >= 0 %}text-success{% else %}text-danger{% endif %}">
+                        {% if total_token_adjustments >= 0 %}+{% endif %}{{ total_token_adjustments }}
+                    </h4>
+                    <p class="text-muted mb-0">Total Token Adjustments</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Details and Activity -->
+    <div class="col-lg-8">
+        <!-- User Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">User Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th>Email:</th>
+                                <td>{{ user_obj.email }}</td>
+                            </tr>
+                            <tr>
+                                <th>Username:</th>
+                                <td>{{ user_obj.username }}</td>
+                            </tr>
+                            <tr>
+                                <th>Full Name:</th>
+                                <td>{{ user_obj.full_name|default:"Not provided" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Date Joined:</th>
+                                <td>{{ user_obj.created_at|date:"F d, Y g:i A" }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th>Last Login:</th>
+                                <td>
+                                    {% if user_obj.last_login %}
+                                        {{ user_obj.last_login|date:"F d, Y g:i A" }}
+                                    {% else %}
+                                        Never
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Account Status:</th>
+                                <td>
+                                    {% if user_obj.is_active %}
+                                        <span class="text-success">Active</span>
+                                    {% else %}
+                                        <span class="text-danger">Inactive</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Email Verified:</th>
+                                <td>
+                                    {% if user_obj.is_verified %}
+                                        <span class="text-success">Yes</span>
+                                    {% else %}
+                                        <span class="text-warning">No</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Admin Access:</th>
+                                <td>
+                                    {% if user_obj.is_superuser %}
+                                        <span class="text-warning">Yes</span>
+                                    {% else %}
+                                        <span class="text-muted">No</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs for User Activity -->
+        <div class="card">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#datasets" role="tab">
+                            Datasets ({{ user_datasets.count }})
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#forum" role="tab">
+                            Forum Activity
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#api" role="tab">
+                            API Keys ({{ user_api_keys.count }})
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#tokens" role="tab">
+                            Token History ({{ token_adjustments.count }})
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#moderation" role="tab">
+                            Moderation ({{ moderation_actions.count }})
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#login" role="tab">
+                            Login History
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#admin-logs" role="tab">
+                            Admin Logs ({{ admin_logs.count }})
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content">
+                    <!-- Datasets Tab -->
+                    <div class="tab-pane fade show active" id="datasets" role="tabpanel">
+                        {% if user_datasets %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Title</th>
+                                            <th>Type</th>
+                                            <th>Rating</th>
+                                            <th>Downloads</th>
+                                            <th>Created</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for dataset in user_datasets %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ dataset.title }}</strong>
+                                                {% if dataset.bio %}
+                                                    <br><small class="text-muted">{{ dataset.bio|truncatewords:10 }}</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-secondary">{{ dataset.get_dataset_type_display }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="text-warning">
+                                                     {{ dataset.rating|floatformat:1 }}
+                                                </span>
+                                            </td>
+                                            <td>{{ dataset.downloads|default:0 }}</td>
+                                            <td>{{ dataset.created_at|date:"M d, Y" }}</td>
+                                            <td>
+                                                <a href="#" class="btn btn-sm btn-outline-primary">View</a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                
+                                <p class="text-muted">No datasets found</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Forum Activity Tab -->
+                    <div class="tab-pane fade" id="forum" role="tabpanel">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="mb-3">Recent Threads ({{ user_threads.count }})</h6>
+                                {% if user_threads %}
+                                    <div class="list-group">
+                                        {% for thread in user_threads|slice:":5" %}
+                                        <div class="list-group-item">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1">{{ thread.title }}</h6>
+                                                <small>{{ thread.created_at|timesince }} ago</small>
+                                            </div>
+                                            <p class="mb-1">{{ thread.content|truncatewords:15 }}</p>
+                                            <small class="text-muted">{{ thread.topic.name }}</small>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <p class="text-muted">No threads created</p>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="mb-3">Recent Posts ({{ user_posts.count }})</h6>
+                                {% if user_posts %}
+                                    <div class="list-group">
+                                        {% for post in user_posts|slice:":5" %}
+                                        <div class="list-group-item">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1">{{ post.thread.title }}</h6>
+                                                <small>{{ post.created_at|timesince }} ago</small>
+                                            </div>
+                                            <p class="mb-1">{{ post.content|truncatewords:15 }}</p>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <p class="text-muted">No posts created</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- API Keys Tab -->
+                    <div class="tab-pane fade" id="api" role="tabpanel">
+                        {% if user_api_keys %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Key</th>
+                                            <th>Status</th>
+                                            <th>Created</th>
+                                            <th>Last Used</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for api_key in user_api_keys %}
+                                        <tr>
+                                            <td>{{ api_key.name|default:"Unnamed" }}</td>
+                                            <td>
+                                                <code class="small">{{ api_key.key|slice:":8" }}...</code>
+                                            </td>
+                                            <td>
+                                                {% if api_key.is_active %}
+                                                    <span class="badge bg-success">Active</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Inactive</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ api_key.created_at|date:"M d, Y" }}</td>
+                                            <td>
+                                                {% if api_key.last_used %}
+                                                    {{ api_key.last_used|timesince }} ago
+                                                {% else %}
+                                                    Never
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-danger" 
+                                                        onclick="revokeApiKey({{ api_key.id }})">
+                                                    Revoke
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                
+                                <p class="text-muted">No API keys found</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Token History Tab -->
+                    <div class="tab-pane fade" id="tokens" role="tabpanel">
+                        {% if token_adjustments %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Amount</th>
+                                            <th>Reason</th>
+                                            <th>Admin</th>
+                                            <th>Date</th>
+                                            <th>Notes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for adjustment in token_adjustments %}
+                                        <tr>
+                                            <td>
+                                                <span class="{% if adjustment.amount >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
+                                                    {% if adjustment.amount >= 0 %}+{% endif %}{{ adjustment.amount }}
+                                                </span>
+                                            </td>
+                                            <td>{{ adjustment.reason|default:"No reason provided" }}</td>
+                                            <td>{{ adjustment.admin.username }}</td>
+                                            <td>{{ adjustment.created_at|date:"M d, Y g:i A" }}</td>
+                                            <td>
+                                                {% if adjustment.notes %}
+                                                    <small class="text-muted">{{ adjustment.notes|truncatewords:10 }}</small>
+                                                {% else %}
+                                                    <small class="text-muted">-</small>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                
+                                <p class="text-muted">No token adjustments found</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Moderation Tab -->
+                    <div class="tab-pane fade" id="moderation" role="tabpanel">
+                        {% if moderation_actions %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Action</th>
+                                            <th>Reason</th>
+                                            <th>Duration</th>
+                                            <th>Moderator</th>
+                                            <th>Date</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for action in moderation_actions %}
+                                        <tr>
+                                            <td>
+                                                <span class="badge 
+                                                    {% if action.action_type == 'warn' %}bg-warning
+                                                    {% elif action.action_type == 'suspend' %}bg-danger
+                                                    {% elif action.action_type == 'ban' %}bg-dark
+                                                    {% else %}bg-secondary{% endif %}">
+                                                    {{ action.get_action_type_display }}
+                                                </span>
+                                            </td>
+                                            <td>{{ action.reason|truncatewords:8 }}</td>
+                                            <td>
+                                                {% if action.duration %}
+                                                    {{ action.duration }} days
+                                                {% else %}
+                                                    Permanent
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ action.moderator.username }}</td>
+                                            <td>{{ action.created_at|date:"M d, Y" }}</td>
+                                            <td>
+                                                {% if action.is_active %}
+                                                    <span class="badge bg-danger">Active</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">Resolved</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                
+                                <p class="text-muted">No moderation actions found</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Login History Tab -->
+                    <div class="tab-pane fade" id="login" role="tabpanel">
+                        {% if login_attempts %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>IP Address</th>
+                                            <th>Status</th>
+                                            <th>User Agent</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for attempt in login_attempts %}
+                                        <tr>
+                                            <td>{{ attempt.timestamp|date:"M d, Y g:i A" }}</td>
+                                            <td><code>{{ attempt.ip_address }}</code></td>
+                                            <td>
+                                                {% if attempt.success %}
+                                                    <span class="badge bg-success">Success</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Failed</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="small">{{ attempt.user_agent|truncatechars:50 }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                
+                                <p class="text-muted">No login attempts found</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Admin Logs Tab -->
+                    <div class="tab-pane fade" id="admin-logs" role="tabpanel">
+                        {% if admin_logs %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Action</th>
+                                            <th>Admin</th>
+                                            <th>Description</th>
+                                            <th>Date</th>
+                                            <th>IP Address</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for log in admin_logs %}
+                                        <tr>
+                                            <td>
+                                                <span class="badge bg-info">{{ log.action }}</span>
+                                            </td>
+                                            <td>{{ log.admin.username }}</td>
+                                            <td>{{ log.description|truncatewords:10 }}</td>
+                                            <td>{{ log.timestamp|date:"M d, Y g:i A" }}</td>
+                                            <td><code class="small">{{ log.ip_address }}</code></td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                
+                                <p class="text-muted">No admin logs found</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'admin_dashboard:user_detail' user_obj.id %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-control" name="full_name" 
+                               value="{{ user_obj.full_name|default:'' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="email" 
+                               value="{{ user_obj.email }}" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="is_active" 
+                                       {% if user_obj.is_active %}checked{% endif %}>
+                                <label class="form-check-label">Active</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="is_verified" 
+                                       {% if user_obj.is_verified %}checked{% endif %}>
+                                <label class="form-check-label">Verified</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Token Adjustment Modal -->
+<div class="modal fade" id="tokenAdjustmentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Adjust User Tokens</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'admin_dashboard:adjust_user_tokens' user_obj.id %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Token Amount</label>
+                        <input type="number" class="form-control" name="amount" 
+                               placeholder="Enter positive or negative amount" required>
+                        <div class="form-text">Use positive numbers to add tokens, negative to subtract</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reason</label>
+                        <select class="form-select" name="reason" required>
+                            <option value="">Select a reason</option>
+                            <option value="bonus">Bonus/Reward</option>
+                            <option value="penalty">Penalty/Violation</option>
+                            <option value="refund">Refund</option>
+                            <option value="correction">Correction</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes (Optional)</label>
+                        <textarea class="form-control" name="notes" rows="3" 
+                                  placeholder="Additional details about this adjustment"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Adjust Tokens</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Moderation Action Modal -->
+<div class="modal fade" id="moderationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Moderation Action</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'admin_dashboard:moderate_user' user_obj.id %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Action Type</label>
+                        <select class="form-select" name="action_type" required>
+                            <option value="">Select action type</option>
+                            <option value="warn">Warning</option>
+                            <option value="suspend">Temporary Suspension</option>
+                            <option value="ban">Permanent Ban</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reason</label>
+                        <textarea class="form-control" name="reason" rows="3" 
+                                  placeholder="Explain the reason for this action" required></textarea>
+                    </div>
+                    <div class="mb-3" id="durationField" style="display: none;">
+                        <label class="form-label">Duration (Days)</label>
+                        <input type="number" class="form-control" name="duration" 
+                               placeholder="Leave empty for permanent action">
+                        <div class="form-text">Only applicable for suspensions</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Internal Notes (Optional)</label>
+                        <textarea class="form-control" name="internal_notes" rows="2" 
+                                  placeholder="Internal notes for admin reference"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">Apply Action</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function revokeApiKey(keyId) {
+    if (confirm('Are you sure you want to revoke this API key?')) {
+        // Add AJAX call to revoke API key
+        fetch(`/admin/api/keys/${keyId}/revoke/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error revoking API key');
+            }
+        });
+    }
+}
+
+// Show/hide duration field based on action type
+document.addEventListener('DOMContentLoaded', function() {
+    const actionTypeSelect = document.querySelector('select[name="action_type"]');
+    const durationField = document.getElementById('durationField');
+    
+    if (actionTypeSelect) {
+        actionTypeSelect.addEventListener('change', function() {
+            if (this.value === 'suspend') {
+                durationField.style.display = 'block';
+            } else {
+                durationField.style.display = 'none';
+            }
+        });
+    }
+    
+    // Auto-refresh token adjustment total when modal is opened
+    const tokenModal = document.getElementById('tokenAdjustmentModal');
+    if (tokenModal) {
+        tokenModal.addEventListener('show.bs.modal', function() {
+            // You can add AJAX call here to get current token balance if needed
+        });
+    }
+    
+    // Confirmation for moderation actions
+    const moderationForm = document.querySelector('#moderationModal form');
+    if (moderationForm) {
+        moderationForm.addEventListener('submit', function(e) {
+            const actionType = document.querySelector('select[name="action_type"]').value;
+            const actionNames = {
+                'warn': 'warning',
+                'suspend': 'suspension', 
+                'ban': 'ban'
+            };
+            
+            if (!confirm(`Are you sure you want to apply this ${actionNames[actionType]} to this user?`)) {
+                e.preventDefault();
+            }
+        });
+    }
+    
+    // Confirmation for token adjustments
+    const tokenForm = document.querySelector('#tokenAdjustmentModal form');
+    if (tokenForm) {
+        tokenForm.addEventListener('submit', function(e) {
+            const amount = document.querySelector('input[name="amount"]').value;
+            const action = amount >= 0 ? 'add' : 'subtract';
+            const absAmount = Math.abs(amount);
+            
+            if (!confirm(`Are you sure you want to ${action} ${absAmount} tokens for this user?`)) {
+                e.preventDefault();
+            }
+        });
+    }
+});
+
+// Utility function to format timestamps
+function formatTimeAgo(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) {
+        return '1 day ago';
+    } else if (diffDays < 7) {
+        return `${diffDays} days ago`;
+    } else if (diffDays < 30) {
+        const weeks = Math.floor(diffDays / 7);
+        return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
+    } else {
+        const months = Math.floor(diffDays / 30);
+        return `${months} month${months > 1 ? 's' : ''} ago`;
+    }
+}
+
+// Enhanced table interactions
+document.addEventListener('DOMContentLoaded', function() {
+    // Add tooltips to truncated content
+    const truncatedElements = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    truncatedElements.forEach(function(element) {
+        new bootstrap.Tooltip(element);
+    });
+    
+    // Add click-to-expand for long content
+    const expandableContent = document.querySelectorAll('.expandable-content');
+    expandableContent.forEach(function(element) {
+        element.addEventListener('click', function() {
+            this.classList.toggle('expanded');
+        });
+    });
+    
+    // Auto-refresh functionality for real-time data
+    let autoRefresh = false;
+    const refreshButton = document.createElement('button');
+    refreshButton.className = 'btn btn-sm btn-outline-secondary ms-2';
+    refreshButton.innerHTML = '';
+    refreshButton.title = 'Toggle auto-refresh';
+    
+    refreshButton.addEventListener('click', function() {
+        autoRefresh = !autoRefresh;
+        this.classList.toggle('active', autoRefresh);
+        
+        if (autoRefresh) {
+            setInterval(function() {
+                // Refresh login attempts and admin logs
+                refreshTabContent('login');
+                refreshTabContent('admin-logs');
+            }, 30000); // Refresh every 30 seconds
+        }
+    });
+    
+    // Add refresh button to page header
+    const pageTitle = document.querySelector('.card-header h6');
+    if (pageTitle) {
+        pageTitle.parentNode.appendChild(refreshButton);
+    }
+});
+
+function refreshTabContent(tabId) {
+    // AJAX call to refresh specific tab content
+    // This would need to be implemented with a corresponding view
+    console.log(`Refreshing ${tabId} tab content...`);
+}
+
+// Export user data functionality
+function exportUserData(format) {
+    const userId = {{ user_obj.id }};
+    const exportUrl = `/admin/users/${userId}/export/${format}/`;
+    
+    // Create a temporary link and click it to download
+    const link = document.createElement('a');
+    link.href = exportUrl;
+    link.download = `user_${userId}_data.${format}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// Add export buttons dynamically
+document.addEventListener('DOMContentLoaded', function() {
+    const actionButtons = document.querySelector('.d-grid.gap-2');
+    if (actionButtons) {
+        const exportDiv = document.createElement('div');
+        exportDiv.className = 'btn-group w-100 mt-2';
+        exportDiv.innerHTML = `
+            <button type="button" class="btn btn-outline-info dropdown-toggle" data-bs-toggle="dropdown">
+                 Export Data
+            </button>
+            <ul class="dropdown-menu w-100">
+                <li><a class="dropdown-item" href="#" onclick="exportUserData('json')">JSON Format</a></li>
+                <li><a class="dropdown-item" href="#" onclick="exportUserData('csv')">CSV Format</a></li>
+                <li><a class="dropdown-item" href="#" onclick="exportUserData('pdf')">PDF Report</a></li>
+            </ul>
+        `;
+        actionButtons.appendChild(exportDiv);
+    }
+});
+
+// Search functionality for tables
+function initializeTableSearch() {
+    const tables = document.querySelectorAll('.table');
+    tables.forEach(function(table) {
+        const tableContainer = table.closest('.tab-pane');
+        if (tableContainer && table.rows.length > 5) {
+            // Add search input
+            const searchDiv = document.createElement('div');
+            searchDiv.className = 'mb-3';
+            searchDiv.innerHTML = `
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control table-search" placeholder="Search table...">
+                </div>
+            `;
+            table.parentNode.insertBefore(searchDiv, table);
+            
+            // Add search functionality
+            const searchInput = searchDiv.querySelector('.table-search');
+            searchInput.addEventListener('keyup', function() {
+                const filter = this.value.toLowerCase();
+                const rows = table.querySelectorAll('tbody tr');
+                
+                rows.forEach(function(row) {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(filter) ? '' : 'none';
+                });
+            });
+        }
+    });
+}
+
+// Initialize search when tabs are shown
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize search for active tab
+    initializeTableSearch();
+    
+    // Initialize search when tab is changed
+    const tabButtons = document.querySelectorAll('[data-bs-toggle="tab"]');
+    tabButtons.forEach(function(button) {
+        button.addEventListener('shown.bs.tab', function() {
+            setTimeout(initializeTableSearch, 100);
+        });
+    });
+});
+
+// Activity indicator for real-time updates
+function showActivityIndicator(message) {
+    const indicator = document.createElement('div');
+    indicator.className = 'alert alert-info alert-dismissible fade show position-fixed';
+    indicator.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    indicator.innerHTML = `
+        
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(indicator);
+    
+    // Auto remove after 3 seconds
+    setTimeout(function() {
+        if (indicator.parentNode) {
+            indicator.remove();
+        }
+    }, 3000);
+}
+
+// Enhanced form validation
+function validateTokenAmount(input) {
+    const value = parseInt(input.value);
+    const feedback = input.parentNode.querySelector('.invalid-feedback') || 
+                    document.createElement('div');
+    
+    feedback.className = 'invalid-feedback';
+    
+    if (isNaN(value) || value === 0) {
+        input.classList.add('is-invalid');
+        feedback.textContent = 'Please enter a valid non-zero number';
+        if (!input.parentNode.contains(feedback)) {
+            input.parentNode.appendChild(feedback);
+        }
+        return false;
+    } else if (Math.abs(value) > 10000) {
+        input.classList.add('is-invalid');
+        feedback.textContent = 'Amount cannot exceed 10,000 tokens';
+        if (!input.parentNode.contains(feedback)) {
+            input.parentNode.appendChild(feedback);
+        }
+        return false;
+    } else {
+        input.classList.remove('is-invalid');
+        input.classList.add('is-valid');
+        if (input.parentNode.contains(feedback)) {
+            feedback.remove();
+        }
+        return true;
+    }
+}
+
+// Add validation to token input
+document.addEventListener('DOMContentLoaded', function() {
+    const tokenInput = document.querySelector('#tokenAdjustmentModal input[name="amount"]');
+    if (tokenInput) {
+        tokenInput.addEventListener('input', function() {
+            validateTokenAmount(this);
+        });
+        
+        tokenInput.addEventListener('blur', function() {
+            validateTokenAmount(this);
+        });
+    }
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Ctrl/Cmd + E = Edit user
+    if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+        e.preventDefault();
+        const editButton = document.querySelector('[data-bs-target="#editUserModal"]');
+        if (editButton) editButton.click();
+    }
+    
+    // Ctrl/Cmd + T = Token adjustment
+    if ((e.ctrlKey || e.metaKey) && e.key === 't') {
+        e.preventDefault();
+        const tokenButton = document.querySelector('[data-bs-target="#tokenAdjustmentModal"]');
+        if (tokenButton) tokenButton.click();
+    }
+    
+    // Ctrl/Cmd + M = Moderation
+    if ((e.ctrlKey || e.metaKey) && e.key === 'm') {
+        e.preventDefault();
+        const moderationButton = document.querySelector('[data-bs-target="#moderationModal"]');
+        if (moderationButton) moderationButton.click();
+    }
+});
+
+// Status change confirmation with details
+function confirmStatusChange(form) {
+    const isActive = {{ user_obj.is_active|yesno:"true,false" }};
+    const userName = "{{ user_obj.full_name|default:user_obj.username }}";
+    const action = isActive ? 'deactivate' : 'activate';
+    const warning = isActive ? 
+        'This will prevent the user from logging in and accessing their account.' :
+        'This will restore the user\'s access to their account.';
+    
+    return confirm(`Are you sure you want to ${action} ${userName}?\n\n${warning}`);
+}
+
+// Update status change form
+document.addEventListener('DOMContentLoaded', function() {
+    const statusForm = document.querySelector('form[action*="toggle_user_status"]');
+    if (statusForm) {
+        statusForm.addEventListener('submit', function(e) {
+            if (!confirmStatusChange(this)) {
+                e.preventDefault();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

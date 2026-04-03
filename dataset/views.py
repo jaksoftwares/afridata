@@ -92,24 +92,101 @@ def dataset_detail(request, dataset_id):
                 preview_rows = df.head(10)
                 preview_data = preview_rows.to_dict('records')
                 
-                # Generate graph data for numeric columns
-                numeric_columns = df.select_dtypes(include=['number']).columns.tolist()
-                if numeric_columns and len(df) > 1:
-                    # Create a simple line chart with first numeric column
-                    first_numeric = numeric_columns[0]
-                    chart_data = df[first_numeric].fillna(0).head(20).tolist()
-                    labels = [f"Row {i+1}" for i in range(len(chart_data))]
+                # Improved Data Visualization Logic
+                # ----------------------------------
+                numeric_cols = df.select_dtypes(include=['number']).columns.tolist()
+                object_cols = df.select_dtypes(include=['object', 'category', 'datetime']).columns.tolist()
+                
+                chart_type = 'bar'
+                chart_labels = []
+                chart_datasets = []
+                insight_label = "General Preview"
+
+                if numeric_cols and len(df) > 1:
+                    # 1. Try to find a good categorical column for labeling
+                    # look for specific names or low-cardinality columns
+                    label_col = None
+                    potential_labels = ['name', 'title', 'category', 'country', 'state', 'city', 'year', 'month', 'date', 'type', 'region', 'label']
+                    for p_label in potential_labels:
+                        matching = [c for c in object_cols if p_label in c.lower()]
+                        if matching:
+                            # Check cardinality - between 2 and 20 is ideal for visualization
+                            if 2 <= df[matching[0]].nunique() <= 20:
+                                label_col = matching[0]
+                                break
                     
+                    # If no named label column, find any categorical column with low cardinality
+                    if not label_col:
+                        for col in object_cols:
+                            if 2 <= df[col].nunique() <= 15:
+                                label_col = col
+                                break
+                    
+                    # 2. Extract or Aggregate data
+                    if label_col:
+                        # Aggregate first 3 numeric columns by label_col
+                        target_numerics = numeric_cols[:2] 
+                        agg_df = df.groupby(label_col)[target_numerics].mean().reset_index()
+                        
+                        # Limit to top 12 categories for clarity
+                        if len(agg_df) > 12:
+                            agg_df = agg_df.head(12)
+                        
+                        chart_labels = agg_df[label_col].astype(str).tolist()
+                        insight_label = f"Average by {label_col}"
+                        
+                        colors = [
+                            'rgba(54, 162, 235, 0.8)', # Blue
+                            'rgba(255, 99, 132, 0.8)', # Red
+                            'rgba(75, 192, 192, 0.8)', # Teal
+                            'rgba(255, 206, 86, 0.8)', # Yellow
+                            'rgba(153, 102, 255, 0.8)' # Purple
+                        ]
+                        
+                        for i, col in enumerate(target_numerics):
+                            chart_datasets.append({
+                                'label': col,
+                                'data': agg_df[col].fillna(0).tolist(),
+                                'backgroundColor': colors[i % len(colors)],
+                                'borderColor': colors[i % len(colors)].replace('0.8', '1'),
+                                'borderWidth': 1
+                            })
+                        
+                        # Use Pie chart if it's a single column with few labels
+                        if len(chart_labels) <= 6 and len(target_numerics) == 1:
+                            chart_type = 'doughnut'
+                        elif any('year' in str(label_col).lower() or 'date' in str(label_col).lower() for i in [1]):
+                            chart_type = 'line'
+
+                    else:
+                        # Fallback: Just plot the first numeric column of the first 20 rows
+                        # But with better labeling than just "Row X"
+                        chart_data_rows = df.head(15)
+                        target_numeric = numeric_cols[0]
+                        
+                        if 'name' in df.columns:
+                            chart_labels = chart_data_rows['name'].astype(str).tolist()
+                        else:
+                            chart_labels = [f"Item {i+1}" for i in range(len(chart_data_rows))]
+                            
+                        chart_datasets.append({
+                            'label': target_numeric,
+                            'data': chart_data_rows[target_numeric].fillna(0).tolist(),
+                            'backgroundColor': 'rgba(54, 162, 235, 0.6)',
+                            'borderColor': 'rgba(54, 162, 235, 1)',
+                            'borderWidth': 1,
+                            'fill': True,
+                            'tension': 0.3
+                        })
+                        chart_type = 'area' if chart_type == 'line' else 'bar'
+
                     graph_data = {
-                        'chart_type': 'line',
-                        'labels': json.dumps(labels),
-                        'datasets': json.dumps([{
-                            'label': first_numeric,
-                            'data': chart_data,
-                            'borderColor': 'rgb(75, 192, 192)',
-                            'backgroundColor': 'rgba(75, 192, 192, 0.2)',
-                            'tension': 0.1
-                        }])
+                        'chart_type': 'line' if chart_type == 'line' or chart_type == 'area' else chart_type,
+                        'labels_json': json.dumps(chart_labels),
+                        'datasets_json': json.dumps(chart_datasets),
+                        'raw_labels': chart_labels,
+                        'raw_datasets': chart_datasets,
+                        'insight_label': insight_label
                     }
     
     except Exception as e:

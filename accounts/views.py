@@ -80,10 +80,14 @@ def login_signup_page(request):
     if request.user.is_authenticated:
         return redirect('home')
     
-    context = {
-        'page_title': 'Login / Sign Up'
-    }
-    return render(request, 'accounts/login.html', context)
+    mode = request.GET.get('mode', 'login')
+    
+    if mode == 'signup':
+        context = {'page_title': 'Sign Up'}
+        return render(request, 'accounts/signup.html', context)
+    else:
+        context = {'page_title': 'Sign In'}
+        return render(request, 'accounts/login.html', context)
 
 
 @csrf_protect

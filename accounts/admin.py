@@ -174,11 +174,11 @@ class LoginAttemptAdmin(admin.ModelAdmin):
         """Display success status with colored icons"""
         if obj.success:
             return format_html(
-                '<span style="color: green;">✓ Success</span>'
+                '<span style="color: green;"> Success</span>'
             )
         else:
             return format_html(
-                '<span style="color: red;">✗ Failed</span>'
+                '<span style="color: red;"> Failed</span>'
             )
     success_status.short_description = 'Status'
     success_status.admin_order_field = 'success'

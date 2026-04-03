@@ -18,13 +18,13 @@
                     <div class="card-body p-5 position-relative">
                         <!-- Status Badge -->
                         <div class="status-badge status-active">
-                            <i class="fas fa-check-circle"></i> Active
+                             Active
                         </div>
 
                         <!-- Header -->
                         <div class="text-center mb-4">
                             <div class="mb-3">
-                                <i class="fas fa-key fa-3x text-primary"></i>
+                                
                             </div>
                             <h2 class="fw-bold text-dark">M-Pesa Access Token</h2>
                             <p class="text-muted">Safaricom Daraja API Authentication Token</p>
@@ -35,21 +35,21 @@
                             <div class="row">
                                 <div class="col-md-4">
                                     <h3 class="mb-1">
-                                        <i class="fas fa-clock"></i>
+                                        
                                     </h3>
                                     <h5 class="mb-0">Valid for 1 Hour</h5>
                                     <small class="opacity-75">Expires automatically</small>
                                 </div>
                                 <div class="col-md-4">
                                     <h3 class="mb-1">
-                                        <i class="fas fa-shield-alt"></i>
+                                        
                                     </h3>
                                     <h5 class="mb-0">Secure</h5>
                                     <small class="opacity-75">OAuth 2.0 Protected</small>
                                 </div>
                                 <div class="col-md-4">
                                     <h3 class="mb-1">
-                                        <i class="fas fa-sync-alt"></i>
+                                        
                                     </h3>
                                     <h5 class="mb-0">Auto-Generated</h5>
                                     <small class="opacity-75">Real-time token</small>
@@ -61,7 +61,7 @@
                         <div class="token-display mb-4" id="tokenDisplay">
                             <div class="d-flex justify-content-between align-items-start mb-2">
                                 <h6 class="mb-0">
-                                    <i class="fas fa-key"></i> Access Token
+                                     Access Token
                                 </h6>
                                 <small class="opacity-75">Generated: {{ timestamp|default:"Now" }}</small>
                             </div>
@@ -74,12 +74,12 @@
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
                                 <button class="btn copy-btn w-100" onclick="copyToken()">
-                                    <i class="fas fa-copy"></i> Copy Token
+                                     Copy Token
                                 </button>
                             </div>
                             <div class="col-md-6">
                                 <button class="btn refresh-btn w-100" onclick="refreshToken()">
-                                    <i class="fas fa-sync-alt"></i> Refresh Token
+                                     Refresh Token
                                 </button>
                             </div>
                         </div>
@@ -87,7 +87,7 @@
                         <!-- Usage Information -->
                         <div class="info-card">
                             <h5 class="fw-bold mb-3">
-                                <i class="fas fa-info-circle"></i> Usage Information
+                                 Usage Information
                             </h5>
                             
                             <div class="row mb-3">
@@ -136,7 +136,7 @@ curl -X POST https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest \
                             </div>
 
                             <div class="alert alert-warning">
-                                <i class="fas fa-exclamation-triangle"></i>
+                                
                                 <strong>Important:</strong> This is a sandbox token for testing purposes only. 
                                 Do not use in production without proper security measures.
                             </div>
@@ -145,7 +145,7 @@ curl -X POST https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest \
                         <!-- API Endpoints -->
                         <div class="info-card">
                             <h5 class="fw-bold mb-3">
-                                <i class="fas fa-list"></i> Available API Endpoints
+                                 Available API Endpoints
                             </h5>
                             
                             <div class="table-responsive">
@@ -186,7 +186,7 @@ curl -X POST https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest \
                         <!-- Footer -->
                         <div class="text-center mt-4">
                             <small class="text-muted">
-                                <i class="fas fa-shield-alt"></i>
+                                
                                 Token generated securely using Safaricom Daraja API
                             </small>
                         </div>
@@ -200,7 +200,7 @@ curl -X POST https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest \
     <div class="toast-container position-fixed top-0 end-0 p-3">
         <div id="copyToast" class="toast" role="alert">
             <div class="toast-header bg-success text-white">
-                <i class="fas fa-check-circle me-2"></i>
+                
                 <strong class="me-auto">Success</strong>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
             </div>

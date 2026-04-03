@@ -1,0 +1,207 @@
+{% load static %}
+<!-- Mobile Menu Backdrop -->
+<div id="mobileMenuBackdrop" onclick="toggleMobileMenu()" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden transition-opacity duration-300 opacity-0" style="backdrop-filter: blur(4px);"></div>
+
+<!-- Mobile Menu Drawer -->
+<div id="mobileMenu" class="mobile-menu fixed inset-y-0 left-0 w-72 bg-white shadow-2xl z-50 md:hidden flex flex-col transform -translate-x-full transition-transform duration-300 ease-in-out">
+    <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+            <img src="{% static 'images/afridata-logo.svg' %}" alt="AfriData Logo" class="h-16 w-auto -ml-2 object-contain" style="transform: scale(1.2); transform-origin: left center;">
+        <button onclick="toggleMobileMenu()" class="text-gray-500 hover:text-gray-800 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center font-bold text-lg transition-colors bg-transparent border-0 outline-none cursor-pointer">✕</button>
+    </div>
+    
+    <div class="p-4 flex-1 overflow-y-auto">
+        <nav class="space-y-2">
+            {% if user.is_authenticated %}
+            <a href="{% url 'home' %}" class="block px-4 py-3 rounded-xl text-gray-700 {% if request.resolver_match.url_name == 'home' %}bg-blue-50 text-blue-700 font-semibold{% else %}hover:bg-gray-50 hover:text-blue-600 font-medium{% endif %} transition-colors no-underline hover:no-underline">Home</a>
+            {% else %}
+            <a href="{% url 'home:default_home' %}" class="block px-4 py-3 rounded-xl text-gray-700 {% if request.resolver_match.url_name == 'default_home' %}bg-blue-50 text-blue-700 font-semibold{% else %}hover:bg-gray-50 hover:text-blue-600 font-medium{% endif %} transition-colors no-underline hover:no-underline">Home</a>
+            {% endif %}
+            <a href="{% url 'dataset_list' %}" class="block px-4 py-3 rounded-xl text-gray-700 {% if 'dataset' in request.resolver_match.url_name %}bg-blue-50 text-blue-700 font-semibold{% else %}hover:bg-gray-50 hover:text-blue-600 font-medium{% endif %} transition-colors no-underline hover:no-underline">Datasets</a>
+            
+            {% if user.is_authenticated and user.username %}
+            <a href="{% url 'community:user_profile' user.username %}" class="block px-4 py-3 rounded-xl text-gray-700 {% if 'community' in request.resolver_match.url_name %}bg-blue-50 text-blue-700 font-semibold{% else %}hover:bg-gray-50 hover:text-blue-600 font-medium{% endif %} transition-colors no-underline hover:no-underline">Community</a>
+            {% else %}
+            <a href="{% url 'community:community' %}" class="block px-4 py-3 rounded-xl text-gray-700 {% if 'community' in request.resolver_match.url_name %}bg-blue-50 text-blue-700 font-semibold{% else %}hover:bg-gray-50 hover:text-blue-600 font-medium{% endif %} transition-colors no-underline hover:no-underline">Community</a>
+            {% endif %}
+            
+            {% if user.is_authenticated %}
+            <a href="{% url 'home:api_docs' %}" class="block px-4 py-3 rounded-xl text-gray-700 {% if 'api' in request.resolver_match.url_name %}bg-blue-50 text-blue-700 font-semibold{% else %}hover:bg-gray-50 hover:text-blue-600 font-medium{% endif %} transition-colors no-underline hover:no-underline">API</a>
+            {% endif %}
+        </nav>
+        
+        <div class="mt-8">
+            {% if user.is_authenticated %}
+            <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-sm">
+                        {{ user.first_name.0|default:user.username.0|upper }}{{ user.last_name.0|default:""|upper }}
+                    </div>
+                    <div class="flex flex-col flex-1 truncate">
+                        <span class="text-gray-900 font-semibold m-0 leading-tight truncate">{{ user.get_full_name|default:user.username }}</span>
+                        <span class="text-gray-500 text-xs m-0 truncate">{{ user.email }}</span>
+                    </div>
+                </div>
+                <div class="space-y-1">
+                    <a href="{% url 'profile' %}" class="block px-3 py-2 text-gray-600 hover:bg-white hover:text-blue-600 rounded-lg transition-colors font-medium text-sm no-underline hover:no-underline">Profile Details</a>
+                    <a href="{% url 'settings' %}" class="block px-3 py-2 text-gray-600 hover:bg-white hover:text-blue-600 rounded-lg transition-colors font-medium text-sm no-underline hover:no-underline">Account Settings</a>
+                    <a href="{% url 'logout' %}" class="block px-3 py-2 text-red-600 hover:bg-white hover:text-red-700 rounded-lg transition-colors font-semibold text-sm mt-1 no-underline hover:no-underline">Sign out</a>
+                </div>
+            </div>
+            {% else %}
+            <div class="space-y-3">
+                <a href="{% url 'login_signup' %}?mode=login" class="block w-full text-center text-blue-700 bg-blue-50 hover:bg-blue-100 py-3.5 rounded-xl transition-all font-semibold shadow-sm no-underline hover:no-underline">Log in to account</a>
+                <a href="{% url 'login_signup' %}?mode=signup" class="block w-full text-center bg-blue-600 text-white py-3.5 rounded-xl hover:bg-blue-700 transition-all font-semibold shadow-sm no-underline hover:no-underline">Create an account</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<!-- Main Navbar Container -->
+<header class="bg-white border-b border-gray-100 sticky top-0 z-50 w-full py-2">
+    <div class="max-w-7xl mx-auto flex justify-between items-center w-full px-4 md:px-6">
+            <!-- Logo -->
+            <div class="flex items-center">
+                <a href="{% url 'home' %}" class="hover:opacity-90 transition-opacity no-underline hover:no-underline">
+                    <img src="{% static 'images/afridata-logo.svg' %}" alt="AfriData Logo" class="h-24 w-auto -ml-4 object-contain" style="transform: scale(1.3); transform-origin: left center;">
+                </a>
+            </div>
+            
+            <nav class="hidden md:flex items-center space-x-8 text-[15px] font-medium tracking-wide m-0 p-0">
+                {% if user.is_authenticated %}
+                <a href="{% url 'home' %}" class="pb-1 border-b-2 {% if request.resolver_match.url_name == 'home' %}border-blue-600 text-blue-600{% else %}border-transparent text-gray-600 hover:text-blue-700 hover:border-blue-300{% endif %} transition-all duration-200 no-underline hover:no-underline">Home</a>
+                {% else %}
+                <a href="{% url 'home:default_home' %}" class="pb-1 border-b-2 {% if request.resolver_match.url_name == 'default_home' %}border-blue-600 text-blue-600{% else %}border-transparent text-gray-600 hover:text-blue-700 hover:border-blue-300{% endif %} transition-all duration-200 no-underline hover:no-underline">Home</a>
+                {% endif %}
+                
+                <a href="{% url 'dataset_list' %}" class="pb-1 border-b-2 {% if 'dataset' in request.resolver_match.url_name %}border-blue-600 text-blue-600{% else %}border-transparent text-gray-600 hover:text-blue-700 hover:border-blue-300{% endif %} transition-all duration-200 no-underline hover:no-underline">Datasets</a>
+                
+                {% if user.is_authenticated and user.username %}
+                <a href="{% url 'community:user_profile' user.username %}" class="pb-1 border-b-2 {% if 'community' in request.resolver_match.url_name %}border-blue-600 text-blue-600{% else %}border-transparent text-gray-600 hover:text-blue-700 hover:border-blue-300{% endif %} transition-all duration-200 no-underline hover:no-underline">Community</a>
+                {% else %}
+                <a href="{% url 'community:community' %}" class="pb-1 border-b-2 {% if 'community' in request.resolver_match.url_name %}border-blue-600 text-blue-600{% else %}border-transparent text-gray-600 hover:text-blue-700 hover:border-blue-300{% endif %} transition-all duration-200 no-underline hover:no-underline">Community</a>
+                {% endif %}
+                
+                {% if user.is_authenticated %}
+                <a href="{% url 'home:api_docs' %}" class="pb-1 border-b-2 {% if 'api' in request.resolver_match.url_name %}border-blue-600 text-blue-600{% else %}border-transparent text-gray-600 hover:text-blue-700 hover:border-blue-300{% endif %} transition-all duration-200 no-underline hover:no-underline">API</a>
+                {% endif %}
+
+                {% if user.is_authenticated %}
+                <!-- User Profile Dropdown -->
+                <div class="relative ml-2">
+                    <button onclick="toggleUserDropdown()" class="flex items-center space-x-2 text-gray-700 hover:text-blue-700 transition-colors focus:outline-none bg-transparent border-0 cursor-pointer">
+                        <div class="w-9 h-9 bg-blue-50 border border-blue-100 hover:bg-blue-100 rounded-full flex items-center justify-center text-blue-700 text-sm font-bold shadow-sm transition-colors">
+                            {{ user.first_name.0|default:user.username.0|upper }}{{ user.last_name.0|default:""|upper }}
+                        </div>
+                        <span class="hidden lg:block text-inherit m-0 font-medium">{{ user.get_full_name|default:user.username }}</span>
+                        <svg class="w-4 h-4 ml-1 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    
+                    <!-- Dropdown Menu -->
+                    <div id="userDropdown" class="absolute right-0 mt-3 w-56 bg-white rounded-xl shadow-xl py-2 z-40 border border-gray-100 hidden">
+                        <div class="px-4 py-3 border-b border-gray-100 mb-1">
+                            <p class="text-xs text-gray-500 uppercase tracking-wider font-bold mb-1 m-0">Signed in as</p>
+                            <p class="text-sm font-semibold text-gray-900 truncate m-0">{{ user.email }}</p>
+                        </div>
+                        <a href="{% url 'profile' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors font-medium no-underline hover:no-underline">
+                            Profile Settings
+                        </a>
+                        <a href="{% url 'settings' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors font-medium no-underline hover:no-underline">
+                            Account Preferences
+                        </a>
+                        {% if user.is_superuser %}
+                        <a href="{% url 'admin_dashboard:dashboard_home' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors font-medium no-underline hover:no-underline">
+                            Admin Dashboard
+                        </a>
+                        {% else %}
+                        <a href="{% url 'public_profile' user.id %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors font-medium no-underline hover:no-underline">
+                            Public Profile
+                        </a>
+                        {% endif %}
+                        <div class="border-t border-gray-100 my-1 mt-1"></div>
+                        <a href="{% url 'logout' %}" class="block px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 font-bold transition-colors no-underline hover:no-underline">
+                            Sign out
+                        </a>
+                    </div>
+                </div>
+                {% else %}
+                <!-- Login/Signup Links -->
+                <div class="flex items-center space-x-5 ml-4">
+                    <a href="{% url 'login_signup' %}?mode=login" class="text-gray-600 hover:text-blue-700 transition-colors duration-200 font-medium tracking-wide no-underline hover:no-underline">Login</a>
+                    <a href="{% url 'login_signup' %}?mode=signup" class="bg-blue-600 text-white px-5 py-2 rounded-md hover:bg-blue-700 transition-all duration-200 font-semibold shadow-sm block no-underline hover:no-underline">Sign Up</a>
+                </div>
+                {% endif %}
+            </nav>
+            
+            <!-- Mobile Menu Button -->
+            <button onclick="toggleMobileMenu()" class="md:hidden text-gray-600 focus:outline-none p-2 border-0 bg-transparent rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </div>
+    </header>
+<script>
+    function toggleMobileMenu() {
+        console.log('Hamburger clicked!');
+        const menu = document.getElementById('mobileMenu');
+        const backdrop = document.getElementById('mobileMenuBackdrop');
+        if (menu) {
+            // Check current transform style or class
+            const isClosed = menu.classList.contains('-translate-x-full') || menu.style.transform === 'translateX(-100%)';
+            
+            if (isClosed) {
+                // Open drawer
+                menu.classList.remove('-translate-x-full');
+                menu.style.transform = 'translateX(0)';
+                if (backdrop) {
+                    backdrop.classList.remove('hidden');
+                    backdrop.style.display = 'block';
+                    // Small timeout to allow display:block to apply before animating opacity
+                    setTimeout(() => {
+                        backdrop.classList.remove('opacity-0');
+                        backdrop.style.opacity = '1';
+                    }, 10);
+                }
+            } else {
+                // Close drawer
+                menu.classList.add('-translate-x-full');
+                menu.style.transform = 'translateX(-100%)';
+                if (backdrop) {
+                    backdrop.classList.add('opacity-0');
+                    backdrop.style.opacity = '0';
+                    setTimeout(() => {
+                        backdrop.classList.add('hidden');
+                        backdrop.style.display = 'none';
+                    }, 300);
+                }
+            }
+        } else {
+            console.error('mobileMenu element not found');
+        }
+    }
+
+    function toggleUserDropdown() {
+        const dropdown = document.getElementById('userDropdown');
+        if(dropdown) {
+            dropdown.classList.toggle('hidden');
+        }
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+        const dropdown = document.getElementById('userDropdown');
+        const button = event.target.closest('button');
+        
+        if (dropdown && (!button || !button.onclick || button.onclick.toString().indexOf('toggleUserDropdown') === -1)) {
+            dropdown.classList.add('hidden');
+        }
+    });
+
+    document.addEventListener("DOMContentLoaded", function() {
+        // Enforce bootstrap overriding by making sure CSS underlines don't bleed visually using important.
+        const links = document.querySelectorAll('header a, .mobile-menu a');
+        links.forEach(l => {
+            l.style.setProperty('text-decoration', 'none', 'important');
+        });
+    });
+</script>
