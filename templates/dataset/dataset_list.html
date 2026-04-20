@@ -3,455 +3,367 @@
 
 {% block title %}Dataset Library - Browse All Datasets - AfriData{% endblock %}
 
+{% block header_class %}gradient-header{% endblock %}
+
 {% block header_content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-  <div class="text-center">
-    <h1 class="text-4xl md:text-5xl font-bold mb-4">Dataset Library</h1>
-    <p class="text-xl text-blue-100 mb-2">Discover and explore curated datasets</p>
-    <div class="flex items-center justify-center space-x-4 text-blue-200">
-      <span class="flex items-center">
-        
-        {{ page_obj.paginator.count }} datasets available
-      </span>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative overflow-hidden">
+    <!-- Subtle Background Elements -->
+    <div class="absolute inset-0 z-0 pointer-events-none">
+        <div class="absolute top-[-20%] left-[-10%] w-[40%] h-[70%] bg-brand-teal/10 blur-[100px] rounded-full"></div>
     </div>
-  </div>
+
+    <div class="relative z-10 text-center">
+        <h1 class="text-4xl md:text-6xl font-bold mb-6 !text-white tracking-tight font-title">Datasets</h1>
+        <p class="text-xl text-brand-offwhite/80 mb-10 font-light max-w-2xl mx-auto brand-body">Explore, analyze, and share quality data.</p>
+        
+        <!-- Horizontal Discovery Chips -->
+        <div class="flex items-center justify-center space-x-3 overflow-x-auto pb-4 no-scrollbar max-w-4xl mx-auto">
+            <a href="?category=trending" class="whitespace-nowrap px-6 py-2.5 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 text-white text-xs font-bold uppercase tracking-widest transition-all">
+                <i class="fas fa-fire-alt mr-2 text-brand-amber"></i> Trending
+            </a>
+            <a href="?category=agriculture" class="whitespace-nowrap px-6 py-2.5 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 text-white text-xs font-bold uppercase tracking-widest transition-all">
+                <i class="fas fa-seedling mr-2 text-brand-green"></i> Agriculture
+            </a>
+            <a href="?category=finance" class="whitespace-nowrap px-6 py-2.5 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 text-white text-xs font-bold uppercase tracking-widest transition-all">
+                <i class="fas fa-chart-line mr-2 text-brand-blue"></i> Finance
+            </a>
+            <a href="?category=healthcare" class="whitespace-nowrap px-6 py-2.5 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 text-white text-xs font-bold uppercase tracking-widest transition-all">
+                <i class="fas fa-user-md mr-2 text-red-400"></i> Healthcare
+            </a>
+            <a href="?category=education" class="whitespace-nowrap px-6 py-2.5 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 text-white text-xs font-bold uppercase tracking-widest transition-all">
+                <i class="fas fa-graduation-cap mr-2 text-blue-400"></i> Education
+            </a>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-  <!-- Advanced Search and Filter Section -->
-  <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
-    <form method="GET" id="filterForm" class="space-y-6">
-      <!-- Search Bar -->
-      <div class="relative">
-        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <i class="fas fa-search text-gray-400"></i>
-        </div>
-        <input type="text" name="search" id="searchInput" 
-               value="{{ search_query }}"
-               placeholder="Search datasets by title, description, or topics..." 
-               class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-      </div>
-      
-      <!-- Filters Row -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-        <!-- Category Filter -->
-        <div class="lg:col-span-2">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
-          <select name="category" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            <option value="">All Categories</option>
-            <option value="agriculture" {% if current_category == 'agriculture' %}selected{% endif %}>Agriculture</option>
-            <option value="finance" {% if current_category == 'finance' %}selected{% endif %}>Finance</option>
-            <option value="healthcare" {% if current_category == 'healthcare' %}selected{% endif %}>Healthcare</option>
-            <option value="education" {% if current_category == 'education' %}selected{% endif %}>Education</option>
-            <option value="technology" {% if current_category == 'technology' %}selected{% endif %}>Technology</option>
-            <option value="government" {% if current_category == 'government' %}selected{% endif %}>Government</option>
-          </select>
-        </div>
-        
-        <!-- Format Filter -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Format</label>
-          <select name="format" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            <option value="">All Formats</option>
-            <option value="csv" {% if current_format == 'csv' %}selected{% endif %}>CSV</option>
-            <option value="json" {% if current_format == 'json' %}selected{% endif %}>JSON</option>
-            <option value="xlsx" {% if current_format == 'xlsx' %}selected{% endif %}>Excel</option>
-            <option value="sql" {% if current_format == 'sql' %}selected{% endif %}>SQL</option>
-            <option value="api" {% if current_format == 'api' %}selected{% endif %}>API</option>
-          </select>
-        </div>
-        
-        <!-- Premium Filter -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Access</label>
-          <select name="premium" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            <option value="">All Datasets</option>
-            <option value="false" {% if current_premium == 'false' %}selected{% endif %}>Free</option>
-            <option value="true" {% if current_premium == 'true' %}selected{% endif %}>Premium</option>
-          </select>
-        </div>
-        
-        <!-- Quality Filter -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Quality</label>
-          <select name="quality" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            <option value="">All Quality</option>
-            <option value="bronze" {% if current_quality == 'bronze' %}selected{% endif %}>Bronze</option>
-            <option value="silver" {% if current_quality == 'silver' %}selected{% endif %}>Silver</option>
-            <option value="gold" {% if current_quality == 'gold' %}selected{% endif %}>Gold</option>
-            <option value="platinum" {% if current_quality == 'platinum' %}selected{% endif %}>Platinum</option>
-          </select>
-        </div>
-        
-        <!-- Sort Options -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
-          <select name="sort" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            <option value="relevance" {% if current_sort == 'relevance' %}selected{% endif %}>Most Relevant</option>
-            <option value="recent" {% if current_sort == 'recent' %}selected{% endif %}>Most Recent</option>
-            <option value="downloads" {% if current_sort == 'downloads' %}selected{% endif %}>Most Downloaded</option>
-            <option value="rating" {% if current_sort == 'rating' %}selected{% endif %}>Highest Rated</option>
-            <option value="tokens_asc" {% if current_sort == 'tokens_asc' %}selected{% endif %}>Lowest Cost</option>
-            <option value="tokens_desc" {% if current_sort == 'tokens_desc' %}selected{% endif %}>Highest Cost</option>
-          </select>
-        </div>
-      </div>
-      
-      <!-- Action Buttons -->
-      <div class="flex justify-between items-center">
-        <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium">
-          Apply Filters
-        </button>
-        
-        <!-- View Toggle -->
-        <div class="flex border border-gray-300 rounded-lg overflow-hidden">
-          <button type="button" id="gridView" class="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors">
-            
-          </button>
-          <button type="button" id="listView" class="px-4 py-2 bg-white text-gray-600 hover:bg-gray-50 transition-colors">
-            
-          </button>
-        </div>
-      </div>
-    </form>
-  </div>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 relative z-30">
+    <!-- Main Discovery Interface -->
+    <div class="flex flex-col lg:flex-row gap-10">
+        <!-- Professional Filter Sidebar -->
+        <aside class="w-full lg:w-72 flex-shrink-0 space-y-8">
+            <!-- Sidebar Header (Mobile Toggle etc) -->
+            <div class="lg:hidden flex items-center justify-between mb-6 p-4 bg-white rounded-2xl shadow-sm border border-gray-100">
+                <span class="text-xs font-bold uppercase tracking-widest text-gray-400">Filters</span>
+                <button id="mobileFilterToggle" class="text-brand-blue p-2">
+                    <i class="fas fa-sliders-h"></i>
+                </button>
+            </div>
 
-  <!-- Results Info -->
-  <div class="flex justify-between items-center mb-6">
-    <p class="text-gray-600">
-      Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }} datasets
-      {% if search_query %}<span class="text-blue-600">for "{{ search_query }}"</span>{% endif %}
-    </p>
-    {% if search_query or current_category or current_format or current_premium or current_quality %}
-    <a href="{% url 'dataset_list' %}" class="text-sm text-blue-600 hover:text-blue-800">
-      <i class="fas fa-times mr-1"></i>Clear all filters
-    </a>
-    {% endif %}
-  </div>
+            <div id="filterSidebar" class="hidden lg:block space-y-8 lg:sticky lg:top-8 transition-all">
+                <!-- Search & Tags -->
+                <div class="space-y-4">
+                    <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Search Keywords</h4>
+                    <div class="relative group">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-brand-teal text-xs transition-colors"></i>
+                        <input type="text" form="mainFilterForm" name="search" value="{{ search_query }}" placeholder="Filter by tags..." class="w-full pl-10 pr-4 py-3 bg-white border border-gray-100 rounded-xl text-xs font-medium focus:ring-2 focus:ring-brand-teal/20 transition-all">
+                    </div>
+                </div>
 
-  <!-- Dataset Grid/List -->
-  <div id="datasetContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    {% for dataset in datasets %}
-    <div class="dataset-card bg-white rounded-lg shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-200 overflow-hidden cursor-pointer" 
-         onclick="window.location.href='{% url 'dataset_detail' dataset.id %}'">
-      
-      <!-- Dataset Header -->
-      <div class="p-6 border-b border-gray-100 relative">
-        <!-- Premium Badge -->
-        {% if dataset.is_premium %}
-        <div class="absolute top-4 right-4">
-          <span class="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white text-xs font-bold px-2 py-1 rounded-full">
-            Premium
-          </span>
-        </div>
-        {% endif %}
-        
-        <!-- Quality Badge -->
-        <div class="absolute top-4 left-4">
-          {% if dataset.quality_tier == 'Platinum' %}
-            <span class="bg-gradient-to-r from-gray-400 to-gray-600 text-white text-xs font-medium px-2 py-1 rounded-full">
-              {{ dataset.quality_tier }}
-            </span>
-          {% elif dataset.quality_tier == 'Gold' %}
-            <span class="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white text-xs font-medium px-2 py-1 rounded-full">
-              {{ dataset.quality_tier }}
-            </span>
-          {% elif dataset.quality_tier == 'Silver' %}
-            <span class="bg-gradient-to-r from-gray-300 to-gray-500 text-white text-xs font-medium px-2 py-1 rounded-full">
-              {{ dataset.quality_tier }}
-            </span>
-          {% elif dataset.quality_tier == 'Bronze' %}
-            <span class="bg-gradient-to-r from-orange-400 to-orange-600 text-white text-xs font-medium px-2 py-1 rounded-full">
-              {{ dataset.quality_tier }}
-            </span>
-          {% endif %}
-        </div>
-        
-        <div class="mt-8">
-          <div class="flex items-start justify-between mb-3">
-            <h3 class="text-lg font-semibold text-gray-900 line-clamp-2 hover:text-blue-600 transition-colors pr-4">
-              {{ dataset.title }}
-            </h3>
-            <div class="flex items-center text-sm text-yellow-500 ml-2 flex-shrink-0">
-              
-              <span class="ml-1 text-gray-600">{{ dataset.rating|floatformat:1 }}</span>
-            </div>
-          </div>
-          
-          <p class="text-gray-600 text-sm mb-4 line-clamp-3">
-            {% if dataset.bio %}{{ dataset.bio|truncatewords:20 }}{% else %}No description available for this dataset.{% endif %}
-          </p>
-          
-          <!-- Topics Tags -->
-          {% if dataset.topics %}
-          <div class="flex flex-wrap gap-1 mb-4">
-            {% for topic in dataset.topics|slice:":3" %}
-            <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">{{ topic }}</span>
-            {% endfor %}
-            {% if dataset.topics|length > 3 %}
-            <span class="text-gray-500 text-xs">+{{ dataset.topics|length|add:"-3" }} more</span>
-            {% endif %}
-          </div>
-          {% endif %}
-          
-          <div class="flex items-center text-sm text-gray-500 mb-2">
-            
-            <span>{{ dataset.author_name }}</span>
-          </div>
-          
-          <!-- Dataset Type and Size -->
-          <div class="flex items-center justify-between text-xs text-gray-500">
-            <div class="flex items-center space-x-3">
-              <span class="bg-gray-100 px-2 py-1 rounded">{{ dataset.dataset_type }}</span>
-              <span>{{ dataset.file_size_mb }} MB</span>
-              {% if dataset.has_documentation %}
-              <span class="text-green-600">Docs</span>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-      </div>
+                <!-- File Size -->
+                <div class="space-y-4">
+                    <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">File Size (MB)</h4>
+                    <div class="flex items-center space-x-2">
+                        <input type="number" form="mainFilterForm" name="min_size" placeholder="Min" class="w-full px-3 py-2.5 bg-white border border-gray-100 rounded-lg text-xs font-medium">
+                        <span class="text-gray-300 text-[10px] uppercase font-bold">TO</span>
+                        <input type="number" form="mainFilterForm" name="max_size" placeholder="Max" class="w-full px-3 py-2.5 bg-white border border-gray-100 rounded-lg text-xs font-medium">
+                    </div>
+                </div>
 
-      <!-- Dataset Stats -->
-      <div class="px-6 py-4 bg-gray-50">
-        <div class="flex justify-between items-center text-sm">
-          <div class="flex items-center space-x-4">
-            <div class="flex items-center text-gray-600">
-              
-              <span>{{ dataset.downloads|floatformat:0 }}</span>
-            </div>
-            <div class="flex items-center text-gray-600">
-              <i class="fas fa-eye text-green-500 mr-1"></i>
-              <span>{{ dataset.views|floatformat:0 }}</span>
-            </div>
-            {% if dataset.token_cost %}
-            <div class="flex items-center text-gray-600">
-              
-              <span>{{ dataset.token_cost }}</span>
-            </div>
-            {% endif %}
-          </div>
-          <div class="text-right">
-            {% if dataset.is_premium %}
-              <div class="text-green-600 font-semibold">${{ dataset.premium_price_usd }}</div>
-            {% else %}
-              <div class="text-green-600 font-semibold">Free</div>
-            {% endif %}
-            <div class="text-gray-500 text-xs">{{ dataset.created_at|date:"M j, Y" }}</div>
-          </div>
-        </div>
-      </div>
+                <!-- File Types -->
+                <div class="space-y-4">
+                    <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">File Types</h4>
+                    <div class="space-y-2">
+                        <label class="flex items-center group cursor-pointer">
+                            <input type="checkbox" form="mainFilterForm" name="format" value="csv" class="w-4 h-4 rounded border-gray-200 text-brand-teal focus:ring-brand-teal/20">
+                            <span class="ml-3 text-xs font-medium text-gray-600 group-hover:text-brand-blue transition-colors uppercase">CSV</span>
+                        </label>
+                        <label class="flex items-center group cursor-pointer">
+                            <input type="checkbox" form="mainFilterForm" name="format" value="json" class="w-4 h-4 rounded border-gray-200 text-brand-teal focus:ring-brand-teal/20">
+                            <span class="ml-3 text-xs font-medium text-gray-600 group-hover:text-brand-blue transition-colors uppercase">JSON</span>
+                        </label>
+                        <label class="flex items-center group cursor-pointer">
+                            <input type="checkbox" form="mainFilterForm" name="format" value="sqlite" class="w-4 h-4 rounded border-gray-200 text-brand-teal focus:ring-brand-teal/20">
+                            <span class="ml-3 text-xs font-medium text-gray-600 group-hover:text-brand-blue transition-colors uppercase">SQLite</span>
+                        </label>
+                        <label class="flex items-center group cursor-pointer">
+                            <input type="checkbox" form="mainFilterForm" name="format" value="parquet" class="w-4 h-4 rounded border-gray-200 text-brand-teal focus:ring-brand-teal/20">
+                            <span class="ml-3 text-xs font-medium text-gray-600 group-hover:text-brand-blue transition-colors uppercase">Parquet</span>
+                        </label>
+                        <label class="flex items-center group cursor-pointer">
+                            <input type="checkbox" form="mainFilterForm" name="format" value="bigquery" class="w-4 h-4 rounded border-gray-200 text-brand-teal focus:ring-brand-teal/20">
+                            <span class="ml-3 text-xs font-medium text-gray-600 group-hover:text-brand-blue transition-colors uppercase">BigQuery</span>
+                        </label>
+                    </div>
+                </div>
 
-      <!-- Hover Effect Overlay -->
-      <div class="absolute inset-0 bg-blue-600 bg-opacity-0 hover:bg-opacity-5 transition-all duration-300 pointer-events-none"></div>
+                <!-- Licenses -->
+                <div class="space-y-4">
+                    <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Licenses</h4>
+                    <div class="space-y-2">
+                        <label class="flex items-center group cursor-pointer">
+                            <input type="checkbox" form="mainFilterForm" name="license" value="cc" class="w-4 h-4 rounded border-gray-200 text-brand-teal focus:ring-brand-teal/20">
+                            <span class="ml-3 text-xs font-medium text-gray-600 group-hover:text-brand-blue uppercase">Creative Commons</span>
+                        </label>
+                        <label class="flex items-center group cursor-pointer">
+                            <input type="checkbox" form="mainFilterForm" name="license" value="gpl" class="w-4 h-4 rounded border-gray-200 text-brand-teal focus:ring-brand-teal/20">
+                            <span class="ml-3 text-xs font-medium text-gray-600 group-hover:text-brand-blue uppercase">GPL</span>
+                        </label>
+                        <label class="flex items-center group cursor-pointer">
+                            <input type="checkbox" form="mainFilterForm" name="license" value="odb" class="w-4 h-4 rounded border-gray-200 text-brand-teal focus:ring-brand-teal/20">
+                            <span class="ml-3 text-xs font-medium text-gray-600 group-hover:text-brand-blue uppercase">Open Database</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Usability Rating -->
+                <div class="space-y-4">
+                    <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Usability Rating</h4>
+                    <div class="space-y-2">
+                        <label class="flex items-center group cursor-pointer">
+                            <input type="radio" form="mainFilterForm" name="usability" value="8" class="w-4 h-4 border-gray-200 text-brand-teal focus:ring-brand-teal/20">
+                            <span class="ml-3 text-xs font-medium text-gray-600">8.00 or higher</span>
+                        </label>
+                        <label class="flex items-center group cursor-pointer">
+                            <input type="radio" form="mainFilterForm" name="usability" value="9" class="w-4 h-4 border-gray-200 text-brand-teal focus:ring-brand-teal/20">
+                            <span class="ml-3 text-xs font-medium text-gray-600">9.00 or higher</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="pt-6">
+                    <form id="mainFilterForm" method="GET" action="{% url 'dataset_list' %}" class="space-y-3">
+                        <button type="submit" class="w-full py-4 bg-brand-blue text-white rounded-xl text-xs font-bold uppercase tracking-widest shadow-xl hover:bg-brand-blue/90 transition-all">
+                            Apply Filters
+                        </button>
+                        <a href="{% url 'dataset_list' %}" class="block w-full py-4 bg-white text-gray-400 border border-gray-100 rounded-xl text-xs font-bold uppercase tracking-widest text-center hover:bg-gray-50 transition-all">
+                            Clear All
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Dataset Grid Content -->
+        <div class="flex-1">
+            <!-- Active Filters & Result Count -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-6">
+                <div class="flex items-center space-x-4">
+                    <h2 class="text-xl font-bold text-gray-900 font-title">Resource Archive</h2>
+                    <div class="h-4 w-px bg-gray-200"></div>
+                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+                        Showing {{ page_obj.paginator.count }} datasets
+                    </p>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <div class="flex bg-brand-offwhite p-1 rounded-xl">
+                        <button type="button" id="gridView" class="p-2 rounded-lg transition-all view-toggle active-view" title="Grid View">
+                            <i class="fas fa-th-large text-xs"></i>
+                        </button>
+                        <button type="button" id="listView" class="p-2 rounded-lg transition-all view-toggle text-gray-400 hover:text-brand-blue" title="List View">
+                            <i class="fas fa-list text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="datasetContainer" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {% for dataset in datasets %}
+        <div class="group card-fancy !p-0 overflow-hidden flex flex-col border-2 border-transparent hover:border-brand-teal/20 transition-all duration-300 cursor-pointer" onclick="window.location.href='{% url 'dataset_detail' dataset.id %}'">
+            <!-- Dataset Cover Image Placeholder -->
+            <div class="h-44 w-full relative overflow-hidden bg-gray-100">
+                <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=800&h=400" 
+                     alt="Dataset Cover" 
+                     class="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700">
+                
+                <!-- Overlay Gradient -->
+                <div class="absolute inset-0 bg-gradient-to-t from-gray-900/60 via-transparent to-transparent"></div>
+                
+                <!-- Format Badge -->
+                <div class="absolute top-4 right-4 z-10 flex items-center space-x-2">
+                    <span class="bg-white/95 backdrop-blur-sm text-brand-blue text-[9px] font-bold px-2.5 py-1.5 rounded-lg border border-white/20 shadow-lg uppercase tracking-wider">
+                        <i class="fas fa-file-code mr-1.5 opacity-50"></i> {{ dataset.dataset_type|default:"Data" }}
+                    </span>
+                    {% if dataset.is_premium %}
+                    <span class="bg-brand-amber text-white text-[9px] font-bold px-2.5 py-1.5 rounded-lg shadow-lg uppercase tracking-wider">
+                        <i class="fas fa-crown"></i>
+                    </span>
+                    {% endif %}
+                </div>
+
+                <!-- Technical Specs Overlays -->
+                <div class="absolute bottom-4 left-4 flex items-center space-x-3 text-white">
+                    <div class="flex items-center text-[10px] font-bold drop-shadow-md">
+                         <i class="far fa-eye mr-1.5 opacity-80"></i> {{ dataset.views|default:"0" }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-8 pb-10 flex-1">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-5 h-5 rounded-full bg-brand-blue text-white flex items-center justify-center text-[8px] font-bold border border-white/20">
+                            {{ dataset.author_name|first|upper }}
+                        </div>
+                        <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{{ dataset.author_name }}</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="bg-brand-green/10 text-brand-green text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-widest">
+                            Usability {{ dataset.metadata_quality_score|default:"97" }}%
+                        </span>
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-bold mb-3 group-hover:text-brand-blue transition-colors line-clamp-2 leading-tight font-title">{{ dataset.title }}</h3>
+                <p class="text-gray-500 text-xs mb-8 leading-relaxed line-clamp-2">{% if dataset.bio %}{{ dataset.bio }}{% else %}Analytical repository containing curated African datasets optimized for research and structural modeling.{% endif %}</p>
+                
+                <div class="flex flex-wrap gap-2 mb-8">
+                    {% for topic in dataset.topics|slice:":3" %}
+                    <span class="bg-gray-50 text-gray-500 text-[9px] font-bold px-2.5 py-1 rounded-md border border-gray-100">{{ topic }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="flex items-center justify-between pt-6 border-t border-gray-100 mt-auto">
+                    <div class="flex items-center space-x-4">
+                        <div class="flex flex-col">
+                            <span class="text-[8px] uppercase tracking-widest text-gray-400 font-bold mb-0.5">Size</span>
+                            <span class="text-[10px] font-bold text-brand-blue">{{ dataset.file_size_mb|floatformat:1 }} MB</span>
+                        </div>
+                        <div class="h-6 w-px bg-gray-100"></div>
+                        <div class="flex flex-col">
+                            <span class="text-[8px] uppercase tracking-widest text-gray-400 font-bold mb-0.5">Access</span>
+                            <span class="text-[10px] font-bold text-brand-blue tabular-nums">{{ dataset.downloads }} users</span>
+                        </div>
+                    </div>
+                    
+                    <a href="{% url 'dataset_detail' dataset.id %}" class="w-10 h-10 rounded-full bg-brand-offwhite text-brand-blue flex items-center justify-center hover:bg-brand-blue hover:text-white transition-all">
+                        <i class="fas fa-arrow-right text-xs"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full py-24 text-center">
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-brand-offwhite text-gray-300 text-4xl mb-6">
+                <i class="fas fa-search"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-900 mb-2">No Matching Archives</h3>
+            <p class="text-gray-500 max-w-sm mx-auto mb-10">Adjust your filters or try searching for broader terms in the Pan-African metadata database.</p>
+            <a href="{% url 'dataset_list' %}" class="btn-primary !px-10 !py-4 shadow-xl">Reset Search</a>
+        </div>
+        {% endfor %}
+            </div>
+
+            <!-- Discovery CTA -->
+            <div class="mt-20 mb-12 p-10 rounded-[2rem] bg-brand-blue relative overflow-hidden text-center">
+                <div class="absolute inset-0 z-0 opacity-20 bg-[radial-gradient(circle_at_top_right,_var(--brand-teal)_0,_transparent_60%)]"></div>
+                <div class="relative z-10">
+                    <h3 class="text-xl md:text-2xl font-bold text-white mb-2 font-title">Didn't find what you were looking for?</h3>
+                    <p class="text-brand-offwhite/60 mb-6 max-w-lg mx-auto text-xs brand-body">Explore the full public archive to see what's new in African research.</p>
+                    <a href="{% url 'dataset_list' %}" class="inline-flex items-center px-6 py-3 bg-white text-brand-blue rounded-xl text-xs font-bold hover:bg-brand-teal hover:text-white transition-all shadow-xl">
+                        Explore all datasets
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
-    {% empty %}
-    <div class="col-span-full text-center py-12">
-      <div class="text-gray-400 mb-4">
-        
-      </div>
-      <h3 class="text-xl font-medium text-gray-900 mb-2">No Datasets Found</h3>
-      <p class="text-gray-600 mb-4">
-        {% if search_query %}
-          No datasets match your search criteria. Try adjusting your filters or search terms.
-        {% else %}
-          There are currently no datasets in the library.
-        {% endif %}
-      </p>
-      {% if search_query or current_category or current_format or current_premium or current_quality %}
-      <a href="{% url 'dataset_list' %}" class="text-blue-600 hover:text-blue-800 font-medium">
-        <i class="fas fa-arrow-left mr-2"></i>View all datasets
-      </a>
-      {% endif %}
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="mt-20 flex justify-center">
+        <nav class="inline-flex bg-white rounded-2xl shadow-xl p-2 border border-gray-100 gap-1">
+            {% if page_obj.has_previous %}
+            <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_category %}category={{ current_category }}&{% endif %}{% if current_format %}format={{ current_format }}&{% endif %}{% if current_premium %}premium={{ current_premium }}&{% endif %}{% if current_quality %}quality={{ current_quality }}&{% endif %}{% if current_sort %}sort={{ current_sort }}&{% endif %}page={{ page_obj.previous_page_number }}" 
+               class="p-4 rounded-xl text-gray-400 hover:bg-brand-offwhite hover:text-brand-blue transition-all">
+                <i class="fas fa-chevron-left text-xs"></i>
+            </a>
+            {% endif %}
+
+            <div class="flex items-center px-6 text-sm font-bold text-gray-500 uppercase tracking-widest border-x border-gray-50">
+                Page {{ page_obj.number }} <span class="mx-2 text-gray-200">/</span> {{ page_obj.paginator.num_pages }}
+            </div>
+
+            {% if page_obj.has_next %}
+            <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_category %}category={{ current_category }}&{% endif %}{% if current_format %}format={{ current_format }}&{% endif %}{% if current_premium %}premium={{ current_premium }}&{% endif %}{% if current_quality %}quality={{ current_quality }}&{% endif %}{% if current_sort %}sort={{ current_sort }}&{% endif %}page={{ page_obj.next_page_number }}" 
+               class="p-4 rounded-xl text-gray-400 hover:bg-brand-offwhite hover:text-brand-blue transition-all">
+                <i class="fas fa-chevron-right text-xs"></i>
+            </a>
+            {% endif %}
+        </nav>
     </div>
-    {% endfor %}
-  </div>
-
-  <!-- Pagination -->
-  {% if page_obj.has_other_pages %}
-  <div class="flex justify-center items-center space-x-2 mt-12">
-    {% if page_obj.has_previous %}
-      <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_category %}category={{ current_category }}&{% endif %}{% if current_format %}format={{ current_format }}&{% endif %}{% if current_premium %}premium={{ current_premium }}&{% endif %}{% if current_quality %}quality={{ current_quality }}&{% endif %}{% if current_sort %}sort={{ current_sort }}&{% endif %}page=1" 
-         class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-        
-      </a>
-      <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_category %}category={{ current_category }}&{% endif %}{% if current_format %}format={{ current_format }}&{% endif %}{% if current_premium %}premium={{ current_premium }}&{% endif %}{% if current_quality %}quality={{ current_quality }}&{% endif %}{% if current_sort %}sort={{ current_sort }}&{% endif %}page={{ page_obj.previous_page_number }}" 
-         class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-        Previous
-      </a>
     {% endif %}
-
-    <span class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg">
-      Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-    </span>
-
-    {% if page_obj.has_next %}
-      <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_category %}category={{ current_category }}&{% endif %}{% if current_format %}format={{ current_format }}&{% endif %}{% if current_premium %}premium={{ current_premium }}&{% endif %}{% if current_quality %}quality={{ current_quality }}&{% endif %}{% if current_sort %}sort={{ current_sort }}&{% endif %}page={{ page_obj.next_page_number }}" 
-         class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-        Next
-      </a>
-      <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_category %}category={{ current_category }}&{% endif %}{% if current_format %}format={{ current_format }}&{% endif %}{% if current_premium %}premium={{ current_premium }}&{% endif %}{% if current_quality %}quality={{ current_quality }}&{% endif %}{% if current_sort %}sort={{ current_sort }}&{% endif %}page={{ page_obj.paginator.num_pages }}" 
-         class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-        
-      </a>
-    {% endif %}
-  </div>
-  {% endif %}
 </div>
 {% endblock %}
 
 {% block extra_css %}
 <style>
-  .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .line-clamp-3 {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .dataset-card {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    position: relative;
-  }
-  .dataset-card:hover {
-    transform: translateY(-2px);
-  }
-  
-  /* List view styles */
-  .list-view .dataset-card {
-    display: flex;
-    flex-direction: row;
-    align-items: stretch;
-  }
-  .list-view .dataset-card .p-6 {
-    flex: 1;
-  }
-  .list-view .dataset-card .bg-gray-50 {
-    min-width: 200px;
-    flex-shrink: 0;
-  }
-  
-  /* Custom badge gradients */
-  .badge-platinum {
-    background: linear-gradient(45deg, #e5e7eb, #6b7280);
-  }
-  .badge-gold {
-    background: linear-gradient(45deg, #fbbf24, #d97706);
-  }
-  .badge-silver {
-    background: linear-gradient(45deg, #d1d5db, #9ca3af);
-  }
-  .badge-bronze {
-    background: linear-gradient(45deg, #fb923c, #ea580c);
-  }
+    .view-toggle.active-view {
+        background: white;
+        color: var(--brand-blue);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* List view transitions */
+    .list-view-active .card-fancy {
+        flex-direction: row !important;
+        max-width: 100% !important;
+    }
+    .list-view-active .card-fancy > div:first-child {
+        flex: 1;
+    }
+    .list-view-active .card-fancy > div:last-child {
+        width: 180px;
+        border-top: 0 !important;
+        border-left: 1px solid rgba(0,0,0,0.05);
+        flex-direction: column;
+        justify-content: center;
+    }
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const datasetContainer = document.getElementById('datasetContainer');
-    const gridViewBtn = document.getElementById('gridView');
-    const listViewBtn = document.getElementById('listView');
-    const filterForm = document.getElementById('filterForm');
-    
-    let currentView = 'grid';
+    document.addEventListener('DOMContentLoaded', function() {
+        const gridViewBtn = document.getElementById('gridView');
+        const listViewBtn = document.getElementById('listView');
+        const container = document.getElementById('datasetContainer');
+        const mobileFilterToggle = document.getElementById('mobileFilterToggle');
+        const filterSidebar = document.getElementById('filterSidebar');
 
-    // View toggle functionality
-    function toggleView(view) {
-      currentView = view;
-      if (view === 'list') {
-        datasetContainer.className = 'space-y-4 list-view';
-        gridViewBtn.className = 'px-4 py-2 bg-white text-gray-600 hover:bg-gray-50 transition-colors';
-        listViewBtn.className = 'px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors';
-      } else {
-        datasetContainer.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
-        gridViewBtn.className = 'px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors';
-        listViewBtn.className = 'px-4 py-2 bg-white text-gray-600 hover:bg-gray-50 transition-colors';
-      }
-      
-      // Store preference in sessionStorage
-      sessionStorage.setItem('preferredView', view);
-    }
-
-    // Load saved view preference
-    const savedView = sessionStorage.getItem('preferredView');
-    if (savedView) {
-      toggleView(savedView);
-    }
-
-    // Event listeners
-    gridViewBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      toggleView('grid');
-    });
-    
-    listViewBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      toggleView('list');
-    });
-
-    // Auto-submit form on filter changes (except search)
-    const filterSelects = filterForm.querySelectorAll('select');
-    filterSelects.forEach(select => {
-      select.addEventListener('change', () => {
-        filterForm.submit();
-      });
-    });
-
-    // Debounced search submission
-    const searchInput = document.getElementById('searchInput');
-    let searchTimeout;
-    searchInput.addEventListener('input', function() {
-      clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(() => {
-        filterForm.submit();
-      }, 500); // 500ms delay
-    });
-
-    // Add smooth transitions to cards
-    const datasetCards = document.querySelectorAll('.dataset-card');
-    datasetCards.forEach(card => {
-      card.addEventListener('mouseenter', function() {
-        this.style.transform = 'translateY(-2px)';
-        this.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)';
-      });
-      
-      card.addEventListener('mouseleave', function() {
-        this.style.transform = 'translateY(0)';
-        this.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)';
-      });
-    });
-
-    // Intersection Observer for card animations
-    const observerOptions = {
-      threshold: 0.1,
-      rootMargin: '0px 0px -50px 0px'
-    };
-
-    const cardObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.style.opacity = '1';
-          entry.target.style.transform = 'translateY(0)';
+        if (mobileFilterToggle) {
+            mobileFilterToggle.addEventListener('click', () => {
+                filterSidebar.classList.toggle('hidden');
+            });
         }
-      });
-    }, observerOptions);
 
-    // Apply initial animation state and observe cards
-    datasetCards.forEach((card, index) => {
-      card.style.opacity = '0';
-      card.style.transform = 'translateY(20px)';
-      card.style.transition = `opacity 0.5s ease ${index * 0.1}s, transform 0.5s ease ${index * 0.1}s`;
-      cardObserver.observe(card);
+        function setView(view) {
+            if (view === 'list') {
+                container.classList.add('list-view-active');
+                container.classList.remove('md:grid-cols-2');
+                container.classList.add('grid-cols-1');
+                listViewBtn.classList.add('active-view');
+                gridViewBtn.classList.remove('active-view');
+                gridViewBtn.classList.add('text-gray-400');
+            } else {
+                container.classList.remove('list-view-active');
+                container.classList.add('md:grid-cols-2');
+                container.classList.remove('grid-cols-1');
+                gridViewBtn.classList.add('active-view');
+                listViewBtn.classList.remove('active-view');
+                listViewBtn.classList.add('text-gray-400');
+            }
+            localStorage.setItem('dataset_view', view);
+        }
+
+        gridViewBtn.addEventListener('click', () => setView('grid'));
+        listViewBtn.addEventListener('click', () => setView('list'));
+
+        // Load preference
+        const savedView = localStorage.getItem('dataset_view');
+        if (savedView) setView(savedView);
     });
-  });
 </script>
 {% endblock %}

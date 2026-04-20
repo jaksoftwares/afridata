@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-sans bg-brand-offwhite text-brand-grey;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold text-brand-blue;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-brand-blue text-white px-6 py-2 rounded-brand-btn hover:opacity-90 transition-all duration-200 inline-flex items-center justify-center;
+  }
+  .btn-secondary {
+    @apply border-2 border-brand-teal text-brand-teal px-6 py-2 rounded-brand-btn hover:bg-brand-teal hover:text-white transition-all duration-200 inline-flex items-center justify-center;
+  }
+  .card-brand {
+    @apply bg-white rounded-brand-card shadow-brand-subtle p-6 border border-gray-100 hover:shadow-lg transition-shadow duration-300;
+  }
+  .table-brand {
+    @apply min-w-full divide-y divide-gray-200;
+  }
+  .table-brand thead {
+    @apply bg-gray-50;
+  }
+  .table-brand th {
+    @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+  }
+  .table-brand tbody {
+    @apply bg-white divide-y divide-gray-200;
+  }
+  .table-brand td {
+    @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900;
+  }
+  .table-brand tr:nth-child(even) {
+    @apply bg-gray-50/50;
+  }
+}

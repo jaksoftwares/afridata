@@ -1,5 +1,5 @@
 {% load static %}
-<footer class="footer-gradient text-white relative overflow-hidden mt-auto">
+<footer class="bg-gradient-to-br from-brand-blue to-[#083b51] text-white relative overflow-hidden mt-auto">
     <!-- Floating Particles -->
     <div class="floating-particles pointer-events-none">
         <div class="particle"></div>
@@ -35,7 +35,7 @@
 
                 <!-- Resources Section -->
                 <div class="footer-section">
-                    <h4 class="text-xl font-bold mb-6 flex items-center">
+                    <h4 class="text-xl font-bold mb-6 flex items-center text-white">
                         Resources
                     </h4>
                     <ul class="space-y-3 m-0 p-0 list-none">
@@ -59,7 +59,7 @@
 
                 <!-- Community Section -->
                 <div class="footer-section">
-                    <h4 class="text-xl font-bold mb-6 flex items-center">
+                    <h4 class="text-xl font-bold mb-6 flex items-center text-white">
                         Community
                     </h4>
                     <ul class="space-y-3 m-0 p-0 list-none">
@@ -83,26 +83,25 @@
 
                 <!-- Newsletter & Social Section -->
                 <div class="footer-section">
-                    <h4 class="text-xl font-bold mb-6 flex items-center">
+                    <h4 class="text-xl font-bold mb-6 flex items-center text-white">
                         Stay Connected
                     </h4>
                     
                     <!-- Newsletter Signup -->
                     <div class="mb-6">
                         <p class="text-gray-300 text-sm mb-4">Get weekly updates on new datasets and features</p>
-                        <div class="space-y-3">
-                            <input 
-                                type="email" 
-                                id="newsletterEmail"
-                                placeholder="Enter your email address" 
-                                class="newsletter-input w-full px-4 py-3 rounded-lg text-gray-900 border-0 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner"
-                            />
-                            <button 
-                                onclick="subscribeNewsletter()"
-                                class="subscribe-btn bg-blue-600 hover:bg-blue-700 w-full px-4 py-3 rounded-lg font-bold text-white focus:outline-none transition-colors shadow-md border-0"
-                            >
-                                Subscribe to Updates
-                            </button>
+                                <input 
+                                    type="email" 
+                                    id="newsletterEmail"
+                                    placeholder="Enter your email address" 
+                                    class="newsletter-input w-full px-4 py-3 rounded-brand-btn text-gray-900 border-0 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-teal shadow-inner"
+                                />
+                                <button 
+                                    onclick="subscribeNewsletter()"
+                                    class="subscribe-btn bg-brand-teal hover:bg-opacity-90 w-full px-4 py-3 rounded-brand-btn font-bold text-white focus:outline-none transition-all shadow-md border-0"
+                                >
+                                    Subscribe to Updates
+                                </button>
                             <div id="successMessage" class="success-message hidden mt-2 text-green-400 text-sm font-medium">
                                 Successfully subscribed! Welcome to AfriData community.
                             </div>

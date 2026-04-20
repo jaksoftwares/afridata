@@ -1,0 +1,28 @@
+{
+  "name": "afridata",
+  "version": "1.0.0",
+  "description": "**Afridata** is a Django-based web application designed to serve as a centralized repository for datasets across Africa. It aims to promote open data access, enable collaboration, and empower individuals and institutions to share, explore, and utilize datasets across multiple domains such as education, health, governance, agriculture, environment, and development.",
+  "main": "index.js",
+  "scripts": {
+    "build": "npx tailwindcss -i ./static/css/main.css -o ./static/css/output.css",
+    "watch": "npx tailwindcss -i ./static/css/main.css -o ./static/css/output.css --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jaksoftwares/afridata.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/jaksoftwares/afridata/issues"
+  },
+  "homepage": "https://github.com/jaksoftwares/afridata#readme",
+  "devDependencies": {
+    "autoprefixer": "^10.5.0",
+    "postcss": "^8.5.10",
+    "tailwindcss": "^4.2.2"
+  }
+}

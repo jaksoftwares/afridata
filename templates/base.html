@@ -5,22 +5,82 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}AfriData{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            blue: '#0B4F6C',    // Deep Ocean Blue
+                            teal: '#1B998B',    // Data Teal
+                            green: '#7BC67B',   // Soft Green
+                            grey: '#4A5568',    // Slate Grey
+                            offwhite: '#F7FAFC',
+                            amber: '#F2C14E',   // Warm Amber
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['IBM Plex Serif', 'serif'],
+                    },
+                    borderRadius: {
+                        'brand-btn': '8px',
+                        'brand-card': '12px',
+                    },
+                    boxShadow: {
+                        'brand-subtle': '0 2px 4px rgba(0, 0, 0, 0.05)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer base {
+            body {
+                @apply font-sans bg-brand-offwhite text-brand-grey antialiased;
+            }
+            h1, h2, h3, h4, h5, h6 {
+                @apply font-semibold text-brand-blue tracking-tight;
+            }
+            p {
+                @apply leading-relaxed;
+            }
+        }
+        @layer components {
+            .btn-primary {
+                @apply bg-brand-blue text-white px-6 py-2.5 rounded-brand-btn font-medium hover:bg-opacity-90 transition-all duration-200 inline-flex items-center justify-center shadow-sm;
+            }
+            .btn-secondary {
+                @apply border-2 border-brand-teal text-brand-teal px-6 py-2.5 rounded-brand-btn font-medium hover:bg-brand-teal hover:text-white transition-all duration-200 inline-flex items-center justify-center;
+            }
+            .card-fancy {
+                @apply bg-white rounded-brand-card shadow-brand-subtle p-6 border border-gray-100 hover:shadow-md transition-shadow duration-300;
+            }
+            .gradient-header {
+                @apply bg-gradient-to-br from-brand-blue via-[#0d6083] to-brand-teal text-white;
+            }
+        }
+    </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     {% if 'community' in request.resolver_match.url_name %}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     {% endif %}
-    <link rel="stylesheet" href="{% static 'accounts/css/styles.css' %}">
-    <link rel="shortcut icon" type="image/x-icon" href="{% static 'accounts/images/favicon.ico' %}">
+    <!-- Custom CSS can still be used for very specific things, but we'll minimize it -->
+    {# <link rel="stylesheet" href="{% static 'accounts/css/styles.css' %}"> #}
+    <link rel="shortcut icon" type="image/svg+xml" href="{% static 'images/afridata-icon.svg' %}">
     {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-gradient-to-br from-gray-50 to-blue-50 text-gray-900">
+<body class="bg-brand-offwhite text-brand-grey font-sans">
     <!-- Standalone Professional Navbar -->
     {% include 'components/navbar.html' %}
 
     <!-- Page-Specific Hero/Header Sections -->
     {% block header_wrapper %}
-    <header class="{% block header_class %}gradient-bg{% endblock %} text-white relative z-10">
+    <header class="{% block header_class %}gradient-header{% endblock %} text-white relative z-10">
         <!-- Make background overlay only show if there is content -->
         <div class="relative z-10 w-full">
             {% block header_content %}{% endblock %}

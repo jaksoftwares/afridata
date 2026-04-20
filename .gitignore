@@ -32,34 +32,59 @@ env/
 ENV/
 .venv/
 
-# Docker
-*.pid
-*.seed
-*.bak
-*.tar
-*.tgz
-*.gz
-__MACOSX/
-docker-compose.override.yml
-# Uncomment below if your images/volumes/cache dirs shouldn't be tracked
-# docker-data/
-# .docker/
-# build/
-# dist/
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp*
+.pnp.js
 
-# VSCode / PyCharm / other IDEs
+# Build directories
+dist/
+build/
+out/
+.next/
+
+# Django Media & Uploads
+media/
+profile_pics/
+datasets/
+staticfiles/
+static_root/
+
+# Database
+db.sqlite3
+db.sqlite3-journal
+*.sqlite
+*.sql
+*.mysql
+
+# Logs
+*.log
+logs/
+
+# IDEs & System
 .vscode/
 .idea/
+.project
+.pydevproject
+.settings/
 *.sublime-project
 *.sublime-workspace
-
-# System
 .DS_Store
 Thumbs.db
+[Dd]esktop.ini
 
-# Testing / Coverage
+# Testing
 htmlcov/
 .coverage
 .pytest_cache/
+.tox/
 nosetests.xml
 test-results/
+
+# Environment
+.env
+.env.*
+!.env.example
