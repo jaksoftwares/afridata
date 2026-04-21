@@ -334,12 +334,11 @@
     <!-- Upload Section -->
     <section id="upload-content" class="p-6 hidden">
       <div class="flex justify-center space-x-4">
-        <button 
-          type="button" 
-          onclick="redirectToUpload()"
-          class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg transition-colors">
+        <a 
+          href="{% url 'upload_dataset' %}"
+          class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg transition-colors no-underline flex items-center justify-center">
           Upload Dataset
-        </button>
+        </a>
       </div>
     </section>
 
@@ -531,10 +530,6 @@
       document.getElementById(`${tab}-tab`).classList.remove('text-gray-600', 'hover:text-blue-600');
     });
   });
-
-  function redirectToUpload() {
-    window.location.href = "{% url 'upload_dataset' %}";
-  }
 
   // File upload preview (optional if file input exists)
   const fileInput = document.getElementById('file-upload');

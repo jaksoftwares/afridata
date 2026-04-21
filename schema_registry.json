@@ -185,5 +185,62 @@
       }
     },
     "created_at": "2026-04-21T10:10:06.956729"
+  },
+  "climate_and_environmental_governance_climate_data_in_the_savannah": {
+    "domain": "climate and environmental governance",
+    "dataset_name": "climate data in the savannah",
+    "raw_columns": [
+      "Year",
+      "Country",
+      "Avg Temperature (\u00b0C)",
+      "CO2 Emissions (Tons/Capita)",
+      "Sea Level Rise (mm)",
+      "Rainfall (mm)",
+      "Population",
+      "Renewable Energy (%)",
+      "Extreme Weather Events",
+      "Forest Area (%)"
+    ],
+    "schema": {
+      "domain": "Climate and Environmental Governance",
+      "alignment_confidence": 0.95,
+      "official_standard": {
+        "reporting_year": "Int32",
+        "country_code": "Utf8",
+        "avg_temperature_celsius": "Float64",
+        "co2_emissions_per_capita": "Float64",
+        "sea_level_rise_mm": "Float64",
+        "annual_rainfall_mm": "Float64",
+        "total_population": "Int64",
+        "renewable_energy_share_percentage": "Float64",
+        "extreme_weather_events_count": "Int64",
+        "forest_cover_percentage": "Float64"
+      },
+      "mapping_instructions": {
+        "Year": "reporting_year",
+        "Country": "country_code",
+        "Avg Temperature (\u00b0C)": "avg_temperature_celsius",
+        "CO2 Emissions (Tons/Capita)": "co2_emissions_per_capita",
+        "Sea Level Rise (mm)": "sea_level_rise_mm",
+        "Rainfall (mm)": "annual_rainfall_mm",
+        "Population": "total_population",
+        "Renewable Energy (%)": "renewable_energy_share_percentage",
+        "Extreme Weather Events": "extreme_weather_events_count",
+        "Forest Area (%)": "forest_cover_percentage"
+      },
+      "transformation_needed": {
+        "reporting_year": "cast(Int32)",
+        "country_code": "cast(Utf8)",
+        "avg_temperature_celsius": "cast(Float64)",
+        "co2_emissions_per_capita": "cast(Float64)",
+        "sea_level_rise_mm": "cast(Float64)",
+        "annual_rainfall_mm": "cast(Float64)",
+        "total_population": "cast(Int64)",
+        "renewable_energy_share_percentage": "cast(Float64)",
+        "extreme_weather_events_count": "cast(Int64)",
+        "forest_cover_percentage": "cast(Float64)"
+      }
+    },
+    "created_at": "2026-04-21T10:31:14.381225"
   }
 }

@@ -10,6 +10,8 @@ import json
 from django.contrib.auth.decorators import login_required
 from collections import Counter
 from django.contrib.auth import get_user_model
+from django.contrib import messages
+from .forms import ContactForm
 
 User = get_user_model()
 
@@ -422,3 +424,19 @@ def quick_search_suggestions(request):
         'success': True,
         'suggestions': suggestions[:8]  # Return top 8 suggestions
     })
+
+
+def contact_us(request):
+    """
+    Handle Contact Us page: form display and processing.
+    """
+    if request.method == 'POST':
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            # In a real app, you'd send an email here.
+            messages.success(request, "Your message has been sent successfully! We'll get back to you soon.")
+            return render(request, 'home/contact.html', {'form': ContactForm(), 'success': True})
+    else:
+        form = ContactForm()
+    
+    return render(request, 'home/contact.html', {'form': form})

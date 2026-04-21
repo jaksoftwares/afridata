@@ -15,5 +15,8 @@ urlpatterns = [
     path('api/stats/', views.dataset_stats, name='dataset_stats'),
     
     # api documentation
-    path('api/docs/', views.api_docs, name='api_docs')
+    path('api/docs/', views.api_docs, name='api_docs'),
+    
+    # Contact Us
+    path('contact/', views.contact_us, name='contact_us'),
 ]

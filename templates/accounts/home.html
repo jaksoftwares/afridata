@@ -37,15 +37,15 @@
                 
                 <!-- Dashboard Shortcuts (The "Odd One Out" Fix: make them feel integrated) -->
                 <div class="flex flex-wrap justify-center gap-4 mb-14">
-                    <button onclick="redirectToUpload()" class="btn-primary !bg-white !text-brand-blue !border-0 hover:!bg-brand-offwhite shadow-xl transition-transform hover:-translate-y-1">
+                    <a href="{% url 'upload_dataset' %}" class="btn-primary !bg-white !text-brand-blue !border-0 hover:!bg-brand-offwhite shadow-xl transition-transform hover:-translate-y-1 no-underline flex items-center justify-center">
                         <i class="fas fa-cloud-upload-alt mr-2 text-brand-teal"></i>Upload New Dataset
-                    </button>
-                    <button onclick="window.location.href='{% url 'dataset_list' %}'" class="btn-secondary !text-white !border-white/20 hover:!bg-white/10 shadow-lg backdrop-blur-sm">
+                    </a>
+                    <a href="{% url 'dataset_list' %}" class="btn-secondary !text-white !border-white/20 hover:!bg-white/10 shadow-lg backdrop-blur-sm no-underline flex items-center justify-center">
                         Browse Library
-                    </button>
-                    <button onclick="window.location.href='/profile/'" class="btn-secondary !text-white !border-white/20 hover:!bg-white/10 shadow-lg backdrop-blur-sm">
+                    </a>
+                    <a href="{% url 'profile' %}" class="btn-secondary !text-white !border-white/20 hover:!bg-white/10 shadow-lg backdrop-blur-sm no-underline flex items-center justify-center">
                         My Workspace
-                    </button>
+                    </a>
                 </div>
             {% else %}
                 <h1 class="text-5xl md:text-7xl font-bold mb-8 tracking-tight !text-white leading-[1.1]">
@@ -56,12 +56,12 @@
                 </p>
                 
                 <div class="flex flex-wrap justify-center gap-4 mb-14">
-                    <button onclick="window.location.href='{% url 'login_signup' %}?mode=signup'" class="btn-primary !bg-brand-teal !border-0 !px-10 py-4 text-lg shadow-xl">
+                    <a href="{% url 'login_signup' %}?mode=signup" class="btn-primary !bg-brand-teal !border-0 !px-10 py-4 text-lg shadow-xl no-underline flex items-center justify-center">
                         Sign Up
-                    </button>
-                    <button onclick="window.location.href='{% url 'dataset_list' %}'" class="btn-secondary !text-white !border-white/20 hover:!bg-white/10 !px-10 py-4 text-lg">
+                    </a>
+                    <a href="{% url 'dataset_list' %}" class="btn-secondary !text-white !border-white/20 hover:!bg-white/10 !px-10 py-4 text-lg no-underline flex items-center justify-center">
                         View Datasets
-                    </button>
+                    </a>
                 </div>
             {% endif %}
 
@@ -175,7 +175,7 @@
                 {% empty %}
                 <div class="text-center py-4 text-gray-500">
                     <p>You haven't uploaded any datasets yet</p>
-                    <button onclick="redirectToUpload()" class="mt-2 text-blue-600 text-sm hover:text-blue-800">Upload Your First Dataset</button>
+                    <a href="{% url 'upload_dataset' %}" class="mt-2 text-blue-600 text-sm hover:text-blue-800 no-underline inline-block">Upload Your First Dataset</a>
                 </div>
                 {% endfor %}
             </div>
@@ -548,7 +548,7 @@
                     </div>
                     <h3 class="text-xl font-bold mb-2">No Featured Datasets</h3>
                     <p class="text-gray-500 mb-8">Contribute to the African data infrastructure today.</p>
-                    <button onclick="redirectToUpload()" class="btn-primary !px-10">Upload Dataset</button>
+                    <a href="{% url 'upload_dataset' %}" class="btn-primary !px-10 no-underline flex items-center justify-center">Upload Dataset</a>
                 </div>
                 {% endfor %}
             </div>
@@ -737,18 +737,7 @@
         });
     }
 
-    // Redirect to upload page
-    function redirectToUpload() {
-        {% if user.is_authenticated %}
-            window.location.href = '{% url "upload_dataset" %}';
-        {% else %}
-            showNotification('Please log in to upload datasets', 'error');
-            setTimeout(() => {
-                window.location.href = '{% url "account_login" %}';
-            }, 2000);
-        {% endif %}
-    }
-
+    // Copy referral code functionality for authenticated users
     // Copy referral code functionality for authenticated users
     function copyReferralCode() {
         {% if user.is_authenticated %}

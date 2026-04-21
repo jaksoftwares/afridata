@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Contact Us | AfriData{% endblock %}
+
+{% block header_class %}gradient-header py-20{% endblock %}
+
+{% block header_content %}
+<div class="container mx-auto px-6 text-center">
+    <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-white animate-fade-in-down">
+        Get in Touch
+    </h1>
+    <p class="text-xl text-white/90 max-w-2xl mx-auto font-light leading-relaxed">
+        Have questions about our datasets? Need technical support? We're here to help you unlock the power of African data.
+    </p>
+</div>
+{% endblock %}
+
+{% block content %}
+<section class="py-16 md:py-24 bg-brand-offwhite relative overflow-hidden">
+    <!-- Decorative background elements -->
+    <div class="absolute top-0 right-0 -u-translate-y-1/2 translate-x-1/2 w-96 h-96 bg-brand-teal/5 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/2 w-96 h-96 bg-brand-blue/5 rounded-full blur-3xl"></div>
+
+    <div class="container mx-auto px-6 relative z-10">
+        <div class="flex flex-col lg:flex-row gap-16">
+            <!-- Contact Information Side -->
+            <div class="lg:w-1/3">
+                <div class="space-y-12">
+                    <div>
+                        <h2 class="text-3xl font-bold text-brand-blue mb-8">Contact Information</h2>
+                        <div class="space-y-8">
+                            <div class="flex items-start gap-5 group">
+                                <div class="w-12 h-12 rounded-2xl bg-brand-teal/10 flex items-center justify-center text-brand-teal group-hover:bg-brand-teal group-hover:text-white transition-all duration-300">
+                                    <i class="fa-solid fa-location-dot text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-lg text-brand-blue">Our Office</h3>
+                                    <p class="text-brand-grey/80">Innovation House, 4th Floor<br>Westlands, Nairobi, Kenya</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-5 group">
+                                <div class="w-12 h-12 rounded-2xl bg-brand-blue/10 flex items-center justify-center text-brand-blue group-hover:bg-brand-blue group-hover:text-white transition-all duration-300">
+                                    <i class="fa-solid fa-envelope text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-lg text-brand-blue">Email Us</h3>
+                                    <p class="text-brand-grey/80">support@afridata.io<br>partnerships@afridata.io</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-5 group">
+                                <div class="w-12 h-12 rounded-2xl bg-brand-amber/10 flex items-center justify-center text-brand-amber group-hover:bg-brand-amber group-hover:text-white transition-all duration-300">
+                                    <i class="fa-solid fa-phone text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-lg text-brand-blue">Call Us</h3>
+                                    <p class="text-brand-grey/80">+254 700 000 000<br>Mon-Fri, 9am-5pm EAT</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Social Presence -->
+                    <div>
+                        <h3 class="text-xl font-bold text-brand-blue mb-6">Follow Us</h3>
+                        <div class="flex gap-4">
+                            <a href="#" class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-brand-grey hover:bg-brand-blue hover:text-white transition-all duration-300">
+                                <i class="fa-brands fa-twitter"></i>
+                            </a>
+                            <a href="#" class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-brand-grey hover:bg-brand-blue hover:text-white transition-all duration-300">
+                                <i class="fa-brands fa-linkedin-in"></i>
+                            </a>
+                            <a href="#" class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-brand-grey hover:bg-brand-blue hover:text-white transition-all duration-300">
+                                <i class="fa-brands fa-facebook-f"></i>
+                            </a>
+                            <a href="#" class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-brand-grey hover:bg-brand-blue hover:text-white transition-all duration-300">
+                                <i class="fa-brands fa-github"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Form Side -->
+            <div class="lg:w-2/3">
+                <div class="bg-white/80 backdrop-blur-md rounded-[2rem] shadow-2xl shadow-gray-200/50 p-8 md:p-12 border border-white/50">
+                    <h2 class="text-3xl font-bold text-brand-blue mb-2">Send us a Message</h2>
+                    <p class="text-brand-grey/70 mb-10">We'll get back to you within 24 hours.</p>
+
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="mb-8 p-4 rounded-xl {% if message.tags == 'success' %}bg-green-50 text-green-700 border border-green-100{% else %}bg-red-50 text-red-700 border border-red-100{% endif %} flex items-center gap-3 animate-fade-in">
+                                <i class="fa-solid {% if message.tags == 'success' %}fa-circle-check{% else %}fa-circle-exclamation{% endif %} text-xl"></i>
+                                <p class="font-medium">{{ message }}</p>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" class="space-y-6">
+                        {% csrf_token %}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="text-sm font-semibold text-brand-blue/70 ml-1">Full Name</label>
+                                {{ form.name }}
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-sm font-semibold text-brand-blue/70 ml-1">Email Address</label>
+                                {{ form.email }}
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-semibold text-brand-blue/70 ml-1">Subject</label>
+                            {{ form.subject }}
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-semibold text-brand-blue/70 ml-1">Message</label>
+                            {{ form.message }}
+                        </div>
+                        <div class="pt-4">
+                            <button type="submit" class="w-full md:w-auto btn-primary !px-12 !py-4 text-lg shadow-lg shadow-brand-blue/20 hover:scale-[1.02] active:scale-[0.98]">
+                                Send Message <i class="fa-solid fa-paper-plane ml-3"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Section Integration -->
+<section class="py-20 bg-white">
+    <div class="container mx-auto px-6">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl font-bold text-brand-blue mb-4">Frequently Asked Questions</h2>
+            <p class="text-brand-grey/70">Quick answers to common questions.</p>
+        </div>
+        <div class="max-w-3xl mx-auto space-y-4">
+            <div class="card-fancy !p-0 overflow-hidden">
+                <button class="w-full px-8 py-6 text-left flex items-center justify-between hover:bg-brand-offwhite transition-colors group">
+                    <span class="font-semibold text-brand-blue">How can I contribute datasets to AfriData?</span>
+                    <i class="fa-solid fa-chevron-down text-brand-teal group-hover:translate-y-1 transition-transform"></i>
+                </button>
+            </div>
+            <div class="card-fancy !p-0 overflow-hidden">
+                <button class="w-full px-8 py-6 text-left flex items-center justify-between hover:bg-brand-offwhite transition-colors group">
+                    <span class="font-semibold text-brand-blue">What data formats are supported?</span>
+                    <i class="fa-solid fa-chevron-down text-brand-teal group-hover:translate-y-1 transition-transform"></i>
+                </button>
+            </div>
+            <div class="card-fancy !p-0 overflow-hidden">
+                <button class="w-full px-8 py-6 text-left flex items-center justify-between hover:bg-brand-offwhite transition-colors group">
+                    <span class="font-semibold text-brand-blue">Is there an API for developers?</span>
+                    <i class="fa-solid fa-chevron-down text-brand-teal group-hover:translate-y-1 transition-transform"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    @keyframes fade-in-down {
+        0% { opacity: 0; transform: translateY(-20px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fade-in {
+        0% { opacity: 0; }
+        100% { opacity: 1; }
+    }
+    .animate-fade-in-down {
+        animation: fade-in-down 0.8s ease-out forwards;
+    }
+    .animate-fade-in {
+        animation: fade-in 0.5s ease-out forwards;
+    }
+</style>
+{% endblock %}

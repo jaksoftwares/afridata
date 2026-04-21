@@ -44,6 +44,10 @@
                 <span class="font-bold text-sm tracking-wide">API Interface</span>
             </a>
             {% endif %}
+            <a href="{% url 'home:contact_us' %}" class="group flex items-center px-4 py-4 rounded-2xl transition-all duration-200 no-underline {% if request.resolver_match.url_name == 'contact_us' %}bg-brand-blue text-white shadow-lg shadow-brand-blue/20{% else %}text-gray-600 hover:bg-brand-offwhite hover:text-brand-blue{% endif %}">
+                <span class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 {% if request.resolver_match.url_name == 'contact_us' %}bg-white/20{% else %}bg-gray-100 group-hover:bg-brand-blue/10{% endif %}"><i class="fas fa-envelope text-sm"></i></span>
+                <span class="font-bold text-sm tracking-wide">Contact</span>
+            </a>
         </nav>
         
         <div class="mt-10 pt-10 border-t border-gray-100">
@@ -104,6 +108,7 @@
                 {% if user.is_authenticated %}
                 <a href="{% url 'home:api_docs' %}" class="pb-1 border-b-2 {% if 'api' in request.resolver_match.url_name %}border-brand-blue text-brand-blue{% else %}border-transparent text-gray-600 hover:text-brand-blue hover:border-brand-teal{% endif %} transition-all duration-200 no-underline hover:no-underline">API</a>
                 {% endif %}
+                <a href="{% url 'home:contact_us' %}" class="pb-1 border-b-2 {% if request.resolver_match.url_name == 'contact_us' %}border-brand-blue text-brand-blue{% else %}border-transparent text-gray-600 hover:text-brand-blue hover:border-brand-teal{% endif %} transition-all duration-200 no-underline hover:no-underline">Contact</a>
 
                 {% if user.is_authenticated %}
                 <!-- User Profile Dropdown -->
