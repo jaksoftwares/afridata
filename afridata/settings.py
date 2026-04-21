@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'django_filters',
     'schema_graph',
     'django_extensions',
+    'standardiser',
 ]
 
 MIDDLEWARE = [
@@ -232,3 +233,7 @@ GRAPH_MODELS = {
 
 
 
+
+# Standardisation Settings
+GEMINI_API_KEY = env('GEMINI_API_KEY', default='')
+SCHEMA_REGISTRY_FILE = BASE_DIR / 'schema_registry.json'

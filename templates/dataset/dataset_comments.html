@@ -23,13 +23,14 @@
         </div>
         <div class="flex space-x-3">
           {% if dataset %}
-          <a href="{% url 'dataset_detail' dataset.id %}" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
+          <a href="{% url 'dataset_detail' dataset.slug %}" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
             ← Back to Dataset
           </a>
-          <a href="{% url 'dataset_preview' dataset.id %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+          <a href="{% url 'dataset_preview' dataset.slug %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
             View Data
           </a>
           {% endif %}
+
         </div>
       </div>
     </div>
@@ -38,7 +39,8 @@
     {% if user.is_authenticated and dataset %}
     <div class="bg-white p-6 rounded shadow mb-6">
       <h2 class="text-lg font-semibold text-gray-700 mb-4">Add Your Comment</h2>
-      <form method="post" action="{% url 'post_comment' dataset.id %}" class="space-y-4">
+      <form method="post" action="{% url 'post_comment' dataset.slug %}" class="space-y-4">
+
         {% csrf_token %}
         <div>
           <label for="content" class="block text-sm font-medium text-gray-700 mb-2">Your Comment</label>
@@ -198,15 +200,16 @@
     <div class="bg-white p-4 rounded shadow mt-6">
       <h3 class="text-lg font-semibold text-gray-700 mb-3">Quick Actions</h3>
       <div class="flex flex-wrap gap-3">
-        <a href="{% url 'dataset_detail' dataset.id %}" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
+        <a href="{% url 'dataset_detail' dataset.slug %}" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
           View Dataset Details
         </a>
-        <a href="{% url 'dataset_preview' dataset.id %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+        <a href="{% url 'dataset_preview' dataset.slug %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
           Preview Data
         </a>
-        <a href="{% url 'download_dataset' dataset.id %}" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+        <a href="{% url 'download_dataset' dataset.slug %}" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
           Download Dataset
         </a>
+
       </div>
     </div>
     {% endif %}

@@ -1,0 +1,386 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Standardisation Results | AfriData{% endblock %}
+
+{% block header_content %}
+<div class="container mx-auto px-6 py-12">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+            <div class="flex items-center gap-3 mb-4">
+                <span class="bg-brand-teal/20 text-brand-teal px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
+                    Pipeline Complete
+                </span>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-serif font-bold text-white mb-4">
+                {{ job.dataset_name }}
+            </h1>
+            <p class="text-xl text-white/80 max-w-2xl font-light">
+                Results and metrics for our automated data standardization and cleaning process in the <span class="font-bold text-white">{{ job.domain | title }}</span> domain.
+            </p>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="bg-white/10 backdrop-blur-md rounded-brand-card p-4 border border-white/20">
+                <div class="text-white/60 text-xs font-bold uppercase mb-1">Status</div>
+                <div class="text-white font-bold flex items-center gap-2">
+                    <span class="h-2 w-2 rounded-full bg-brand-green animate-pulse"></span>
+                    Ready for Review
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-6 py-12">
+    <!-- Step Indicator -->
+    <div class="mb-12">
+        <div class="flex items-center justify-center max-w-4xl mx-auto">
+            <div class="flex flex-col items-center flex-1 relative">
+                <div class="w-10 h-10 rounded-full bg-brand-teal text-white flex items-center justify-center font-bold z-10 shadow-lg">1</div>
+                <span class="text-xs font-bold mt-2 text-brand-blue uppercase tracking-tighter">Dataset</span>
+                <div class="absolute top-5 left-1/2 w-full h-0.5 bg-brand-teal z-0"></div>
+            </div>
+            <div class="flex flex-col items-center flex-1 relative">
+                <div class="w-10 h-10 rounded-full bg-brand-teal text-white flex items-center justify-center font-bold z-10 shadow-lg">2</div>
+                <span class="text-xs font-bold mt-2 text-brand-blue uppercase tracking-tighter">Processing</span>
+                <div class="absolute top-5 left-1/2 w-full h-0.5 bg-brand-teal z-0"></div>
+            </div>
+            <div class="flex flex-col items-center flex-1 relative">
+                <div class="w-10 h-10 rounded-full bg-brand-teal text-white flex items-center justify-center font-bold z-10 shadow-lg border-4 border-brand-offwhite">3</div>
+                <span class="text-xs font-bold mt-2 text-brand-blue uppercase tracking-tighter">Results</span>
+                <div class="absolute top-5 left-1/2 w-full h-0.5 bg-gray-200 z-0"></div>
+            </div>
+            <div class="flex flex-col items-center flex-1 relative">
+                <div class="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center font-bold z-10">4</div>
+                <span class="text-xs font-bold mt-2 text-gray-400 uppercase tracking-tighter">Download</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left Column: Metrics & Summary -->
+        <div class="lg:col-span-8 space-y-8">
+            
+            <!-- Quality Score Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- AI Confidence -->
+                <div class="card-fancy !p-8 flex flex-col justify-between">
+                    <div>
+                        <div class="text-brand-grey/60 text-[10px] font-bold uppercase tracking-widest mb-1">AI Confidence</div>
+                        <div class="text-4xl font-serif font-black text-brand-blue">{{ summary.ai_confidence }}<span class="text-lg ml-0.5 text-brand-teal">%</span></div>
+                    </div>
+                    <div class="mt-6">
+                        <div class="w-full bg-gray-100 rounded-full h-2">
+                            <div class="bg-brand-teal rounded-full h-2 transition-all duration-1000 ease-out" style="width: {{ summary.ai_confidence }}%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Completeness -->
+                <div class="card-fancy !p-8 flex flex-col justify-between">
+                    <div>
+                        <div class="text-brand-grey/60 text-[10px] font-bold uppercase tracking-widest mb-1">Completeness</div>
+                        <div class="text-4xl font-serif font-black text-brand-blue">{{ summary.completeness }}<span class="text-lg ml-0.5 text-brand-teal">%</span></div>
+                    </div>
+                    <div class="mt-6">
+                        <div class="w-full bg-gray-100 rounded-full h-2">
+                            <div class="{% if summary.completeness < 50 %}bg-red-400{% elif summary.completeness < 80 %}bg-brand-amber{% else %}bg-brand-green{% endif %} rounded-full h-2 transition-all duration-1000 ease-out" style="width: {{ summary.completeness }}%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mapping Score -->
+                <div class="card-fancy !p-8 flex flex-col justify-between" title="Accuracy of automated schema mapping">
+                    <div>
+                        <div class="text-brand-grey/60 text-[10px] font-bold uppercase tracking-widest mb-1">Mapping Score</div>
+                        <div class="text-4xl font-serif font-black text-brand-blue">{{ summary.mapping_score }}<span class="text-lg ml-0.5 text-brand-teal">%</span></div>
+                    </div>
+                    <div class="mt-6">
+                        <div class="w-full bg-gray-100 rounded-full h-2">
+                            <div class="bg-brand-blue rounded-full h-2 transition-all duration-1000 ease-out" style="width: {{ summary.mapping_score }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Summary Detail -->
+            <div class="card-fancy">
+                <div class="flex items-center gap-2 mb-6 border-b border-gray-50 pb-4">
+                    <div class="bg-brand-blue/10 p-2 rounded-lg">
+                        <i class="fas fa-table text-brand-blue"></i>
+                    </div>
+                    <h3 class="text-lg font-bold">Standardization Summary</h3>
+                </div>
+                
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div>
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Dataset Size</p>
+                        <p class="text-2xl font-bold text-brand-blue">{{ summary.rows_original|default:"0" }} <span class="text-sm font-normal text-gray-500">rows</span></p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Standardized</p>
+                        <p class="text-2xl font-bold text-brand-teal">{{ summary.rows_processed|default:"0" }} <span class="text-sm font-normal text-gray-500">rows</span></p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Schema Fields</p>
+                        <p class="text-2xl font-bold text-brand-blue">{{ summary.columns_mapped }}/{{ summary.columns_count }}</p>
+                        <p class="text-[10px] text-brand-teal font-bold tracking-tight uppercase">Mapped to Standard</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Runtime</p>
+                        <p class="text-2xl font-bold text-brand-grey">{{ summary.processing_duration }}<span class="text-sm ml-0.5">s</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistical Enhancements -->
+            {% if result.normalization_summary %}
+            <div class="card-fancy">
+                <div class="flex items-center gap-2 mb-6 border-b border-gray-50 pb-4">
+                    <div class="bg-brand-teal/10 p-2 rounded-lg">
+                        <i class="fas fa-wand-magic-sparkles text-brand-teal"></i>
+                    </div>
+                    <h3 class="text-lg font-bold">Intelligent Enhancements Applied</h3>
+                </div>
+                
+                <div class="space-y-4">
+                    {% for summary_line in result.normalization_summary %}
+                    <div class="flex items-start gap-3 p-3 bg-brand-offwhite rounded-lg border-l-4 border-brand-teal italic text-sm">
+                        <i class="fas fa-circle-check text-brand-teal mt-1"></i>
+                        <span>{{ summary_line }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="mt-6 p-4 bg-brand-blue/5 rounded-xl border border-brand-blue/10">
+                    <div class="flex items-center gap-2 text-brand-blue font-bold text-xs mb-2 uppercase tracking-widest">
+                        <i class="fas fa-info-circle"></i>
+                        Naming Convention
+                    </div>
+                    <div class="flex flex-wrap gap-4 text-xs">
+                        <code class="bg-white px-2 py-1 rounded border border-brand-blue/20">col_zscore</code>
+                        <code class="bg-white px-2 py-1 rounded border border-brand-blue/20">col_log</code>
+                        <code class="bg-white px-2 py-1 rounded border border-brand-blue/20">col_encoded</code>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Schema Inspector -->
+            <div class="card-fancy">
+                <div class="flex items-center justify-between mb-6 border-b border-gray-50 pb-4">
+                    <div class="flex items-center gap-2">
+                        <div class="bg-gray-100 p-2 rounded-lg">
+                            <i class="fas fa-code text-gray-600"></i>
+                        </div>
+                        <h3 class="text-lg font-bold">Automated Rulebook (JSON)</h3>
+                    </div>
+                    <button onclick="copyRulebook()" class="text-xs text-brand-blue font-bold hover:underline">
+                        <i class="fas fa-copy mr-1"></i> Copy Schema
+                    </button>
+                </div>
+                
+                <div id="rulebook-code" class="bg-gray-900 text-brand-green p-6 rounded-brand-card font-mono text-sm leading-relaxed max-height-[400px] overflow-y-auto whitespace-pre-wrap break-words border-t-8 border-gray-800">{% autoescape off %}{{ result.schema_generated_json }}{% endautoescape %}</div>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Actions -->
+        <div class="lg:col-span-4 space-y-8">
+            
+            <!-- Review Action -->
+            <div class="card-fancy bg-brand-blue text-white overflow-hidden relative group">
+                <div class="absolute -right-8 -top-8 w-32 h-32 bg-white/5 rounded-full group-hover:scale-125 transition-transform duration-500"></div>
+                <div class="relative z-10">
+                    <h3 class="text-xl font-bold text-white mb-3">Refine Definitions</h3>
+                    <p class="text-white/70 text-sm mb-6 leading-loose">
+                        AI has automatically mapped your data fields to AfriData standards. Review and edit these mappings to perfect your dataset's structural integrity.
+                    </p>
+                    <a href="javascript:void(0)" onclick="reviewMappings()" id="review-btn" class="w-full bg-white text-brand-blue font-bold py-4 rounded-brand-btn text-center inline-block hover:bg-opacity-90 transition-all shadow-lg active:scale-[0.98]">
+                        <i class="fas fa-pen-nib mr-2"></i> Review & Edit Mappings
+                    </a>
+                </div>
+            </div>
+
+            <!-- Downloads Section -->
+            <div class="card-fancy">
+                <h3 class="text-lg font-bold mb-6 border-b border-gray-50 pb-4">Final Exports</h3>
+                
+                <div class="space-y-4">
+                    <!-- CSV -->
+                    <button onclick="downloadFile('csv')" id="csv-btn" class="w-full flex items-center justify-between p-4 rounded-brand-btn border border-gray-100 hover:border-brand-teal hover:bg-brand-teal/5 group transition-all">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-gray-100 p-3 rounded-lg group-hover:bg-brand-teal group-hover:text-white transition-colors">
+                                <i class="fas fa-file-csv text-xl"></i>
+                            </div>
+                            <div class="text-left">
+                                <p class="font-bold text-brand-grey group-hover:text-brand-blue">Standardized CSV</p>
+                                <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Universal Format</p>
+                            </div>
+                        </div>
+                        <i class="fas fa-download text-gray-300 group-hover:text-brand-teal"></i>
+                    </button>
+
+                    <!-- Excel -->
+                    <button onclick="downloadFile('excel')" id="excel-btn" class="w-full flex items-center justify-between p-4 rounded-brand-btn border border-gray-100 hover:border-brand-teal hover:bg-brand-teal/5 group transition-all">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-gray-100 p-3 rounded-lg group-hover:bg-brand-teal group-hover:text-white transition-colors">
+                                <i class="fas fa-file-excel text-xl"></i>
+                            </div>
+                            <div class="text-left">
+                                <p class="font-bold text-brand-grey group-hover:text-brand-blue">Standardized Excel</p>
+                                <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Multi-sheet analysis</p>
+                            </div>
+                        </div>
+                        <i class="fas fa-download text-gray-300 group-hover:text-brand-teal"></i>
+                    </button>
+
+                    <!-- Parquet -->
+                    <button onclick="downloadFile('parquet')" id="parquet-btn" class="w-full flex items-center justify-between p-4 rounded-brand-btn border border-gray-100 hover:border-brand-blue hover:bg-brand-blue/5 group transition-all">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-brand-blue/10 p-3 rounded-lg group-hover:bg-brand-blue group-hover:text-white transition-colors border border-brand-blue/10">
+                                <i class="fas fa-cubes text-xl text-brand-blue group-hover:text-white"></i>
+                            </div>
+                            <div class="text-left">
+                                <p class="font-bold text-brand-grey group-hover:text-brand-blue">Parquet Storage</p>
+                                <p class="text-[10px] text-brand-blue/60 uppercase tracking-widest font-bold">High performance</p>
+                            </div>
+                        </div>
+                        <i class="fas fa-download text-gray-300 group-hover:text-brand-blue"></i>
+                    </button>
+                    
+                    <!-- JSON -->
+                    <button onclick="downloadFile('json')" id="json-btn" class="w-full flex items-center justify-between p-4 rounded-brand-btn border border-gray-100 hover:border-gray-800 hover:bg-gray-50 group transition-all">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-gray-100 p-3 rounded-lg group-hover:bg-gray-800 group-hover:text-white transition-colors">
+                                <i class="fas fa-bracket-curly text-xl"></i>
+                            </div>
+                            <div class="text-left">
+                                <p class="font-bold text-brand-grey group-hover:text-gray-900">Standard Schema (JSON)</p>
+                                <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Machine Readable Meta</p>
+                            </div>
+                        </div>
+                        <i class="fas fa-download text-gray-300 group-hover:text-gray-900"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Tip -->
+            <div class="p-6 bg-brand-amber/10 rounded-brand-card border border-brand-amber/20">
+                <div class="flex gap-4">
+                    <i class="fas fa-lightbulb text-brand-amber text-2xl mt-1"></i>
+                    <div>
+                        <h4 class="text-brand-amber font-bold mb-1">Data Science Tip</h4>
+                        <p class="text-xs text-brand-grey/80 leading-relaxed">
+                            Standardized datasets achieve up to <strong>30% faster</strong> model training times due to reduced pre-processing overhead.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Normalization Summary (Tailwind version) -->
+{% if result.normalization_summary %}
+<div id="normalization-modal" class="fixed inset-0 z-[60] hidden">
+    <div class="absolute inset-0 bg-brand-blue/60 backdrop-blur-sm"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-xl px-4">
+        <div class="bg-white rounded-brand-card shadow-2xl overflow-hidden border border-brand-teal/30">
+            <div class="gradient-header p-6 flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-wand-magic-sparkles text-xl"></i>
+                    <h3 class="text-xl font-serif font-bold text-white">Advanced Normalization Applied</h3>
+                </div>
+                <button onclick="closeModal()" class="text-white/60 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-8">
+                <div class="space-y-4 mb-8">
+                    {% for summary_line in result.normalization_summary %}
+                    <div class="flex items-center gap-3 text-brand-grey font-medium">
+                        <i class="fas fa-check-circle text-brand-green"></i>
+                        {{ summary_line }}
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="bg-brand-offwhite p-4 rounded-xl border border-gray-100">
+                    <p class="text-sm font-bold text-brand-blue mb-2 uppercase tracking-widest flex items-center gap-2">
+                        <i class="fas fa-info-circle"></i> New Fields Created
+                    </p>
+                    <p class="text-xs text-gray-500 leading-relaxed">
+                        AfriData Standardizer has automatically computed z-scores, log-transforms, and categorical encodings to facilitate immediate research use.
+                    </p>
+                </div>
+                
+                <div class="mt-8 flex justify-end">
+                    <button onclick="closeModal()" class="btn-primary !px-12 active:scale-95">
+                        Continue to Download
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% block extra_js %}
+<script>
+    function downloadFile(format) {
+        const jobId = "{{ job.job_id }}";
+        const btnId = format + '-btn';
+        const originalContent = document.getElementById(btnId).innerHTML;
+        
+        // Show loading state
+        document.getElementById(btnId).disabled = true;
+        document.getElementById(btnId).classList.add('opacity-50', 'pointer-events-none');
+        
+        window.location.href = `/standardiser/download/${jobId}/?format=${format}`;
+        
+        // Reset after bit
+        setTimeout(() => {
+            document.getElementById(btnId).disabled = false;
+            document.getElementById(btnId).classList.remove('opacity-50', 'pointer-events-none');
+        }, 4000);
+    }
+
+    function reviewMappings() {
+        const jobId = "{{ job.job_id }}";
+        const btn = document.getElementById('review-btn');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Loading Editor...';
+        btn.classList.add('opacity-80', 'pointer-events-none');
+        window.location.href = `/standardiser/review/${jobId}/`;
+    }
+
+    function copyRulebook() {
+        const codeElement = document.getElementById('rulebook-code');
+        const text = codeElement.innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            alert('Rulebook copied to clipboard!');
+        });
+    }
+
+    function closeModal() {
+        document.getElementById('normalization-modal').classList.add('hidden');
+    }
+
+    // Auto show modal if it exists
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('normalization-modal');
+        if (modal) {
+            setTimeout(() => {
+                modal.classList.remove('hidden');
+            }, 800);
+        }
+    });
+</script>
+{% endblock %}
+
+{% endblock %}

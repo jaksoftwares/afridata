@@ -23,9 +23,10 @@ from django.contrib.auth import get_user_model
 User = get_user_model() 
 
 
-def dataset_detail(request, dataset_id):
+def dataset_detail(request, slug):
     """View to display dataset details and bio with enhanced functionality"""
-    dataset = get_object_or_404(Dataset, id=dataset_id)
+    dataset = get_object_or_404(Dataset, slug=slug)
+
    
     # Increment view count
     dataset.views += 1
@@ -226,9 +227,10 @@ def dataset_detail(request, dataset_id):
     return render(request, 'dataset/dataset_detail.html', context)
 
 
-def dataset_preview(request, dataset_id):
+def dataset_preview(request, slug):
     """View to display full dataset preview with pagination"""
-    dataset = get_object_or_404(Dataset, id=dataset_id)
+    dataset = get_object_or_404(Dataset, slug=slug)
+
     
     try:
         if dataset.file:
@@ -284,9 +286,10 @@ def dataset_preview(request, dataset_id):
         return render(request, 'dataset/dataset_preview.html', context)
 
 
-def dataset_comments(request, dataset_id):
+def dataset_comments(request, slug):
     """View to display comments with pagination"""
-    dataset = get_object_or_404(Dataset, id=dataset_id)
+    dataset = get_object_or_404(Dataset, slug=slug)
+
     
     # Get comments ordered by upvotes then by creation date
     comments = Comment.objects.filter(
@@ -309,15 +312,17 @@ def dataset_comments(request, dataset_id):
 
 @login_required
 @require_POST
-def post_comment(request, dataset_id):
+def post_comment(request, slug):
     """View to allow authenticated user to post a comment"""
-    dataset = get_object_or_404(Dataset, id=dataset_id)
+    dataset = get_object_or_404(Dataset, slug=slug)
+
     
     content = request.POST.get('content', '').strip()
     
     if not content:
         messages.error(request, 'Comment content cannot be empty.')
-        return redirect('dataset_detail', dataset_id=dataset_id)
+        return redirect('dataset_detail', slug=slug)
+
     
     # Create new comment
     comment = Comment.objects.create(
@@ -327,7 +332,8 @@ def post_comment(request, dataset_id):
     )
     
     messages.success(request, 'Comment posted successfully!')
-    return redirect('dataset_detail', dataset_id=dataset_id)
+    return redirect('dataset_detail', slug=slug)
+
 
 
 @login_required
@@ -347,9 +353,10 @@ def upvote_comment(request, comment_id):
 
 
 @login_required
-def download_dataset(request, dataset_id):
+def download_dataset(request, slug):
     """Handle dataset download with token system"""
-    dataset = get_object_or_404(Dataset, id=dataset_id)
+    dataset = get_object_or_404(Dataset, slug=slug)
+
     user_profile = request.user.profile
     
     # Check if user has already downloaded this dataset
@@ -362,7 +369,8 @@ def download_dataset(request, dataset_id):
     user_profile.reset_monthly_downloads_if_needed()
     if not user_profile.can_download_this_month():
         messages.error(request, f'You have reached your monthly download limit of {user_profile.monthly_download_limit} files.')
-        return redirect('dataset_detail', dataset_id=dataset_id)
+        return redirect('dataset_detail', slug=slug)
+
     
     # Handle premium datasets
     if dataset.is_premium:
@@ -375,7 +383,8 @@ def download_dataset(request, dataset_id):
         
         if not premium_purchase:
             messages.error(request, 'This is a premium dataset. Please purchase it first.')
-            return redirect('dataset_detail', dataset_id=dataset_id)
+            return redirect('dataset_detail', slug=slug)
+
         
         # Create download record
         Download.objects.create(
@@ -389,7 +398,8 @@ def download_dataset(request, dataset_id):
         # Handle regular token-based downloads
         if not user_profile.can_afford(dataset.token_cost):
             messages.error(request, f'Insufficient tokens. You need {dataset.token_cost} tokens but have {user_profile.token_balance}.')
-            return redirect('dataset_detail', dataset_id=dataset_id)
+            return redirect('dataset_detail', slug=slug)
+
         
         # Deduct tokens
         if user_profile.spend_tokens(dataset.token_cost, f'Downloaded {dataset.title}'):
@@ -402,7 +412,8 @@ def download_dataset(request, dataset_id):
             )
         else:
             messages.error(request, 'Failed to process token payment.')
-            return redirect('dataset_detail', dataset_id=dataset_id)
+            return redirect('dataset_detail', slug=slug)
+
     
     # Increment counters
     dataset.downloads += 1
@@ -456,12 +467,14 @@ def upload_dataset(request):
                     'message': f'Dataset uploaded successfully! You earned {upload_bonus} tokens.',
                     'dataset_id': dataset.pk,
                     'tokens_earned': upload_bonus,
-                    'redirect_url': reverse('dataset_detail', kwargs={'dataset_id': dataset.pk})
+                    'redirect_url': reverse('dataset_detail', kwargs={'slug': dataset.slug})
+
                 })
             else:
                 # Regular form submission - redirect as usual
                 messages.success(request, f'Dataset uploaded successfully! You earned {upload_bonus} tokens.')
-                return redirect('dataset_detail', dataset_id=dataset.pk)
+                return redirect('dataset_detail', slug=dataset.slug)
+
         else:
             # Form has errors
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -626,6 +639,7 @@ def dataset_list(request):
     for dataset in page_obj:
         dataset_data.append({
             'id': dataset.id,
+            'slug': dataset.slug,
             'title': dataset.title,
             'author_name': dataset.author.get_full_name() or dataset.author.username,
             'downloads': dataset.downloads,

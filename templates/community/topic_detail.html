@@ -4,31 +4,54 @@
 {% block title %}{{ topic.name }} - Community Forums{% endblock %}
 
 {% block header_class %}bg-gradient-to-r from-blue-600 to-indigo-700{% endblock %}
-{% block header_content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-    <div class="flex flex-col md:flex-row items-center gap-6">
-        <div class="flex-shrink-0 w-24 h-24 rounded-2xl shadow-lg flex items-center justify-center text-4xl text-white transform -rotate-3" style="background-color: {{ topic.color }};">
-            {% if topic.icon %}
-                <i class="{{ topic.icon }}"></i>
-            {% else %}
-                <i class="fas fa-comments"></i>
+{% block header_wrapper %}
+<div class="forum-hero py-24 px-4 shadow-2xl" 
+     style="background: linear-gradient(135deg, {{ topic.color|default:'#0B4F6C' }} 0%, #1a2e4c 100%);">
+    <div class="max-w-7xl mx-auto relative z-10">
+        <div class="flex flex-col md:flex-row items-center gap-10">
+            <div class="flex-shrink-0 w-32 h-32 rounded-[2.5rem] shadow-2xl flex items-center justify-center text-5xl text-white transform -rotate-6 border-4 border-white/10 backdrop-blur-md" 
+                 style="background-color: rgba(255,255,255,0.1);">
+                <i class="{{ topic.icon|default:'fas fa-comments' }}"></i>
+            </div>
+            <div class="flex-1 text-center md:text-left text-white">
+                <nav class="flex mb-6 text-white/50 text-[10px] font-bold uppercase tracking-widest justify-center md:justify-start" aria-label="Breadcrumb">
+                    <ol class="flex items-center space-x-3">
+                        <li><a href="{% url 'community:community' %}" class="hover:text-white transition-colors">Forums</a></li>
+                        <li class="flex items-center space-x-3">
+                            <i class="fas fa-chevron-right text-[7px]"></i>
+                            <span class="text-white">{{ topic.name }}</span>
+                        </li>
+                    </ol>
+                </nav>
+                <h1 class="text-4xl md:text-6xl font-bold mb-4 font-serif tracking-tight !text-white leading-tight">{{ topic.name }}</h1>
+                <p class="text-lg text-white/70 font-sans font-light max-w-2xl leading-relaxed">{{ topic.description }}</p>
+            </div>
+            {% if user.is_authenticated %}
+            <div class="mt-6 md:mt-0 flex-shrink-0">
+                <a href="{% url 'community:create_thread' topic.pk %}" class="btn-primary !bg-white !text-brand-blue !px-10 !py-5 shadow-2xl hover:scale-105 transition-transform flex items-center gap-3">
+                    <i class="fas fa-plus"></i>
+                    New Discussion
+                </a>
+            </div>
             {% endif %}
         </div>
-        <div class="flex-1 text-center md:text-left text-white">
-            <h1 class="text-4xl md:text-5xl font-bold mb-2">{{ topic.name }}</h1>
-            <p class="text-xl text-blue-100 opacity-90 max-w-2xl">{{ topic.description }}</p>
-        </div>
-        {% if user.is_authenticated %}
-        <div class="mt-6 md:mt-0 flex-shrink-0">
-            <a href="{% url 'community:create_thread' topic.pk %}" class="bg-white text-blue-600 hover:bg-gray-50 focus:ring-4 focus:ring-blue-300 font-bold rounded-xl px-6 py-3 shadow-lg transition-all inline-flex items-center gap-2 transform hover:-translate-y-1">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                New Discussion
-            </a>
-        </div>
-        {% endif %}
     </div>
 </div>
+
+<style>
+    .forum-hero {
+        position: relative;
+        overflow: hidden;
+    }
+    .forum-hero::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at top right, rgba(255,255,255,0.05) 0%, transparent 50%);
+    }
+</style>
 {% endblock %}
+
 
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 -mt-6">

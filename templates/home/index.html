@@ -116,7 +116,8 @@
                     
                     <div class="space-y-4 flex-1">
                         {% for dataset in trending_datasets|slice:":3" %}
-                        <div class="group/item flex items-center p-3 rounded-xl hover:bg-brand-offwhite transition-all cursor-pointer border border-transparent hover:border-gray-100" onclick="viewDataset('{{ dataset.id }}')">
+                        <div class="group/item flex items-center p-3 rounded-xl hover:bg-brand-offwhite transition-all cursor-pointer border border-transparent hover:border-gray-100" onclick="viewDataset('{{ dataset.slug }}')">
+
                             <!-- Mini Cover -->
                             <div class="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 mr-4">
                                 <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=200&h=200" 
@@ -222,7 +223,8 @@
             
             <div id="datasetContainer" class="grid grid-cols-1 gap-8">
                 {% for dataset in featured_datasets %}
-                <div class="group card-fancy !p-0 overflow-hidden border-2 border-transparent hover:border-brand-teal/20 transition-all duration-300 cursor-pointer" onclick="viewDataset('{{ dataset.id }}')">
+                <div class="group card-fancy !p-0 overflow-hidden border-2 border-transparent hover:border-brand-teal/20 transition-all duration-300 cursor-pointer" onclick="viewDataset('{{ dataset.slug }}')">
+
                     <div class="flex flex-col md:flex-row h-full">
                         <!-- Dataset Cover Image -->
                         <div class="md:w-72 h-64 md:h-auto relative overflow-hidden bg-gray-100 flex-shrink-0">
@@ -321,11 +323,12 @@
     window.location.href = "{% url 'dataset_list' %}?sort=" + encodeURIComponent(sortBy);
   }
 
-  function viewDataset(datasetId) {
-    if (datasetId && !isNaN(datasetId)) {
-        window.location.href = "{% url 'dataset_detail' dataset_id=999999 %}".replace('999999', datasetId);
+  function viewDataset(slug) {
+    if (slug) {
+        window.location.href = "{% url 'dataset_detail' slug='placeholder' %}".replace('placeholder', slug);
     }
   }
+
 
   function animateCounters() {
     const counters = document.querySelectorAll('.animate-number');

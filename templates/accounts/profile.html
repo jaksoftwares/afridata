@@ -308,10 +308,11 @@
             {% endif %}
           </div>
           <div class="flex space-x-2">
-            <a href="{% url 'dataset_detail' dataset.id %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-colors flex-1 text-center">
+            <a href="{% url 'dataset_detail' dataset.slug %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-colors flex-1 text-center">
               View Dataset
             </a>
-            <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm transition-colors" onclick="shareDataset('{{ dataset.id }}')">
+            <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm transition-colors" onclick="shareDataset('{{ dataset.slug }}')">
+
               
             </button>
           </div>
@@ -575,8 +576,9 @@
     }
   }
 
-  function shareDataset(datasetId) {
-    const datasetUrl = `${window.location.origin}/dataset/${datasetId}/`;
+  function shareDataset(slug) {
+    const datasetUrl = `${window.location.origin}/dataset/${slug}/`;
+
     if (navigator.share) {
       navigator.share({
         title: "Dataset from AfriData",

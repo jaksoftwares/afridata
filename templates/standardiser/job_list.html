@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Pipelines | AfriData{% endblock %}
+
+{% block header_content %}
+<div class="container mx-auto px-6 py-12">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+            <h1 class="text-4xl md:text-5xl font-serif font-bold text-white mb-4">
+                My Standardisation Jobs
+            </h1>
+            <p class="text-xl text-white/80 max-w-2xl font-light">
+                Track and manage your data processing history, metrics, and standardized exports.
+            </p>
+        </div>
+        <div class="flex flex-wrap gap-4">
+            <a href="{% url 'dataset_list' %}" class="btn-secondary !border-white !text-white hover:!bg-white hover:!text-brand-blue">
+                <i class="fas fa-search mr-2"></i> Browse Library
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-6 py-12">
+    
+    {% if jobs %}
+    <!-- Filter Section (Simplified) -->
+    <div class="mb-8 flex items-center gap-4 overflow-x-auto pb-4">
+        <span class="text-xs font-bold text-brand-grey/60 uppercase tracking-widest whitespace-nowrap">Filter By Status:</span>
+        <div class="flex gap-2">
+            <a href="?status=" class="px-4 py-2 rounded-full text-xs font-bold transition-all {% if not status_filter %}bg-brand-blue text-white shadow-md{% else %}bg-white text-brand-blue border border-brand-blue/10 hover:border-brand-blue{% endif %}">
+                All Jobs
+            </a>
+            <a href="?status=pending" class="px-4 py-2 rounded-full text-xs font-bold transition-all {% if status_filter == 'pending' %}bg-brand-blue text-white shadow-md{% else %}bg-white text-brand-blue border border-brand-blue/10 hover:border-brand-blue{% endif %}">
+                Pending
+            </a>
+            <a href="?status=completed" class="px-4 py-2 rounded-full text-xs font-bold transition-all {% if status_filter == 'completed' %}bg-brand-blue text-white shadow-md{% else %}bg-white text-brand-blue border border-brand-blue/10 hover:border-brand-blue{% endif %}">
+                Completed
+            </a>
+            <a href="?status=failed" class="px-4 py-2 rounded-full text-xs font-bold transition-all {% if status_filter == 'failed' %}bg-brand-blue text-white shadow-md{% else %}bg-white text-brand-blue border border-brand-blue/10 hover:border-brand-blue{% endif %}">
+                Failed
+            </a>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="card-fancy !p-0 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-gray-50 border-b border-gray-100">
+                    <tr>
+                        <th class="px-8 py-5 text-xs font-bold text-brand-grey/50 uppercase tracking-widest">Dataset Info</th>
+                        <th class="px-6 py-5 text-xs font-bold text-brand-grey/50 uppercase tracking-widest">Domain</th>
+                        <th class="px-6 py-5 text-xs font-bold text-brand-grey/50 uppercase tracking-widest text-center">Status</th>
+                        <th class="px-6 py-5 text-xs font-bold text-brand-grey/50 uppercase tracking-widest text-center">Scores</th>
+                        <th class="px-6 py-5 text-xs font-bold text-brand-grey/50 uppercase tracking-widest">Created At</th>
+                        <th class="px-8 py-5 text-xs font-bold text-brand-grey/50 uppercase tracking-widest text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    {% for job in jobs %}
+                    <tr class="hover:bg-brand-offwhite/50 transition-colors group">
+                        <td class="px-8 py-6">
+                            <div class="flex flex-col">
+                                <span class="font-bold text-brand-blue group-hover:text-brand-teal transition-colors">{{ job.dataset_name }}</span>
+                                <span class="text-[10px] text-gray-400 font-mono flex items-center gap-1 mt-1 truncate max-w-[200px]">
+                                    <i class="fas fa-file-alt"></i> {{ job.original_filename }}
+                                </span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-6">
+                            <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-tight">{{ job.domain | title }}</span>
+                        </td>
+                        <td class="px-6 py-6 font-center">
+                            <div class="flex justify-center">
+                                {% if job.status == 'completed' %}
+                                    <span class="flex items-center gap-1.5 text-[10px] font-bold text-brand-green uppercase tracking-widest">
+                                        <i class="fas fa-circle-check"></i> Completed
+                                    </span>
+                                {% elif job.status == 'processing' %}
+                                    <span class="flex items-center gap-1.5 text-[10px] font-bold text-brand-blue uppercase tracking-widest animate-pulse">
+                                        <i class="fas fa-spinner fa-spin"></i> Processing
+                                    </span>
+                                {% elif job.status == 'failed' %}
+                                    <span class="flex items-center gap-1.5 text-[10px] font-bold text-red-500 uppercase tracking-widest">
+                                        <i class="fas fa-circle-xmark"></i> Failed
+                                    </span>
+                                {% elif job.status == 'review' %}
+                                    <span class="flex items-center gap-1.5 text-[10px] font-bold text-brand-amber uppercase tracking-widest">
+                                        <i class="fas fa-eye"></i> Pending Review
+                                    </span>
+                                {% else %}
+                                    <span class="text-[10px] uppercase font-bold text-gray-400">{{ job.status }}</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-6">
+                            <div class="flex flex-col items-center gap-1">
+                                <div class="flex items-center gap-3 w-32">
+                                    <span class="text-[9px] font-bold text-gray-400 uppercase tracking-tighter w-4">AI</span>
+                                    <div class="flex-1 bg-gray-100 rounded-full h-1">
+                                        <div class="bg-brand-teal h-1 rounded-full" style="width: {{ job.ai_confidence|default:0 }}%"></div>
+                                    </div>
+                                    <span class="text-[9px] font-bold text-brand-blue">{{ job.ai_confidence|default:"-" }}%</span>
+                                </div>
+                                <div class="flex items-center gap-3 w-32">
+                                    <span class="text-[9px] font-bold text-gray-400 uppercase tracking-tighter w-4">MAP</span>
+                                    <div class="flex-1 bg-gray-100 rounded-full h-1">
+                                        <div class="bg-brand-blue h-1 rounded-full" style="width: {{ job.mapping_score|default:0 }}%"></div>
+                                    </div>
+                                    <span class="text-[9px] font-bold text-brand-blue">{{ job.mapping_score|default:"-" }}%</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-6">
+                            <div class="text-[10px] text-gray-500 font-medium">
+                                {{ job.created_at | date:"M d" }}
+                                <span class="text-gray-300 mx-1">|</span>
+                                {{ job.created_at | date:"H:i" }}
+                            </div>
+                        </td>
+                        <td class="px-8 py-6 text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <a href="{% url 'standardiser:job_detail' job.job_id %}" class="bg-gray-50 hover:bg-brand-blue hover:text-white p-2 rounded-lg transition-all border border-gray-100 text-brand-blue shadow-sm" title="Raw Details">
+                                    <i class="fas fa-info-circle"></i>
+                                </a>
+                                {% if job.status in 'review,completed' %}
+                                <a href="{% url 'standardiser:standardisation_ready' job.job_id %}" class="bg-brand-teal text-white p-2 rounded-lg hover:shadow-lg transition-all active:scale-95" title="View Report">
+                                    <i class="fas fa-chart-line"></i>
+                                </a>
+                                {% endif %}
+                                <form method="post" action="{% url 'standardiser:delete_job' job.job_id %}" 
+                                      style="display: inline;" 
+                                      onsubmit="return confirm('Archive this processing record?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="bg-white hover:bg-red-50 text-red-300 hover:text-red-500 p-2 rounded-lg transition-all border border-transparent hover:border-red-100" title="Delete">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="max-w-2xl mx-auto py-24 text-center">
+        <div class="bg-white rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-8 shadow-brand-subtle border border-gray-50 text-gray-100">
+            <i class="fas fa-database text-4xl"></i>
+        </div>
+        <h3 class="text-3xl font-serif font-bold text-brand-blue mb-4">No Pipeline History Found</h3>
+        <p class="text-brand-grey/60 text-lg mb-12 font-light">
+            You haven't standardized any datasets yet. Join our community of researchers by creating your first standardized dataset version today.
+        </p>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a href="{% url 'dataset_list' %}" class="btn-primary !px-12 w-full sm:w-auto">
+                <i class="fas fa-search mr-2"></i> Explore Library
+            </a>
+            <a href="{% url 'standardiser:upload_dataset' %}" class="btn-secondary !px-12 w-full sm:w-auto">
+                <i class="fas fa-upload mr-2"></i> Upload Custom File
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

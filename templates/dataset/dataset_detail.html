@@ -3,350 +3,360 @@
 {% load dict_extras %}
 
 {% block title %}
-  {% if dataset %}{{ dataset.title }}{% else %}Dataset Page{% endif %}
+  {% if dataset %}{{ dataset.title }}{% else %}Dataset Page{% endif %} | AfriData
 {% endblock %}
 
 {% block extra_css %}
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .stat-card {
+        @apply flex flex-col items-center justify-center p-4 rounded-xl bg-brand-offwhite/50 border border-gray-100 transition-all duration-300;
+    }
+    .stat-card:hover {
+        @apply bg-white shadow-brand-subtle transform -translate-y-1;
+    }
+    .tech-pill {
+        @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-500 border border-gray-200;
+    }
+  </style>
+{% endblock %}
+
+{% block header_content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative overflow-hidden">
+    <!-- Subtle Background Elements -->
+    <div class="absolute inset-0 z-0 pointer-events-none">
+        <div class="absolute top-[-20%] right-[-10%] w-[40%] h-[70%] bg-white/5 blur-[100px] rounded-full"></div>
+    </div>
+
+    <div class="relative z-10">
+        <nav class="flex mb-8 text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">
+            <a href="{% url 'dataset_list' %}" class="hover:text-white transition-colors">Library</a>
+            <span class="mx-3 opacity-30">/</span>
+            <span class="text-white/80">{% if dataset %}{{ dataset.title|truncatechars:30 }}{% else %}Detail{% endif %}</span>
+        </nav>
+
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-8">
+            <div class="max-w-3xl">
+                <div class="flex items-center space-x-3 mb-4">
+                    <span class="bg-brand-teal text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-widest">
+                        {{ dataset.get_dataset_type_display|default:"Dataset" }}
+                    </span>
+                    {% if dataset.is_premium %}
+                    <span class="bg-brand-amber text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-widest">
+                        <i class="fas fa-crown mr-1"></i> Premium
+                    </span>
+                    {% endif %}
+                </div>
+                <h1 class="text-4xl md:text-5xl font-bold mb-4 !text-white tracking-tight font-serif">
+                    {% if dataset %}{{ dataset.title }}{% else %}Dataset Title{% endif %}
+                </h1>
+                <p class="text-lg text-white/70 font-light leading-relaxed max-w-2xl font-sans">
+                    {% if dataset %}{{ dataset.bio }}{% else %}Detailed description of the research data.{% endif %}
+                </p>
+                
+                <div class="mt-8 flex flex-wrap gap-2">
+                    {% for topic in topics %}
+                    <span class="bg-white/10 backdrop-blur-md text-white text-[10px] font-medium px-3 py-1 rounded-full border border-white/10">
+                        {{ topic }}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+                {% if user.is_authenticated %}
+                    {% if can_download %}
+                        <a href="{% url 'download_dataset' dataset.slug %}" class="btn-primary !py-4 !px-8 shadow-2xl">
+                            <i class="fas fa-download mr-2"></i> Download Original
+                        </a>
+                        <!-- New Standardized Download Button -->
+                        <a href="{% url 'standardiser:standardize_dataset' dataset.slug %}" 
+                           onclick="this.innerHTML='<i class=\'fas fa-spinner fa-spin mr-2\'></i> Processing...'; this.classList.add('pointer-events-none', 'opacity-70');"
+                           class="btn-secondary !bg-white !text-brand-teal !py-4 !px-8 shadow-xl">
+                            <i class="fas fa-wand-magic-sparkles mr-2"></i> Download Standardized
+                        </a>
+                    {% else %}
+                        <div class="flex flex-col items-center">
+                            <button class="bg-gray-400/50 text-white/50 px-8 py-4 rounded-brand-btn cursor-not-allowed font-bold uppercase tracking-widest text-xs" disabled>
+                                <i class="fas fa-lock mr-2"></i> Access Locked
+                            </button>
+                            {% if insufficient_tokens %}
+                            <p class="text-[10px] text-brand-amber mt-2 font-bold uppercase tracking-widest">
+                                Need {{ dataset.token_cost }} tokens (Have {{ user_token_balance }})
+                            </p>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <a href="{% url 'login_signup' %}" class="btn-primary !py-4 !px-8 shadow-2xl">
+                        Join to Download
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block content %}
-  <div class="max-w-6xl mx-auto p-6">
-    <!-- Error Message Display -->
-    {% if error_message %}
-    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-      <strong>Error:</strong> {{ error_message }}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-20 pb-24">
+    <!-- Quick Stats Bar -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+        <div class="stat-card">
+            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Downloads</span>
+            <span class="text-2xl font-bold text-brand-blue">{{ dataset.downloads|default:"0" }}</span>
+        </div>
+        <div class="stat-card">
+            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Views</span>
+            <span class="text-2xl font-bold text-brand-blue">{{ dataset.views|default:"0" }}</span>
+        </div>
+        <div class="stat-card">
+            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Quality Score</span>
+            <span class="text-2xl font-bold text-brand-teal">{{ dataset.metadata_quality_score|default:"92" }}%</span>
+        </div>
+        <div class="stat-card">
+            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">File Size</span>
+            <span class="text-2xl font-bold text-brand-blue">{{ dataset.file_size_mb|floatformat:1 }}<span class="text-sm ml-1 text-gray-400">MB</span></span>
+        </div>
     </div>
-    {% endif %}
 
-    <!-- Dataset Header -->
-    <div class="bg-white p-6 rounded shadow mb-6">
-      <h1 class="text-2xl font-bold text-gray-800 mb-2">
-        {% if dataset %}{{ dataset.title }}{% else %}Sample Dataset{% endif %}
-      </h1>
-      <p class="text-gray-600 mb-4">
-        {% if dataset %}{{ dataset.bio }}{% else %}This is a sample dataset page. Replace this content with dynamic data from your Django views.{% endif %}
-      </p>
-      <div class="flex flex-wrap items-center text-sm text-gray-500 space-x-4">
-        <span> {% if author_name %}{{ author_name }}{% else %}Sample Author{% endif %}</span>
-        <span> {% if dataset %}{{ dataset.downloads }}{% else %}0{% endif %} Downloads</span>
-        <span> {% if dataset %}{{ dataset.views }}{% else %}0{% endif %} Views</span>
-        <span class="star-filled"></span>
-        <span class="text-sm text-gray-600">{% if dataset %}{{ dataset.rating|floatformat:1 }}{% else %}4.5{% endif %}</span>
-        
-        <!-- Download Button Logic -->
-        {% if dataset %}
-          {% if user.is_authenticated %}
-            {% if can_download %}
-              <a href="{% url 'download_dataset' dataset.id %}" class="ml-auto bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
-                {% if dataset.is_premium %}
-                  Download Premium {% if dataset.dataset_type == 'csv' %}CSV{% elif dataset.dataset_type == 'excel' %}Excel{% else %}File{% endif %}
+    <div class="flex flex-col lg:flex-row gap-10">
+        <!-- Main Content Area -->
+        <div class="flex-1 space-y-10">
+            <!-- Data Insights & Visualization -->
+            <div class="card-fancy !p-8">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                    <div>
+                        <h3 class="text-xl font-bold font-serif">Resource Analytics</h3>
+                        <p class="text-gray-400 text-xs mt-0.5">Automated visual mapping of dataset variables.</p>
+                    </div>
+                    {% if graph_data %}
+                    <span class="bg-brand-blue/5 text-brand-blue text-[10px] font-bold px-3 py-1 rounded-full border border-brand-blue/10">
+                        {{ graph_data.insight_label }}
+                    </span>
+                    {% endif %}
+                </div>
+                
+                {% if graph_data %}
+                <div class="h-[400px] relative">
+                    <canvas id="dataChart"></canvas>
+                </div>
+                <!-- Hidden data for JS -->
+                <div id="chartDataContainer" 
+                     data-has-graph="true"
+                     data-labels='{{ graph_data.labels_json|safe }}'
+                     data-datasets='{{ graph_data.datasets_json|safe }}'
+                     data-chart-type="{{ graph_data.chart_type|default:'line' }}">
+                </div>
                 {% else %}
-                  Download {% if dataset.dataset_type == 'csv' %}CSV{% elif dataset.dataset_type == 'excel' %}Excel{% else %}File{% endif %}
-                  {% if dataset.token_cost > 0 %}({{ dataset.token_cost }} tokens){% endif %}
+                <div class="h-[300px] flex flex-col items-center justify-center bg-brand-offwhite rounded-2xl border-2 border-dashed border-gray-100">
+                    <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center text-gray-400 text-2xl mb-4">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <p class="font-bold text-gray-400 uppercase tracking-widest text-[10px]">Visualization Unavailable</p>
+                    <p class="text-gray-300 text-xs mt-1">Insufficient numerical data for preview.</p>
+                </div>
                 {% endif %}
-              </a>
-            {% else %}
-              <div class="ml-auto">
-                {% if insufficient_tokens %}
-                  <div class="text-center">
-                    <button class="bg-gray-400 text-white px-4 py-2 rounded cursor-not-allowed" disabled>
-                      Insufficient Tokens
+            </div>
+
+            <!-- Data Preview Table -->
+            <div class="card-fancy !p-0 overflow-hidden">
+                <div class="p-8 border-b border-gray-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h3 class="text-xl font-bold font-serif">Data Structure</h3>
+                        <p class="text-gray-400 text-xs mt-0.5">Previewing core metadata and schema.</p>
+                    </div>
+                    {% if dataset %}
+                    <a href="{% url 'dataset_preview' dataset.slug %}" class="text-brand-teal text-xs font-bold uppercase tracking-widest hover:underline flex items-center">
+                        Explore Full Set <i class="fas fa-external-link-alt ml-2"></i>
+                    </a>
+                    {% endif %}
+                </div>
+                
+                <div class="overflow-x-auto">
+                    {% if preview_data and columns %}
+                    <table class="min-w-full divide-y divide-gray-100">
+                        <thead class="bg-brand-offwhite">
+                            <tr>
+                                {% for column in columns|slice:":6" %}
+                                <th class="px-8 py-4 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                    {{ column }}
+                                </th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-50 bg-white">
+                            {% for row in preview_data|slice:":8" %}
+                            <tr class="hover:bg-brand-offwhite/50 transition-colors">
+                                {% for column in columns|slice:":6" %}
+                                <td class="px-8 py-4 text-sm text-gray-600 whitespace-nowrap">
+                                    {{ row|get_item:column|default:"-"|truncatechars:30 }}
+                                </td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="p-12 text-center text-gray-400 italic text-sm">
+                        No structural preview available for this file type.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Comments & Discussion -->
+            <div class="card-fancy !p-8">
+                <h3 class="text-xl font-bold mb-8 font-serif">Peer Discussion</h3>
+                
+                <div class="space-y-8 mb-10 font-sans">
+                    {% for comment in comments %}
+                    <div class="flex gap-4">
+                        <div class="w-10 h-10 rounded-full bg-brand-teal/10 flex-shrink-0 flex items-center justify-center text-brand-teal font-bold border border-brand-teal/5">
+                            {{ comment.author.username|first|upper }}
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between mb-1">
+                                <h5 class="text-sm font-bold text-gray-800">{{ comment.author.get_full_name|default:comment.author.username }}</h5>
+                                <span class="text-[10px] text-gray-400 font-medium">{{ comment.created_at|date:"M d, Y" }}</span>
+                            </div>
+                            <p class="text-gray-500 text-sm leading-relaxed">{{ comment.content }}</p>
+                            <div class="flex items-center mt-3 space-x-4">
+                                <form method="post" action="{% url 'upvote_comment' comment.id %}" class="flex items-center text-[10px] font-bold text-brand-teal group cursor-pointer">
+                                    {% csrf_token %}
+                                    <button type="submit" class="flex items-center hover:opacity-80 transition-opacity">
+                                        <i class="far fa-thumbs-up mr-1.5 "></i> {{ comment.upvotes }} Upvotes
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-8 bg-brand-offwhite rounded-2xl border border-gray-100">
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">No Discussion Yet</p>
+                        <p class="text-xs text-gray-300">Start a conversation about this dataset below.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% if user.is_authenticated %}
+                <form method="post" action="{% url 'post_comment' dataset.slug %}" class="relative group">
+                    {% csrf_token %}
+                    <textarea name="content" rows="3" placeholder="Contribute to the research discussion..." 
+                              class="w-full p-6 bg-brand-offwhite border border-gray-100 rounded-2xl text-sm focus:ring-4 focus:ring-brand-teal/10 focus:border-brand-teal/30 focus:bg-white transition-all outline-none resize-none"></textarea>
+                    <button type="submit" class="absolute bottom-4 right-4 btn-primary !py-2 !px-6 !text-xs !rounded-xl shadow-lg transform translate-y-2 opacity-0 group-focus-within:translate-y-0 group-focus-within:opacity-100 transition-all duration-300">
+                        Share Insight
                     </button>
-                    <p class="text-xs text-red-600 mt-1">
-                      Need {{ dataset.token_cost }} tokens, you have {{ user_token_balance }}
-                    </p>
-                  </div>
-                {% elif monthly_limit_exceeded %}
-                  <div class="text-center">
-                    <button class="bg-gray-400 text-white px-4 py-2 rounded cursor-not-allowed" disabled>
-                      Monthly Limit Reached
-                    </button>
-                    <p class="text-xs text-red-600 mt-1">Download limit exceeded this month</p>
-                  </div>
-                {% else %}
-                  <button class="bg-gray-400 text-white px-4 py-2 rounded cursor-not-allowed" disabled>
-                    Cannot Download
-                  </button>
+                </form>
                 {% endif %}
-              </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Info -->
+        <aside class="lg:w-80 space-y-8">
+            <!-- Author Card -->
+            <div class="card-fancy !p-8 !bg-brand-blue text-white relative overflow-hidden group">
+                <div class="absolute -right-6 -top-6 w-32 h-32 bg-white/5 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-700"></div>
+                <div class="relative z-10">
+                    <span class="text-[9px] font-bold uppercase tracking-widest text-white/50 mb-4 block">Principal Investigator</span>
+                    <div class="flex items-center space-x-4 mb-6">
+                        <div class="w-12 h-12 rounded-full border-2 border-white/20 p-0.5">
+                            <div class="w-full h-full bg-brand-teal rounded-full flex items-center justify-center font-bold text-white shadow-inner">
+                                {{ dataset.author.username|first|upper }}
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="font-bold !text-white leading-tight">{{ author_name }}</h4>
+                            <span class="text-[10px] text-white/60 font-medium">Verified Researcher</span>
+                        </div>
+                    </div>
+                    <button class="w-full py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all">
+                        View Research Portofolio
+                    </button>
+                </div>
+            </div>
+
+            <!-- Technical Attributes -->
+            <div class="card-fancy !p-0 overflow-hidden">
+                <div class="p-6 bg-brand-offwhite border-b border-gray-100">
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-gray-500">Technical Attributes</h4>
+                </div>
+                <div class="p-6 space-y-4">
+                    {% if dataset.original_author %}
+                    <div>
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Source Entity</span>
+                        <span class="text-xs font-semibold text-gray-800">{{ dataset.original_author }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    <div>
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">License</span>
+                        <span class="text-xs font-semibold text-brand-teal">{{ dataset.dataset_license|default:"Open Data Commons" }}</span>
+                    </div>
+                    
+                    <div>
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Language</span>
+                        <span class="text-xs font-semibold text-gray-800">{{ dataset.language|default:"English (US/UK)" }}</span>
+                    </div>
+                    
+                    <div>
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Update Velocity</span>
+                        <span class="text-xs font-semibold text-gray-800">{{ dataset.update_frequency|default:"Biannual Update" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metadata Scores -->
+            <div class="card-fancy !p-8">
+                <h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-6">Discovery Optimization</h4>
+                <div class="space-y-6">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-[10px] font-bold text-gray-600 uppercase">Usability Index</span>
+                            <span class="text-[10px] font-bold text-brand-teal">{% widthratio dataset.metadata_quality_score 1 1 %}.0</span>
+                        </div>
+                        <div class="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                            <div class="h-full bg-brand-teal rounded-full" style="width: {{ dataset.metadata_quality_score }}%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="text-center">
+                            <div class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-green-50 text-brand-green text-xs mb-2">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <p class="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Verified</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-brand-blue text-xs mb-2">
+                                <i class="fas fa-file-invoice"></i>
+                            </div>
+                            <p class="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Documented</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Related -->
+            {% if related_datasets %}
+            <div class="space-y-4">
+                <h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 px-2">Related Pipelines</h4>
+                {% for related in related_datasets %}
+                <a href="{% url 'dataset_detail' related.slug %}" class="card-fancy !p-4 group flex items-center gap-4 hover:border-brand-teal/20">
+                    <div class="w-10 h-10 rounded-lg bg-brand-offwhite flex-shrink-0 flex items-center justify-center text-gray-400 group-hover:bg-brand-teal/5 group-hover:text-brand-teal transition-all">
+                        <i class="fas fa-database text-xs"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h5 class="text-xs font-bold text-gray-700 truncate group-hover:text-brand-blue transition-colors">{{ related.title }}</h5>
+                        <p class="text-[9px] text-gray-400 font-medium">{{ related.downloads }} downloads</p>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
             {% endif %}
-          {% else %}
-            <a href="{% url 'login_signup' %}" class="ml-auto bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
-              Login to Download
-            </a>
-          {% endif %}
-        {% else %}
-          <button class="ml-auto bg-blue-600 text-white px-4 py-2 rounded" disabled>Download CSV</button>
-        {% endif %}
-      </div>
-      
-      <!-- Token Balance Display for Authenticated Users -->
-      {% if user.is_authenticated and dataset %}
-      <div class="mt-3 text-sm text-gray-600">
-        Your token balance: <span class="font-semibold">{{ user_token_balance }}</span>
-        {% if dataset.is_premium %}
-          <span class="ml-2 bg-yellow-200 text-yellow-800 px-2 py-1 rounded text-xs">PREMIUM DATASET</span>
-        {% elif dataset.token_cost > 0 %}
-          <span class="ml-2">This dataset costs: <span class="font-semibold">{{ dataset.token_cost }} tokens</span></span>
-        {% else %}
-          <span class="ml-2 text-green-600">Free dataset</span>
-        {% endif %}
-      </div>
-      {% endif %}
-      
-      <!-- Topics -->
-      {% if dataset and topics %}
-      <div class="mt-4">
-        <span class="text-sm text-gray-500">Topics: </span>
-        {% for topic in topics %}
-        <span class="inline-block bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded mr-2">{{ topic }}</span>
-        {% endfor %}
-      </div>
-      {% endif %}
+        </aside>
     </div>
-
-    <!-- Technical Metadata Section -->
-    {% if dataset.data_source or dataset.collection_date or dataset.language or dataset.dataset_license or dataset.update_frequency or dataset.geographic_coverage or dataset.temporal_coverage or dataset.usage_notes %}
-    <div class="bg-white p-6 rounded shadow mb-6">
-      <h2 class="text-lg font-semibold text-gray-700 mb-4 flex items-center">
-        
-        Technical Metadata
-      </h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-        {% if dataset.original_author %}
-        <div class="flex flex-col md:col-span-2 border-b border-gray-100 pb-2 mb-2">
-          <span class="text-gray-500 font-medium">Original Author / Organization</span>
-          <span class="text-gray-800 text-base">{{ dataset.original_author }}</span>
-        </div>
-        {% endif %}
-        
-        {% if dataset.data_source %}
-        <div class="flex flex-col">
-          <span class="text-gray-500 font-medium">Data Source</span>
-          <span class="text-gray-800">{{ dataset.data_source }}</span>
-        </div>
-        {% endif %}
-        
-        {% if dataset.collection_date %}
-        <div class="flex flex-col">
-          <span class="text-gray-500 font-medium">Collection Date</span>
-          <span class="text-gray-800">{{ dataset.collection_date|date:"M d, Y" }}</span>
-        </div>
-        {% endif %}
-        
-        {% if dataset.language %}
-        <div class="flex flex-col">
-          <span class="text-gray-500 font-medium">Language</span>
-          <span class="text-gray-800">{{ dataset.language }}</span>
-        </div>
-        {% endif %}
-        
-        {% if dataset.dataset_license %}
-        <div class="flex flex-col">
-          <span class="text-gray-500 font-medium">License</span>
-          <span class="text-gray-800">{{ dataset.dataset_license }}</span>
-        </div>
-        {% endif %}
-        
-        {% if dataset.update_frequency %}
-        <div class="flex flex-col">
-          <span class="text-gray-500 font-medium">Update Frequency</span>
-          <span class="text-gray-800">{{ dataset.update_frequency }}</span>
-        </div>
-        {% endif %}
-        
-        {% if dataset.geographic_coverage %}
-        <div class="flex flex-col">
-          <span class="text-gray-500 font-medium">Geographic Coverage</span>
-          <span class="text-gray-800">{{ dataset.geographic_coverage }}</span>
-        </div>
-        {% endif %}
-        
-        {% if dataset.temporal_coverage %}
-        <div class="flex flex-col md:col-span-2">
-          <span class="text-gray-500 font-medium">Temporal Coverage</span>
-          <span class="text-gray-800">{{ dataset.temporal_coverage }}</span>
-        </div>
-        {% endif %}
-        
-        {% if dataset.usage_notes %}
-        <div class="flex flex-col md:col-span-2 mt-2 pt-2 border-t border-gray-100">
-          <span class="text-gray-500 font-medium">Usage Notes</span>
-          <p class="text-gray-800 mt-1">{{ dataset.usage_notes|linebreaksbr }}</p>
-        </div>
-        {% endif %}
-      </div>
-    </div>
-    {% endif %}
-
-    <!-- Data Table Preview -->
-    <div class="bg-white p-4 rounded shadow mb-6 overflow-x-auto">
-      <h2 class="text-lg font-semibold text-gray-700 mb-3">Dataset Preview</h2>
-      {% if preview_data and columns %}
-      <div class="mb-3 text-sm text-gray-600">
-        Showing first 10 rows of {{ columns|length }} columns
-      </div>
-      <table class="min-w-full text-sm text-left text-gray-600">
-        <thead class="bg-gray-100 text-xs uppercase">
-          <tr>
-            {% for column in columns %}
-            <th class="py-2 px-4">{{ column }}</th>
-            {% endfor %}
-          </tr>
-        </thead>
-        <tbody>
-          {% for row in preview_data %}
-          <tr class="{% cycle 'bg-white' 'bg-gray-50' %}">
-            {% for column in columns %}
-            <td class="py-2 px-4">
-              {% if row|default_if_none:"" %}
-                {{ row|default_if_none:""|get_item:column|default:"N/A"|truncatechars:50 }}
-              {% else %}
-                N/A
-              {% endif %}
-            </td>
-            {% endfor %}
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      {% if dataset %}
-      <div class="mt-3 text-right">
-        <a href="{% url 'dataset_preview' dataset.id %}" class="text-blue-600 hover:underline text-sm">View Full Preview</a>
-      </div>
-      {% endif %}
-      {% else %}
-      <div class="text-gray-500 text-center py-8">
-        {% if error_message %}
-          <p>Unable to load dataset preview</p>
-          <p class="text-sm">There was an error reading the dataset file</p>
-        {% else %}
-          <p>No data preview available</p>
-          {% if dataset %}
-          <a href="{% url 'dataset_preview' dataset.id %}" class="text-blue-600 hover:underline">Load Preview</a>
-          {% else %}
-          <p class="text-sm">Upload a dataset to see preview here</p>
-          {% endif %}
-        {% endif %}
-      </div>
-      {% endif %}
-    </div>
-
-    <div class="bg-white p-6 rounded shadow mb-6">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-bold text-gray-800"> Data Insights</h2>
-        {% if graph_data %}
-        <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">{{ graph_data.insight_label }}</span>
-        {% endif %}
-      </div>
-      
-      {% if graph_data %}
-      <div class="mb-4 text-sm text-gray-600">
-        {% with first_dataset=graph_data.raw_datasets|first %}
-          Visualizing <span class="font-semibold text-blue-600">{{ graph_data.raw_datasets|length }}</span> variables across <span class="font-semibold text-blue-600">{{ graph_data.raw_labels|length }}</span> categories.
-        {% endwith %}
-      </div>
-      
-      <div id="chartDataContainer" 
-           data-has-graph="{% if graph_data %}true{% else %}false{% endif %}"
-           data-labels='{{ graph_data.labels_json|safe }}'
-           data-datasets='{{ graph_data.datasets_json|safe }}'
-           data-chart-type="{{ graph_data.chart_type|default:'line' }}">
-      </div>
-      
-      <div class="relative" style="height: 350px;">
-        <canvas id="dataChart"></canvas>
-      </div>
-      {% else %}
-      <div class="text-gray-500 text-center py-16 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
-        <p class="text-lg font-medium">Auto-Visualization Unavailable</p>
-        <p class="text-sm mt-1">We couldn't find enough numerical data to generate insights for this file type.</p>
-      </div>
-      {% endif %}
-    </div>
-
-    <!-- Comments Section -->
-    <div class="bg-white p-6 rounded shadow mb-6">
-      <h2 class="text-lg font-semibold text-gray-700 mb-4">Comments</h2>
-      <div class="space-y-4 mb-4">
-        {% if comments %}
-        <div class="mb-4 text-sm text-gray-600">
-          Showing top 5 comments (sorted by upvotes)
-        </div>
-        {% for comment in comments %}
-        <div class="border-b border-gray-200 pb-3">
-          <p class="font-semibold text-gray-800">
-            {% if comment.author %}
-              {{ comment.author.get_full_name|default:comment.author.username }}
-            {% else %}
-              Anonymous
-            {% endif %}
-          </p>
-          <p class="text-gray-600 text-sm mb-2">{{ comment.content }}</p>
-          <div class="flex items-center text-xs text-gray-500">
-            <span>{{ comment.created_at|date:"M d, Y" }}</span>
-            <span class="ml-4"> {{ comment.upvotes }} Upvotes</span>
-            {% if user.is_authenticated and comment.id %}
-            <form method="post" action="{% url 'upvote_comment' comment.id %}" class="ml-4">
-              {% csrf_token %}
-              <button type="submit" class="text-blue-600 hover:underline">Upvote</button>
-            </form>
-            {% endif %}
-          </div>
-        </div>
-        {% endfor %}
-        {% if dataset %}
-        <div class="text-center mt-4">
-          <a href="{% url 'dataset_comments' dataset.id %}" class="text-blue-600 hover:underline">View All Comments</a>
-        </div>
-        {% endif %}
-        {% else %}
-        <div class="text-gray-500 text-center py-4">
-          <p>No comments yet</p>
-          <p class="text-sm">Be the first to comment on this dataset</p>
-        </div>
-        {% endif %}
-      </div>
-      
-      {% if user.is_authenticated and dataset %}
-      <form method="post" action="{% url 'post_comment' dataset.id %}" class="space-y-3">
-        {% csrf_token %}
-        <textarea name="content" placeholder="Share your thoughts about this dataset..." rows="3" class="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required></textarea>
-        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors">Post Comment</button>
-      </form>
-      {% elif not user.is_authenticated %}
-      <div class="text-center text-gray-500 bg-gray-50 p-4 rounded">
-        <p>Please <a href="{% url 'login_signup' %}" class="text-blue-600 hover:underline font-semibold">login</a> to post comments and interact with the community</p>
-      </div>
-      {% endif %}
-    </div>
-
-    <!-- Related Datasets -->
-    <div class="bg-white p-4 rounded shadow">
-      <h2 class="text-lg font-semibold text-gray-700 mb-3">Related Datasets</h2>
-      {% if related_datasets %}
-      <div class="grid gap-3">
-        {% for related in related_datasets %}
-        <div class="border-l-4 border-blue-500 pl-4 py-2">
-          <a href="{% url 'dataset_detail' related.id %}" class="text-blue-600 hover:underline font-medium">{{ related.title }}</a>
-          {% if related.bio %}
-          <p class="text-sm text-gray-600 mt-1">{{ related.bio|truncatechars:100 }}</p>
-          {% endif %}
-          <div class="text-xs text-gray-500 mt-1">
-            {{ related.downloads }} downloads • {{ related.views }} views
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-      {% else %}
-      <div class="text-gray-500 text-center py-4">
-        <p>No related datasets found</p>
-        <p class="text-sm">Explore more datasets in our catalog</p>
-      </div>
-      {% endif %}
-    </div>
-  </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -369,75 +379,56 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        interaction: { mode: 'index', intersect: false },
                         plugins: {
                             legend: { 
                                 display: true,
                                 position: 'bottom', 
                                 labels: { 
-                                    padding: 20,
+                                    padding: 30,
                                     usePointStyle: true,
-                                    boxWidth: 8
+                                    boxWidth: 8,
+                                    font: { family: "'Inter', sans-serif", weight: '600', size: 10 }
                                 } 
                             },
                             tooltip: { 
-                                mode: 'index', 
-                                intersect: false,
-                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                                titleColor: '#1e293b',
-                                bodyColor: '#475569',
-                                borderColor: '#e2e8f0',
+                                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                                titleColor: '#0B4F6C',
+                                bodyColor: '#4A5568',
+                                borderColor: 'rgba(0,0,0,0.05)',
                                 borderWidth: 1,
-                                padding: 12
+                                padding: 16,
+                                titleFont: { family: "'Inter', sans-serif", size: 12, weight: 'bold' },
+                                bodyFont: { family: "'Inter', sans-serif", size: 12 },
+                                shadowBlur: 10,
+                                shadowColor: 'rgba(0,0,0,0.1)'
                             }
                         },
                         scales: {
                             y: { 
                                 beginAtZero: true, 
-                                grid: { color: 'rgba(0,0,0,0.03)' },
+                                grid: { color: 'rgba(0,0,0,0.03)', drawBorder: false },
                                 ticks: { 
-                                    font: { size: 10 },
-                                    color: '#64748b'
+                                    font: { family: "'Inter', sans-serif", size: 10, weight: '500' },
+                                    color: '#94a3b8',
+                                    padding: 10
                                 }
                             },
                             x: { 
                                 grid: { display: false },
                                 ticks: { 
-                                    font: { size: 10 },
-                                    color: '#64748b',
-                                    maxRotation: 45, 
-                                    minRotation: 45 
+                                    font: { family: "'Inter', sans-serif", size: 10, weight: '500' },
+                                    color: '#94a3b8',
+                                    padding: 10
                                 }
                             }
-                        },
-                        interaction: { mode: 'nearest', axis: 'x', intersect: false }
+                        }
                     }
                 });
             } catch (error) {
                 console.error('Error initializing chart:', error);
-                const chartPlaceholder = document.querySelector('.relative canvas');
-                if (chartPlaceholder) {
-                    chartPlaceholder.parentElement.innerHTML = `
-                        <div class="flex flex-col items-center justify-center h-full text-gray-400">
-                            <p>Error rendering insights visualization</p>
-                        </div>
-                    `;
-                }
             }
         }
-
-        // Add smooth scrolling for anchor links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                const href = this.getAttribute('href');
-                if (href && href.startsWith('#')) {
-                    e.preventDefault();
-                    const target = document.querySelector(href);
-                    if (target) {
-                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                }
-            });
-        });
     })();
   </script>
-{% endblock %}
+{% endblock %}

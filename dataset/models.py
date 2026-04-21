@@ -4,6 +4,8 @@ from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 from decimal import Decimal
 import os
+from django.utils.text import slugify
+
 
 class Dataset(models.Model):
     DATASET_TYPES = [
@@ -25,6 +27,8 @@ class Dataset(models.Model):
     ]
     
     title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True, null=True, blank=True)
+
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='authored_datasets')
     file = models.FileField(upload_to='datasets/')
     dataset_type = models.CharField(max_length=20, choices=DATASET_TYPES)
@@ -115,7 +119,19 @@ class Dataset(models.Model):
         # Auto-calculate token cost on save
         if self.file and not self.token_cost:
             self.token_cost = self.calculate_token_cost()
+        
+        # Auto-generate slug if not present
+        if not self.slug:
+            self.slug = slugify(self.title)
+            # Ensure slug is unique
+            original_slug = self.slug
+            counter = 1
+            while Dataset.objects.filter(slug=self.slug).exists():
+                self.slug = f"{original_slug}-{counter}"
+                counter += 1
+                
         super().save(*args, **kwargs)
+
 
 class Comment(models.Model):
     id = models.AutoField(primary_key=True)

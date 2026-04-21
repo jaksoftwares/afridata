@@ -5,103 +5,31 @@
 
 {% block extra_css %}
 <style>
-    /* Brand Typography Integration */
-    .brand-title {
-        font-family: 'Outfit', sans-serif;
-        font-weight: 700;
-        letter-spacing: -0.02em;
+    .glass-card {
+        background: rgba(255, 255, 255, 0.82);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
     }
     
-    .brand-body {
-        font-family: 'Inter', sans-serif;
+    .forum-hero {
+        background: linear-gradient(135deg, #0B4F6C 0%, #1B998B 100%);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .forum-hero::before {
+        content: '';
+        position: absolute;
+        top: -20%;
+        right: -10%;
+        width: 60%;
+        height: 140%;
+        background: radial-gradient(circle, rgba(123, 198, 123, 0.15) 0%, transparent 60%);
+        transform: rotate(-15deg);
     }
 
-    .topic-card {
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        margin-bottom: 1.5rem;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        background: white;
-    }
-    
-    .topic-card:hover {
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        transform: translateY(-2px);
-        border-color: var(--brand-teal);
-    }
-    
-    .topic-icon {
-        width: 54px;
-        height: 54px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.25rem;
-        color: white;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    }
-    
-    .stats-card {
-        background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 16px;
-        padding: 2rem;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    }
-    
-    .activity-card {
-        background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        padding: 1.5rem;
-    }
-    
-    .thread-item {
-        border-bottom: 1px solid #f3f4f6;
-        padding: 1rem 0;
-    }
-    
-    .thread-item:last-child {
-        border-bottom: none;
-    }
-    
-    .user-avatar {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        background: var(--brand-blue);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: 700;
-        font-size: 0.85rem;
-    }
-    
-    .topic-stats {
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        tracking-widest;
-        color: #9ca3af;
-    }
-    
-    .search-section {
-        background: var(--brand-blue);
-        color: white;
-        padding: 4rem 0;
-        margin-bottom: 3rem;
-        border-radius: 0 0 2rem 2rem;
-    }
-    
-    .topic-badge {
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-
-    .dropdown-menu {
+    .dropdown-menu-custom {
         display: none;
         position: absolute;
         right: 0;
@@ -115,7 +43,7 @@
         border: 1px solid #f3f4f6;
     }
     
-    .dropdown-menu.show {
+    .dropdown-menu-custom.show {
         display: block;
         animation: slideUp 0.2s ease-out;
     }
@@ -124,50 +52,38 @@
         from { opacity: 0; transform: translateY(10px); }
         to { opacity: 1; transform: translateY(0); }
     }
-    
-    .dropdown-item {
-        display: flex;
-        align-items: center;
-        padding: 0.75rem 1rem;
-        color: #374151;
-        text-decoration: none;
-        transition: all 0.2s;
-        border-radius: 8px;
-        font-size: 0.875rem;
-        font-weight: 500;
-    }
-    
-    .dropdown-item:hover {
-        background-color: #f9fafb;
-        color: var(--brand-blue);
-    }
 </style>
 {% endblock %}
 
-{% block header_content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-  <div class="text-center">
-    <h1 class="text-4xl md:text-6xl font-bold mb-6 text-white brand-title">
-        Community Discussions
-    </h1>
-    <p class="text-xl text-white/90 mb-10 font-light brand-body max-w-2xl mx-auto">
-        Join the conversation with other researchers and share your insights.
-    </p>
-    
-    <form method="GET" action="{% url 'community:search' %}" class="max-w-2xl mx-auto px-4">
-        <div class="flex shadow-2xl rounded-2xl overflow-hidden group border border-white/20">
-            <input type="text" 
-            class="flex-1 px-6 py-4 text-lg border-0 focus:ring-0 text-gray-900 brand-body bg-white" 
-            name="q" 
-            placeholder="Search discussions..." 
-            value="{{ request.GET.q|default:'' }}">
-            <button class="bg-brand-teal text-white px-8 py-4 hover:bg-brand-teal/90 transition-colors" type="submit">
-                <i class="fas fa-search"></i>
-            </button>
+{% block header_wrapper %}
+<header class="forum-hero text-white relative z-10 shadow-2xl">
+    <div class="py-24 px-4 relative z-10">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center max-w-4xl mx-auto">
+                <span class="text-brand-green font-bold uppercase tracking-widest text-[10px] mb-4 block">Knowledge Exchange</span>
+                <h1 class="text-5xl md:text-7xl font-bold mb-6 text-white font-serif tracking-tight leading-none">
+                    Community <span class="text-brand-teal italic">Discussions</span>
+                </h1>
+                <p class="text-xl text-white/70 mb-12 font-sans font-light leading-relaxed max-w-2xl mx-auto">
+                    Connecting African data professionals, researchers, and innovators through shared intelligence.
+                </p>
+                
+                <form method="GET" action="{% url 'community:search' %}" class="max-w-2xl mx-auto">
+                    <div class="flex shadow-2xl rounded-2xl overflow-hidden glass-card p-1">
+                        <input type="text" 
+                        class="flex-1 px-8 py-5 text-lg border-0 focus:ring-0 text-gray-900 font-sans bg-white/50 rounded-xl" 
+                        name="q" 
+                        placeholder="Search thread titles or research keywords..." 
+                        value="{{ request.GET.q|default:'' }}">
+                        <button class="bg-brand-teal text-white px-10 py-5 hover:bg-brand-teal/90 transition-all font-bold tracking-widest uppercase text-xs rounded-xl" type="submit">
+                            Search
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-    </form>
-  </div>
-</div>
+    </div>
+</header>
 {% endblock %}
 
 {% block content %}
@@ -176,91 +92,97 @@
         <!-- Main Content -->
         <div class="lg:col-span-2">
             <!-- Forum Statistics -->
-            <div class="stats-card mb-10 border-0 shadow-lg">
+            <div class="card-fancy !p-10 mb-12 border-0 glass-card">
                 <div class="grid grid-cols-3 text-center divide-x divide-gray-100">
                     <div>
-                        <h3 class="text-3xl font-bold text-brand-blue mb-1 brand-title">{{ stats.total_threads|default:"0" }}</h3>
+                        <h3 class="text-4xl font-bold text-brand-blue mb-1 font-serif">{{ stats.total_threads|default:"0" }}</h3>
                         <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Discussions</div>
                     </div>
                     <div>
-                        <h3 class="text-3xl font-bold text-brand-blue mb-1 brand-title">{{ stats.total_posts|default:"0" }}</h3>
+                        <h3 class="text-4xl font-bold text-brand-blue mb-1 font-serif">{{ stats.total_posts|default:"0" }}</h3>
                         <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Posts</div>
                     </div>
                     <div>
-                        <h3 class="text-3xl font-bold text-brand-blue mb-1 brand-title">{{ stats.total_members|default:"0" }}</h3>
+                        <h3 class="text-4xl font-bold text-brand-blue mb-1 font-serif">{{ stats.total_members|default:"0" }}</h3>
                         <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Members</div>
                     </div>
                 </div>
             </div>
 
-            <h2 class="text-2xl font-bold mb-8 text-gray-900 brand-title">Topics</h2>
+            <h2 class="text-2xl font-bold mb-8 text-gray-900 font-serif tracking-tight">Browse Domain Topics</h2>
             
-            {% for topic in topics %}
-            <div class="topic-card group">
-                <div class="p-6">
-                    <div class="flex items-center">
+            <div class="space-y-6">
+                {% for topic in topics %}
+                <div class="group card-fancy !p-0 overflow-hidden border-2 border-transparent hover:border-brand-teal/20 transition-all duration-300">
+                    <div class="p-8 flex items-center">
                         <div class="flex-shrink-0">
-                            <div class="topic-icon" style="background-color: {{ topic.color|default:'#1a2e4c' }};">
+                            <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-xl shadow-lg shadow-brand-blue/10" style="background-color: {{ topic.color|default:'#1a2e4c' }};">
                                 <i class="{{ topic.icon|default:'fas fa-comments' }}"></i>
                             </div>
                         </div>
-                        <div class="flex-1 ml-6">
-                            <h5 class="text-xl font-bold mb-1">
-                                <a href="{% url 'community:topic_detail' topic.pk %}" 
-                                   class="text-gray-900 group-hover:text-brand-blue transition-colors brand-title">
-                                    {{ topic.name }}
-                                </a>
-                            </h5>
-                            <p class="text-gray-500 text-sm brand-body">{{ topic.description }}</p>
-                            <div class="topic-stats mt-3 flex items-center">
-                                <span>{{ topic.thread_count|default:"0" }} threads</span>
-                                <span class="mx-3 opacity-30">•</span>
-                                <span>{{ topic.post_count|default:"0" }} posts</span>
+                        <div class="flex-1 ml-8">
+                            <div class="flex items-center gap-3 mb-1">
+                                <h5 class="text-xl font-bold">
+                                    <a href="{% url 'community:topic_detail' topic.pk %}" 
+                                       class="text-gray-900 group-hover:text-brand-blue transition-colors font-serif">
+                                        {{ topic.name }}
+                                    </a>
+                                </h5>
+                            </div>
+                            <p class="text-gray-500 text-sm font-sans mb-4">{{ topic.description }}</p>
+                            <div class="flex items-center gap-6">
+                                <div class="flex items-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                    <i class="far fa-comments mr-2 text-brand-teal"></i> {{ topic.thread_count|default:"0" }} Threads
+                                </div>
+                                <div class="flex items-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                    <i class="far fa-edit mr-2 text-brand-teal"></i> {{ topic.post_count|default:"0" }} Posts
+                                </div>
                             </div>
                         </div>
                         <div class="flex-shrink-0 text-right hidden md:block">
                             {% if topic.get_latest_post %}
-                                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Latest Update</div>
-                                <div class="text-xs font-bold text-gray-700 brand-body">{{ topic.get_latest_post.created_at|timesince }} ago</div>
-                                <div class="text-[10px] text-gray-400 brand-body">by {{ topic.get_latest_post.author.username }}</div>
+                                <div class="text-[10px] font-bold text-gray-300 uppercase tracking-widest mb-1">Pulse</div>
+                                <div class="text-xs font-bold text-brand-teal font-sans">{{ topic.get_latest_post.created_at|timesince }} ago</div>
+                                <div class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">{{ topic.get_latest_post.author.username }}</div>
                             {% else %}
-                                <span class="text-xs font-bold text-gray-300 uppercase tracking-widest">No activity</span>
+                                <span class="text-[10px] font-bold text-gray-200 uppercase tracking-widest">Dormant</span>
                             {% endif %}
                         </div>
                     </div>
                 </div>
+                {% empty %}
+                <div class="card-fancy !p-20 text-center border-dashed border-2 border-gray-200">
+                    <h4 class="text-xl font-bold text-gray-400 font-serif">No Topics Found</h4>
+                </div>
+                {% endfor %}
             </div>
-            {% empty %}
-            <div class="text-center py-20 bg-brand-offwhite rounded-2xl border border-dashed border-gray-200">
-                <h4 class="text-xl font-bold text-gray-400 brand-title">No Topics Found</h4>
-            </div>
-            {% endfor %}
+
         </div>
 
         <!-- Sidebar -->
         <div class="lg:col-span-1">
             <!-- Recent Threads -->
-            <div class="activity-card mb-8 shadow-md border-0">
+            <div class="activity-card mb-8 shadow-md border-0 bg-white rounded-2xl p-6">
                 <h5 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-6">Recent Discussions</h5>
                 {% for thread in recent_threads %}
-                <div class="thread-item group">
+                <div class="pb-4 mb-4 border-b border-gray-50 last:border-0 last:pb-0 group">
                     <div class="flex items-start">
-                        <div class="user-avatar mr-4 flex-shrink-0 shadow-sm">
+                        <div class="w-8 h-8 rounded-full bg-brand-blue mr-3 flex-shrink-0 flex items-center justify-center text-white font-bold text-xs">
                             {{ thread.author.username|first|upper }}
                         </div>
                         <div class="flex-1 min-w-0">
                             <h6 class="font-bold text-sm mb-1 leading-snug">
                                 <a href="{% url 'community:thread_detail' thread.pk %}" 
-                                   class="text-gray-900 group-hover:text-brand-blue transition-colors brand-body">
+                                   class="text-gray-900 group-hover:text-brand-blue transition-colors font-sans italic">
                                     {{ thread.title|truncatechars:50 }}
                                 </a>
                             </h6>
-                            <div class="flex items-center text-[10px] font-bold">
-                                <span class="px-2 py-0.5 rounded text-brand-teal bg-brand-teal/10 topic-badge">
+                            <div class="flex items-center text-[9px] font-bold">
+                                <span class="px-2 py-0.5 rounded text-brand-teal bg-brand-teal/10 uppercase tracking-widest">
                                     {{ thread.topic.name }}
                                 </span>
                                 <span class="mx-2 text-gray-300">•</span>
-                                <span class="text-gray-400">{{ thread.created_at|timesince }} ago</span>
+                                <span class="text-gray-400 uppercase">{{ thread.created_at|timesince }} ago</span>
                             </div>
                         </div>
                     </div>
@@ -271,23 +193,23 @@
             </div>
 
             <!-- Latest Replies -->
-            <div class="activity-card shadow-md border-0">
+            <div class="activity-card shadow-md border-0 bg-white rounded-2xl p-6">
                 <h5 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-6">Latest Replies</h5>
                 {% for post in recent_posts %}
-                <div class="thread-item group">
+                <div class="pb-4 mb-4 border-b border-gray-50 last:border-0 last:pb-0 group">
                     <div class="flex items-start">
-                        <div class="user-avatar mr-4 flex-shrink-0 shadow-sm" style="background-color: var(--brand-teal);">
+                        <div class="w-8 h-8 rounded-full bg-brand-teal mr-3 flex-shrink-0 flex items-center justify-center text-white font-bold text-xs shadow-sm">
                             {{ post.author.username|first|upper }}
                         </div>
                         <div class="flex-1 min-w-0">
                             <h6 class="font-bold text-sm mb-1">
                                 <a href="{% url 'community:thread_detail' post.thread.pk %}" 
-                                   class="text-gray-900 group-hover:text-brand-blue transition-colors brand-body">
+                                   class="text-gray-900 group-hover:text-brand-blue transition-colors font-sans">
                                     {{ post.thread.title|truncatechars:40 }}
                                 </a>
                             </h6>
-                            <p class="text-xs text-gray-500 mb-2 brand-body line-clamp-2">"{{ post.content }}"</p>
-                            <div class="text-[10px] font-bold text-gray-400">
+                            <p class="text-xs text-gray-500 mb-2 font-sans line-clamp-2 italic opacity-80">"{{ post.content }}"</p>
+                            <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
                                 <strong>{{ post.author.username }}</strong>
                                 <span class="mx-1">•</span> {{ post.created_at|timesince }}
                             </div>
@@ -310,12 +232,12 @@
                 class="bg-brand-blue hover:bg-brand-blue/90 text-white w-14 h-14 rounded-full shadow-2xl transition-all hover:scale-110 flex items-center justify-center">
             <i class="fas fa-plus text-xl"></i>
         </button>
-        <div id="quickActionsMenu" class="dropdown-menu">
+        <div id="quickActionsMenu" class="dropdown-menu-custom">
             <div class="px-4 py-3 border-b border-gray-50 mb-2">
                 <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Start a Thread</span>
             </div>
             {% for topic in topics %}
-            <a class="dropdown-item" href="{% url 'community:create_thread' topic.pk %}">
+            <a class="flex items-center p-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors text-sm font-bold no-underline" href="{% url 'community:create_thread' topic.pk %}">
                 <div class="w-2 h-2 rounded-full mr-3" style="background-color: {{ topic.color|default:'#1a2e4c' }};"></div>
                 {{ topic.name }}
             </a>
@@ -344,13 +266,16 @@
 
     // Animate stats numbers
     document.addEventListener('DOMContentLoaded', function() {
-        const stats = document.querySelectorAll('.stats-card h3');
+        const stats = document.querySelectorAll('.card-fancy h3');
         stats.forEach(stat => {
-            const target = parseInt(stat.innerText.replace(/[^0-9]/g, ''));
+            const textContent = stat.innerText.trim();
+            const target = parseInt(textContent.replace(/[^0-9]/g, ''));
             if (isNaN(target)) return;
             
             let count = 0;
             const inc = target / 50;
+            if (target === 0) return;
+            
             const timer = setInterval(() => {
                 count += inc;
                 if (count >= target) {

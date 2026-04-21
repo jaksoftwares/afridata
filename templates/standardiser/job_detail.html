@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Job Analytics | {{ job.dataset_name }}{% endblock %}
+
+{% block header_content %}
+<div class="container mx-auto px-6 py-12">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div class="flex-1">
+            <nav class="flex mb-4 text-[10px] font-bold uppercase tracking-widest text-white/50">
+                <a href="{% url 'standardiser:job_list' %}" class="hover:text-white transition-colors">History</a>
+                <span class="mx-3 opacity-30">/</span>
+                <span class="text-white/80">Job Analytics</span>
+            </nav>
+            <h1 class="text-3xl md:text-5xl font-serif font-bold text-white mb-2">
+                {{ job.dataset_name }}
+            </h1>
+            <p class="text-brand-teal font-mono text-xs font-bold uppercase tracking-[0.3em]">
+                System UID: {{ job.job_id }}
+            </p>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="text-right hidden sm:block">
+                <p class="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1">Status</p>
+                <div class="flex items-center justify-end gap-2 text-white">
+                    {% if job.status == 'completed' %}
+                        <span class="text-xs font-black uppercase tracking-tighter text-brand-green">Pipeline Success</span>
+                        <i class="fas fa-circle-check text-brand-green"></i>
+                    {% elif job.status == 'processing' %}
+                        <span class="text-xs font-black uppercase tracking-tighter text-brand-amber">Active Processing</span>
+                        <i class="fas fa-spinner fa-spin text-brand-amber"></i>
+                    {% else %}
+                        <span class="text-xs font-black uppercase tracking-tighter text-gray-400">{{ job.status }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <a href="{% url 'standardiser:standardisation_ready' job.job_id %}" class="btn-primary !bg-white !text-brand-blue shadow-2xl hover:scale-105 transition-transform">
+                <i class="fas fa-chart-line mr-2"></i> View Report
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-6 py-12">
+    
+    <!-- Metrics Grid -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+        <div class="card-fancy !p-6 flex flex-col items-center justify-center text-center">
+            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">Rows Ingested</span>
+            <span class="text-3xl font-black text-brand-blue">{{ job.rows_processed|default:'-' }}</span>
+        </div>
+        <div class="card-fancy !p-6 flex flex-col items-center justify-center text-center">
+            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">Schema Mapping</span>
+            <span class="text-3xl font-black text-brand-teal">{{ job.columns_mapped }}/{{ job.columns_count }}</span>
+        </div>
+        <div class="card-fancy !p-6 flex flex-col items-center justify-center text-center">
+            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">AI Confidence</span>
+            <span class="text-3xl font-black text-brand-blue">{{ job.ai_confidence|floatformat:0 }}%</span>
+        </div>
+        <div class="card-fancy !p-6 flex flex-col items-center justify-center text-center">
+            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">Integrity Score</span>
+            <span class="text-3xl font-black text-brand-blue">{{ job.completeness|floatformat:0 }}%</span>
+        </div>
+    </div>
+
+    <!-- Main Detail Tabs -->
+    <div x-data="{ activeTab: 'overview' }" class="space-y-8">
+        
+        <!-- Tab Navigation -->
+        <div class="flex items-center gap-8 border-b border-gray-100 overflow-x-auto pb-px">
+            <button @click="activeTab = 'overview'" :class="activeTab === 'overview' ? 'text-brand-blue border-brand-teal' : 'text-gray-400 border-transparent hover:text-brand-blue'" class="pb-4 border-b-2 text-xs font-bold uppercase tracking-widest transition-all">
+                Overview
+            </button>
+            {% if mapping_edits %}
+            <button @click="activeTab = 'mappings'" :class="activeTab === 'mappings' ? 'text-brand-blue border-brand-teal' : 'text-gray-400 border-transparent hover:text-brand-blue'" class="pb-4 border-b-2 text-xs font-bold uppercase tracking-widest transition-all">
+                Heuristic Edits
+            </button>
+            {% endif %}
+            {% if logs %}
+            <button @click="activeTab = 'logs'" :class="activeTab === 'logs' ? 'text-brand-blue border-brand-teal' : 'text-gray-400 border-transparent hover:text-brand-blue'" class="pb-4 border-b-2 text-xs font-bold uppercase tracking-widest transition-all">
+                Runtime Logs
+            </button>
+            {% endif %}
+        </div>
+
+        <!-- Tab Content -->
+        <div class="card-fancy !p-8">
+            
+            <!-- Overview Tab Content -->
+            <div x-show="activeTab === 'overview'" class="space-y-12 animate-in fade-in duration-500">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                    <div class="lg:col-span-2 space-y-8">
+                        <div>
+                            <h3 class="text-xs font-bold text-brand-grey/40 uppercase tracking-widest mb-6">Pipeline Metadata</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-12">
+                                <div>
+                                    <p class="text-[10px] text-gray-400 uppercase font-bold mb-1">Original Filename</p>
+                                    <p class="text-sm font-bold text-brand-blue truncate">{{ job.original_filename }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-gray-400 uppercase font-bold mb-1">Payload Size</p>
+                                    <p class="text-sm font-bold text-brand-blue">{{ job.file_size|filesizeformat }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-gray-400 uppercase font-bold mb-1">Research Domain</p>
+                                    <p class="text-sm font-bold text-brand-blue">{{ job.domain|title }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-gray-400 uppercase font-bold mb-1">Execution Date</p>
+                                    <p class="text-sm font-bold text-brand-blue">{{ job.created_at|date:'M d, Y' }} <span class="text-gray-300 font-light mx-1">at</span> {{ job.created_at|date:'H:i' }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if job.error_message %}
+                        <div class="p-6 bg-red-50 border-l-4 border-red-500 rounded-r-xl">
+                            <h4 class="text-sm font-bold text-red-900 mb-2 flex items-center gap-2">
+                                <i class="fas fa-triangle-exclamation"></i> Runtime Exception Detected
+                            </h4>
+                            <code class="text-xs text-red-700 bg-white/50 p-3 block rounded-lg mt-2 leading-relaxed font-mono">
+                                {{ job.error_message }}
+                            </code>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="space-y-8">
+                        <div>
+                            <h3 class="text-xs font-bold text-brand-grey/40 uppercase tracking-widest mb-6">Quality Visualizer</h3>
+                            <div class="space-y-6">
+                                <div class="space-y-2">
+                                    <div class="flex justify-between items-end">
+                                        <span class="text-[10px] font-bold text-brand-blue uppercase tracking-tighter">Mapping Score</span>
+                                        <span class="text-[10px] font-black text-brand-teal">{{ job.mapping_score|floatformat:0 }}%</span>
+                                    </div>
+                                    <div class="h-2 bg-gray-50 rounded-full overflow-hidden">
+                                        <div class="h-full bg-brand-teal transition-all duration-1000" style="width: {{ job.mapping_score }}%"></div>
+                                    </div>
+                                </div>
+                                <div class="space-y-2">
+                                    <div class="flex justify-between items-end">
+                                        <span class="text-[10px] font-bold text-brand-blue uppercase tracking-tighter">AI Verification</span>
+                                        <span class="text-[10px] font-black text-brand-blue">{{ job.ai_confidence|floatformat:0 }}%</span>
+                                    </div>
+                                    <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                        <div class="h-full bg-brand-blue transition-all duration-1000" style="width: {{ job.ai_confidence }}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <form method="post" action="{% url 'standardiser:delete_job' job.job_id %}" class="pt-4 border-t border-gray-50">
+                            {% csrf_token %}
+                            <button type="submit" onclick="return confirm('Archive this record?')" class="text-[10px] font-bold text-red-300 uppercase tracking-widest hover:text-red-500 transition-colors flex items-center gap-2">
+                                <i class="fas fa-trash-alt"></i> Archive Processing History
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mappings Tab Content -->
+            {% if mapping_edits %}
+            <div x-show="activeTab === 'mappings'" class="animate-in slide-in-from-bottom-4 duration-500">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="border-b border-gray-100">
+                            <tr>
+                                <th class="px-4 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Original Field</th>
+                                <th class="px-4 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Target Entity</th>
+                                <th class="px-4 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Author</th>
+                                <th class="px-4 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-50">
+                            {% for edit in mapping_edits %}
+                            <tr class="hover:bg-gray-50/50 transition-colors">
+                                <td class="px-4 py-5 font-mono text-xs text-brand-blue">{{ edit.original_column_name }}</td>
+                                <td class="px-4 py-5">
+                                    <span class="bg-brand-blue/5 text-brand-blue px-2 py-1 rounded text-[10px] font-bold uppercase tracking-tight">{{ edit.edited_column_name }}</span>
+                                </td>
+                                <td class="px-4 py-5 text-xs text-gray-500">{{ edit.edited_by|default:'System Rule' }}</td>
+                                <td class="px-4 py-5 text-right">
+                                    {% if edit.applied %}
+                                        <span class="text-[10px] font-bold text-brand-teal uppercase tracking-widest">Applied</span>
+                                    {% else %}
+                                        <span class="text-[10px] font-bold text-brand-amber uppercase tracking-widest">Pending</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Logs Tab Content -->
+            {% if logs %}
+            <div x-show="activeTab === 'logs'" class="animate-in slide-in-from-bottom-4 duration-500">
+                <div class="space-y-4">
+                    {% for log in logs %}
+                    <div class="flex gap-6 p-4 rounded-xl hover:bg-gray-50/50 transition-colors group">
+                        <div class="w-20 pt-1 flex-shrink-0">
+                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">{{ log.created_at|date:'H:i:s.u'|slice:":12" }}</span>
+                        </div>
+                        <div class="flex-shrink-0 pt-0.5">
+                            {% if log.level == 'ERROR' %}
+                                <i class="fas fa-circle text-[8px] text-red-500"></i>
+                            {% elif log.level == 'WARNING' %}
+                                <i class="fas fa-circle text-[8px] text-brand-amber"></i>
+                            {% else %}
+                                <i class="fas fa-circle text-[8px] text-brand-teal"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex-1">
+                            <h5 class="text-xs font-bold text-brand-blue mb-1 uppercase tracking-tight">{{ log.step }}</h5>
+                            <p class="text-sm text-gray-500 leading-relaxed max-w-2xl">{{ log.message }}</p>
+                            {% if log.duration_ms %}
+                            <div class="mt-2 text-[9px] font-bold text-brand-teal uppercase tracking-widest">
+                                Latency: {{ log.duration_ms }}ms
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+
+    </div>
+</div>
+
+<!-- Alpine.js is needed for the tabs, typically should be in base.html head -->
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+{% endblock %}

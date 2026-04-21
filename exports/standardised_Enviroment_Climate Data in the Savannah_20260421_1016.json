@@ -1,0 +1,413 @@
+{
+  "job_id": "47d422fa-2bec-4de8-be4a-d85094e68b86",
+  "domain": "Enviroment",
+  "dataset_name": "Climate Data in the Savannah",
+  "schema": {
+    "domain": "Climate and Environment",
+    "alignment_confidence": 0.9,
+    "official_standard": {
+      "reporting_year": "Int32",
+      "country_iso_code": "Utf8",
+      "average_temperature_celsius": "Float64",
+      "co2_emissions_per_capita_metric_tons": "Float64",
+      "sea_level_rise_mm": "Float64",
+      "annual_rainfall_mm": "Float64",
+      "total_population": "Int64",
+      "renewable_energy_share_percentage": "Float64",
+      "extreme_weather_events_count": "Int32",
+      "forest_area_percentage": "Float64"
+    },
+    "mapping_instructions": {
+      "Year": "reporting_year",
+      "Country": "country_iso_code",
+      "Avg Temperature (\u00b0C)": "average_temperature_celsius",
+      "CO2 Emissions (Tons/Capita)": "co2_emissions_per_capita_metric_tons",
+      "Sea Level Rise (mm)": "sea_level_rise_mm",
+      "Rainfall (mm)": "annual_rainfall_mm",
+      "Population": "total_population",
+      "Renewable Energy (%)": "renewable_energy_share_percentage",
+      "Extreme Weather Events": "extreme_weather_events_count",
+      "Forest Area (%)": "forest_area_percentage"
+    },
+    "transformation_needed": {
+      "reporting_year": "cast(Int32)",
+      "country_iso_code": null,
+      "average_temperature_celsius": "cast(Float64)",
+      "co2_emissions_per_capita_metric_tons": "cast(Float64)",
+      "sea_level_rise_mm": "cast(Float64)",
+      "annual_rainfall_mm": "cast(Float64)",
+      "total_population": "cast(Int64)",
+      "renewable_energy_share_percentage": "cast(Float64)",
+      "extreme_weather_events_count": "cast(Int32)",
+      "forest_area_percentage": "cast(Float64)"
+    }
+  },
+  "mappings": {
+    "Year": "reporting_year",
+    "Country": "country_iso_code",
+    "Avg Temperature (\u00b0C)": "average_temperature_celsius",
+    "CO2 Emissions (Tons/Capita)": "co2_emissions_per_capita_metric_tons",
+    "Sea Level Rise (mm)": "sea_level_rise_mm",
+    "Rainfall (mm)": "annual_rainfall_mm",
+    "Population": "total_population",
+    "Renewable Energy (%)": "renewable_energy_share_percentage",
+    "Extreme Weather Events": "extreme_weather_events_count",
+    "Forest Area (%)": "forest_area_percentage"
+  },
+  "quality_report": {
+    "summary": {
+      "original_rows": 1000,
+      "final_rows": 1000,
+      "total_rows_removed": 0,
+      "rows_removed_pct": 0.0,
+      "columns": 10
+    },
+    "operations_summary": {
+      "null_handling": 0,
+      "duplicates_removed": 0,
+      "outliers_detected": 0,
+      "validation_errors": 10,
+      "pattern_issues": 1,
+      "integrity_issues": 0
+    },
+    "data_quality": {
+      "avg_completeness": 100.0,
+      "columns_with_nulls": 0,
+      "columns_with_outliers": 0
+    },
+    "issues_found": {
+      "null_values": {
+        "reporting_year": {
+          "before_null_count": 0,
+          "before_null_pct": 0.0,
+          "after_null_count": 0,
+          "after_null_pct": 0.0
+        },
+        "country_iso_code": {
+          "before_null_count": 0,
+          "before_null_pct": 0.0,
+          "after_null_count": 0,
+          "after_null_pct": 0.0
+        },
+        "average_temperature_celsius": {
+          "before_null_count": 0,
+          "before_null_pct": 0.0,
+          "after_null_count": 0,
+          "after_null_pct": 0.0
+        },
+        "co2_emissions_per_capita_metric_tons": {
+          "before_null_count": 0,
+          "before_null_pct": 0.0,
+          "after_null_count": 0,
+          "after_null_pct": 0.0
+        },
+        "sea_level_rise_mm": {
+          "before_null_count": 0,
+          "before_null_pct": 0.0,
+          "after_null_count": 0,
+          "after_null_pct": 0.0
+        },
+        "annual_rainfall_mm": {
+          "before_null_count": 0,
+          "before_null_pct": 0.0,
+          "after_null_count": 0,
+          "after_null_pct": 0.0
+        },
+        "total_population": {
+          "before_null_count": 0,
+          "before_null_pct": 0.0,
+          "after_null_count": 0,
+          "after_null_pct": 0.0
+        },
+        "renewable_energy_share_percentage": {
+          "before_null_count": 0,
+          "before_null_pct": 0.0,
+          "after_null_count": 0,
+          "after_null_pct": 0.0
+        },
+        "extreme_weather_events_count": {
+          "before_null_count": 0,
+          "before_null_pct": 0.0,
+          "after_null_count": 0,
+          "after_null_pct": 0.0
+        },
+        "forest_area_percentage": {
+          "before_null_count": 0,
+          "before_null_pct": 0.0,
+          "after_null_count": 0,
+          "after_null_pct": 0.0
+        }
+      },
+      "outliers": {},
+      "validation_errors": {
+        "reporting_year": {
+          "expected": "Int32",
+          "actual": "String",
+          "issue": "Type mismatch"
+        },
+        "country_iso_code": {
+          "expected": "Utf8",
+          "actual": "String",
+          "issue": "Type mismatch"
+        },
+        "average_temperature_celsius": {
+          "expected": "Float64",
+          "actual": "String",
+          "issue": "Type mismatch"
+        },
+        "co2_emissions_per_capita_metric_tons": {
+          "expected": "Float64",
+          "actual": "String",
+          "issue": "Type mismatch"
+        },
+        "sea_level_rise_mm": {
+          "expected": "Float64",
+          "actual": "String",
+          "issue": "Type mismatch"
+        },
+        "annual_rainfall_mm": {
+          "expected": "Float64",
+          "actual": "String",
+          "issue": "Type mismatch"
+        },
+        "total_population": {
+          "expected": "Int64",
+          "actual": "String",
+          "issue": "Type mismatch"
+        },
+        "renewable_energy_share_percentage": {
+          "expected": "Float64",
+          "actual": "String",
+          "issue": "Type mismatch"
+        },
+        "extreme_weather_events_count": {
+          "expected": "Int32",
+          "actual": "String",
+          "issue": "Type mismatch"
+        },
+        "forest_area_percentage": {
+          "expected": "Float64",
+          "actual": "String",
+          "issue": "Type mismatch"
+        }
+      },
+      "pattern_issues": {
+        "country_iso_code": {
+          "type": "country_code",
+          "invalid_count": 15,
+          "sample_invalid": [
+            "UK",
+            "Indonesia",
+            "France",
+            "India",
+            "Australia"
+          ]
+        }
+      },
+      "integrity_issues": {}
+    }
+  },
+  "sample_data": [
+    {
+      "reporting_year": "2000",
+      "country_iso_code": "Argentina",
+      "average_temperature_celsius": "16.9",
+      "co2_emissions_per_capita_metric_tons": "3.9",
+      "sea_level_rise_mm": "4.0",
+      "annual_rainfall_mm": "2047",
+      "total_population": "564877556",
+      "renewable_energy_share_percentage": "15.5",
+      "extreme_weather_events_count": "11",
+      "forest_area_percentage": "18.4",
+      "reporting_year_encoded": 0,
+      "country_iso_code_encoded": 0,
+      "average_temperature_celsius_encoded": 67,
+      "co2_emissions_per_capita_metric_tons_encoded": 135,
+      "sea_level_rise_mm_encoded": 30,
+      "renewable_energy_share_percentage_encoded": 49,
+      "extreme_weather_events_count_encoded": 3,
+      "forest_area_percentage_encoded": 66
+    },
+    {
+      "reporting_year": "2000",
+      "country_iso_code": "Australia",
+      "average_temperature_celsius": "16.1",
+      "co2_emissions_per_capita_metric_tons": "17.1",
+      "sea_level_rise_mm": "3.9",
+      "annual_rainfall_mm": "2834",
+      "total_population": "753610692",
+      "renewable_energy_share_percentage": "22.3",
+      "extreme_weather_events_count": "12",
+      "forest_area_percentage": "60.3",
+      "reporting_year_encoded": 0,
+      "country_iso_code_encoded": 1,
+      "average_temperature_celsius_encoded": 59,
+      "co2_emissions_per_capita_metric_tons_encoded": 86,
+      "sea_level_rise_mm_encoded": 29,
+      "renewable_energy_share_percentage_encoded": 111,
+      "extreme_weather_events_count_encoded": 4,
+      "forest_area_percentage_encoded": 398
+    },
+    {
+      "reporting_year": "2000",
+      "country_iso_code": "Australia",
+      "average_temperature_celsius": "11.4",
+      "co2_emissions_per_capita_metric_tons": "2.2",
+      "sea_level_rise_mm": "1.8",
+      "annual_rainfall_mm": "1071",
+      "total_population": "1388230143",
+      "renewable_energy_share_percentage": "12.0",
+      "extreme_weather_events_count": "4",
+      "forest_area_percentage": "50.9",
+      "reporting_year_encoded": 0,
+      "country_iso_code_encoded": 1,
+      "average_temperature_celsius_encoded": 14,
+      "co2_emissions_per_capita_metric_tons_encoded": 117,
+      "sea_level_rise_mm_encoded": 8,
+      "renewable_energy_share_percentage_encoded": 18,
+      "extreme_weather_events_count_encoded": 9,
+      "forest_area_percentage_encoded": 320
+    },
+    {
+      "reporting_year": "2000",
+      "country_iso_code": "Australia",
+      "average_temperature_celsius": "8.3",
+      "co2_emissions_per_capita_metric_tons": "12.1",
+      "sea_level_rise_mm": "1.1",
+      "annual_rainfall_mm": "2195",
+      "total_population": "353488527",
+      "renewable_energy_share_percentage": "42.4",
+      "extreme_weather_events_count": "13",
+      "forest_area_percentage": "63.2",
+      "reporting_year_encoded": 0,
+      "country_iso_code_encoded": 1,
+      "average_temperature_celsius_encoded": 275,
+      "co2_emissions_per_capita_metric_tons_encoded": 36,
+      "sea_level_rise_mm_encoded": 1,
+      "renewable_energy_share_percentage_encoded": 298,
+      "extreme_weather_events_count_encoded": 5,
+      "forest_area_percentage_encoded": 422
+    },
+    {
+      "reporting_year": "2000",
+      "country_iso_code": "Brazil",
+      "average_temperature_celsius": "31.2",
+      "co2_emissions_per_capita_metric_tons": "14.6",
+      "sea_level_rise_mm": "3.7",
+      "annual_rainfall_mm": "803",
+      "total_population": "255339962",
+      "renewable_energy_share_percentage": "28.3",
+      "extreme_weather_events_count": "9",
+      "forest_area_percentage": "21.7",
+      "reporting_year_encoded": 0,
+      "country_iso_code_encoded": 2,
+      "average_temperature_celsius_encoded": 208,
+      "co2_emissions_per_capita_metric_tons_encoded": 61,
+      "sea_level_rise_mm_encoded": 27,
+      "renewable_energy_share_percentage_encoded": 168,
+      "extreme_weather_events_count_encoded": 14,
+      "forest_area_percentage_encoded": 88
+    },
+    {
+      "reporting_year": "2000",
+      "country_iso_code": "Canada",
+      "average_temperature_celsius": "16.5",
+      "co2_emissions_per_capita_metric_tons": "17.6",
+      "sea_level_rise_mm": "2.2",
+      "annual_rainfall_mm": "2279",
+      "total_population": "329517333",
+      "renewable_energy_share_percentage": "13.6",
+      "extreme_weather_events_count": "3",
+      "forest_area_percentage": "46.2",
+      "reporting_year_encoded": 0,
+      "country_iso_code_encoded": 3,
+      "average_temperature_celsius_encoded": 63,
+      "co2_emissions_per_capita_metric_tons_encoded": 91,
+      "sea_level_rise_mm_encoded": 12,
+      "renewable_energy_share_percentage_encoded": 32,
+      "extreme_weather_events_count_encoded": 8,
+      "forest_area_percentage_encoded": 284
+    },
+    {
+      "reporting_year": "2000",
+      "country_iso_code": "Canada",
+      "average_temperature_celsius": "22.8",
+      "co2_emissions_per_capita_metric_tons": "9.6",
+      "sea_level_rise_mm": "2.5",
+      "annual_rainfall_mm": "720",
+      "total_population": "248996061",
+      "renewable_energy_share_percentage": "14.4",
+      "extreme_weather_events_count": "12",
+      "forest_area_percentage": "30.5",
+      "reporting_year_encoded": 0,
+      "country_iso_code_encoded": 3,
+      "average_temperature_celsius_encoded": 125,
+      "co2_emissions_per_capita_metric_tons_encoded": 190,
+      "sea_level_rise_mm_encoded": 15,
+      "renewable_energy_share_percentage_encoded": 40,
+      "extreme_weather_events_count_encoded": 4,
+      "forest_area_percentage_encoded": 162
+    },
+    {
+      "reporting_year": "2000",
+      "country_iso_code": "Canada",
+      "average_temperature_celsius": "23.5",
+      "co2_emissions_per_capita_metric_tons": "7.0",
+      "sea_level_rise_mm": "2.8",
+      "annual_rainfall_mm": "2006",
+      "total_population": "584732301",
+      "renewable_energy_share_percentage": "46.5",
+      "extreme_weather_events_count": "5",
+      "forest_area_percentage": "39.0",
+      "reporting_year_encoded": 0,
+      "country_iso_code_encoded": 3,
+      "average_temperature_celsius_encoded": 132,
+      "co2_emissions_per_capita_metric_tons_encoded": 165,
+      "sea_level_rise_mm_encoded": 18,
+      "renewable_energy_share_percentage_encoded": 331,
+      "extreme_weather_events_count_encoded": 10,
+      "forest_area_percentage_encoded": 231
+    },
+    {
+      "reporting_year": "2000",
+      "country_iso_code": "Canada",
+      "average_temperature_celsius": "14.4",
+      "co2_emissions_per_capita_metric_tons": "1.2",
+      "sea_level_rise_mm": "3.1",
+      "annual_rainfall_mm": "527",
+      "total_population": "496479467",
+      "renewable_energy_share_percentage": "16.5",
+      "extreme_weather_events_count": "14",
+      "forest_area_percentage": "52.7",
+      "reporting_year_encoded": 0,
+      "country_iso_code_encoded": 3,
+      "average_temperature_celsius_encoded": 42,
+      "co2_emissions_per_capita_metric_tons_encoded": 7,
+      "sea_level_rise_mm_encoded": 21,
+      "renewable_energy_share_percentage_encoded": 59,
+      "extreme_weather_events_count_encoded": 6,
+      "forest_area_percentage_encoded": 334
+    },
+    {
+      "reporting_year": "2000",
+      "country_iso_code": "China",
+      "average_temperature_celsius": "26.7",
+      "co2_emissions_per_capita_metric_tons": "15.4",
+      "sea_level_rise_mm": "2.7",
+      "annual_rainfall_mm": "2066",
+      "total_population": "784881916",
+      "renewable_energy_share_percentage": "43.0",
+      "extreme_weather_events_count": "1",
+      "forest_area_percentage": "52.4",
+      "reporting_year_encoded": 0,
+      "country_iso_code_encoded": 4,
+      "average_temperature_celsius_encoded": 163,
+      "co2_emissions_per_capita_metric_tons_encoded": 69,
+      "sea_level_rise_mm_encoded": 17,
+      "renewable_energy_share_percentage_encoded": 303,
+      "extreme_weather_events_count_encoded": 1,
+      "forest_area_percentage_encoded": 332
+    }
+  ],
+  "total_rows": 1000
+}

@@ -7,13 +7,15 @@ urlpatterns = [
     path('', views.dataset_list, name='dataset_list'),
     
     # Dataset detail and related pages
-    path('dataset/<int:dataset_id>/', views.dataset_detail, name='dataset_detail'),
-    path('dataset/<int:dataset_id>/preview/', views.dataset_preview, name='dataset_preview'),
-    path('dataset/<int:dataset_id>/download/', views.download_dataset, name='download_dataset'),
-    path('dataset/<int:dataset_id>/comments/', views.dataset_comments, name='dataset_comments'),
+    path('dataset/<slug:slug>/', views.dataset_detail, name='dataset_detail'),
+    path('dataset/<slug:slug>/preview/', views.dataset_preview, name='dataset_preview'),
+    path('dataset/<slug:slug>/download/', views.download_dataset, name='download_dataset'),
+    path('dataset/<slug:slug>/comments/', views.dataset_comments, name='dataset_comments'),
+
     
     # Comment functionality
-    path('comment/<int:dataset_id>/post/', views.post_comment, name='post_comment'),
+    path('comment/<slug:slug>/post/', views.post_comment, name='post_comment'),
+
     path('comment/<int:comment_id>/upvote/', views.upvote_comment, name='upvote_comment'),
     
     # Dataset upload

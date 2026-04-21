@@ -172,7 +172,8 @@
 
             <div id="datasetContainer" class="grid grid-cols-1 md:grid-cols-2 gap-8">
         {% for dataset in datasets %}
-        <div class="group card-fancy !p-0 overflow-hidden flex flex-col border-2 border-transparent hover:border-brand-teal/20 transition-all duration-300 cursor-pointer" onclick="window.location.href='{% url 'dataset_detail' dataset.id %}'">
+        <div class="group card-fancy !p-0 overflow-hidden flex flex-col border-2 border-transparent hover:border-brand-teal/20 transition-all duration-300 cursor-pointer" onclick="window.location.href='{% url 'dataset_detail' dataset.slug %}'">
+
             <!-- Dataset Cover Image Placeholder -->
             <div class="h-44 w-full relative overflow-hidden bg-gray-100">
                 <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=800&h=400" 
@@ -239,7 +240,8 @@
                         </div>
                     </div>
                     
-                    <a href="{% url 'dataset_detail' dataset.id %}" class="w-10 h-10 rounded-full bg-brand-offwhite text-brand-blue flex items-center justify-center hover:bg-brand-blue hover:text-white transition-all">
+                    <a href="{% url 'dataset_detail' dataset.slug %}" class="w-10 h-10 rounded-full bg-brand-offwhite text-brand-blue flex items-center justify-center hover:bg-brand-blue hover:text-white transition-all">
+
                         <i class="fas fa-arrow-right text-xs"></i>
                     </a>
                 </div>

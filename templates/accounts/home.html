@@ -240,7 +240,8 @@
             <div class="p-4 space-y-4 flex-1">
                 {% for dataset in trending_datasets %}
                 <div class="group relative p-5 rounded-brand-card hover:bg-brand-offwhite transition-all duration-300 border border-transparent hover:border-gray-200 cursor-pointer"
-                     onclick="viewDataset('{{ dataset.id }}')">
+                     onclick="viewDataset('{{ dataset.slug }}')">
+
                     <div class="flex justify-between items-start mb-3">
                         <h5 class="font-bold text-lg group-hover:text-brand-blue transition-colors line-clamp-1 pr-6">{{ dataset.title }}</h5>
                         <span class="shrink-0 bg-brand-offwhite group-hover:bg-brand-teal group-hover:text-white text-brand-teal text-[10px] font-bold px-2 py-1 rounded transition-colors uppercase tracking-widest">
@@ -533,7 +534,7 @@
                             </div>
                         </div>
                         <div class="bg-gray-50/50 p-8 flex flex-col justify-center items-center md:w-56 border-t md:border-t-0 md:border-l border-gray-100">
-                            <button onclick="viewDataset('{{ dataset.id }}')" class="btn-primary w-full !rounded-full mb-3 shadow-md group-hover:shadow-brand-teal/20">
+                            <button onclick="viewDataset('{{ dataset.slug }}')" class="btn-primary w-full !rounded-full mb-3 shadow-md group-hover:shadow-brand-teal/20">
                                 View Full <i class="fas fa-chevron-right ml-1 text-[10px]"></i>
                             </button>
                             <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Released: {{ dataset.created_at|date:"M Y" }}</span>
@@ -658,9 +659,12 @@
         window.location.href = `{% url 'dataset_list' %}?sort=${encodeURIComponent(sortBy)}`;
     }
 
-    function viewDataset(datasetId) {
-        window.location.href = `/dataset/dataset/${datasetId}/`;
+    function viewDataset(slug) {
+        if (slug) {
+            window.location.href = "{% url 'dataset_detail' slug='placeholder' %}".replace('placeholder', slug);
+        }
     }
+
 
     function showAIRecommendations() {
         // Create modal for AI recommendations

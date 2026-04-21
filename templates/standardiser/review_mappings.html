@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Mappings | AfriData{% endblock %}
+
+{% block header_content %}
+<div class="container mx-auto px-6 py-12">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+            <div class="flex items-center gap-3 mb-4">
+                <span class="bg-brand-amber/20 text-brand-amber px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
+                    Expert Mode
+                </span>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-serif font-bold text-white mb-4">
+                Mapping & Rulebook
+            </h1>
+            <p class="text-xl text-white/80 max-w-2xl font-light">
+                Fine-tune the automated field mappings and review the generated rulebook for <span class="font-bold text-white">{{ job.dataset_name }}</span>.
+            </p>
+        </div>
+        <div>
+            <a href="{% url 'standardiser:standardisation_ready' job.job_id %}" class="btn-secondary !border-white !text-white hover:!bg-white hover:!text-brand-blue">
+                <i class="fas fa-arrow-left mr-2"></i> Back to Results
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-6 py-12">
+    <!-- Main Editor Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        
+        <!-- Left: Column Mappings (Editable) -->
+        <div class="space-y-6">
+            <div class="card-fancy">
+                <div class="flex items-center gap-2 mb-6 border-b border-gray-50 pb-4">
+                    <div class="bg-brand-teal/10 p-2 rounded-lg">
+                        <i class="fas fa-exchange-alt text-brand-teal"></i>
+                    </div>
+                    <h3 class="text-lg font-bold">Field Mapping Editor</h3>
+                </div>
+
+                <form method="post" id="mappingForm" class="space-y-8">
+                    {% csrf_token %}
+                    
+                    <div class="bg-gray-900 rounded-brand-card p-6 font-mono text-sm shadow-inner ring-1 ring-white/10">
+                        <div class="text-brand-green/40 mb-2"># Field Mappings JSON</div>
+                        <div class="text-brand-teal leading-relaxed">
+                            <span class="text-blue-400">{</span>
+                            {% for name, field in form.fields.items %}
+                                {% if 'map_' in name %}
+                                    <div class="ml-6 flex items-center gap-2 group py-1">
+                                        <span class="text-brand-green">"{{ field.label }}"</span>
+                                        <span class="text-white">:</span>
+                                        <input type="text" name="{{ name }}" 
+                                               value="{{ field.initial|default:'' }}"
+                                               class="flex-1 bg-white/5 border border-white/10 rounded px-2 py-1 text-brand-amber font-bold focus:bg-white focus:text-brand-blue focus:ring-2 focus:ring-brand-teal outline-none transition-all placeholder:text-gray-600"
+                                               pattern="^[a-zA-Z_][a-zA-Z0-9_]*$|^__DROP__$"
+                                               placeholder="standard_field_name"
+                                               />
+                                        <span class="text-white">,</span>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                            <span class="text-blue-400">}</span>
+                        </div>
+                    </div>
+
+                    <!-- Instructions -->
+                    <div class="p-6 bg-brand-blue/5 rounded-xl border border-brand-blue/10 flex gap-4">
+                        <i class="fas fa-lightbulb text-brand-amber text-xl mt-1"></i>
+                        <div class="text-sm">
+                            <p class="font-bold text-brand-blue mb-1">Configuration Tip</p>
+                            <p class="text-gray-500 leading-relaxed">
+                                Use <code class="bg-white px-1 rounded font-bold">__DROP__</code> as the value to completely exclude a column from standardized exports. Field names must be snake_case.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Submission area -->
+                    <div class="flex flex-col gap-4">
+                        <button type="submit" class="btn-primary !py-4 shadow-brand-subtle group">
+                            <i class="fas fa-save mr-2 group-hover:scale-110 transition-transform"></i>
+                            Apply Changes & Re-process
+                        </button>
+                        <a href="{% url 'standardiser:standardisation_ready' job.job_id %}" class="text-center text-sm font-bold text-gray-400 hover:text-brand-blue transition-colors">
+                            Discard and Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right: Full Rulebook/Schema -->
+        <div class="space-y-6">
+            <div class="card-fancy">
+                <div class="flex items-center justify-between mb-6 border-b border-gray-50 pb-4">
+                    <div class="flex items-center gap-2">
+                        <div class="bg-brand-blue/10 p-2 rounded-lg">
+                            <i class="fas fa-book text-brand-blue"></i>
+                        </div>
+                        <h3 class="text-lg font-bold">Generated Pipeline Rulebook</h3>
+                    </div>
+                    <span class="text-[10px] bg-gray-100 px-2 py-1 rounded font-bold uppercase tracking-widest text-gray-400">Read Only</span>
+                </div>
+
+                <div class="relative group">
+                    <div class="bg-gray-800 text-gray-300 p-8 rounded-brand-card font-mono text-xs leading-loose overflow-y-auto max-h-[600px] border-t-8 border-brand-blue/30 shadow-inner">
+                        {% autoescape off %}{{ result.schema_generated_json }}{% endautoescape %}
+                    </div>
+                    <!-- Overlay indicator -->
+                    <div class="absolute bottom-4 right-4 bg-brand-blue text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest opacity-40 group-hover:opacity-100 transition-opacity">
+                        Full Schema Snapshot
+                    </div>
+                </div>
+
+                <div class="mt-8 p-6 bg-brand-teal/5 rounded-xl border border-brand-teal/10 flex gap-4">
+                    <i class="fas fa-info-circle text-brand-teal text-xl mt-1"></i>
+                    <div class="text-sm">
+                        <p class="font-bold text-brand-teal mb-1">About the Rulebook</p>
+                        <p class="text-gray-500 leading-relaxed">
+                            This document is the definitive source of truth for your data standardization. It defines data types, range validations, and normalization rules.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Simple validation feedback
+    document.getElementById('mappingForm').addEventListener('submit', function(e) {
+        const btn = this.querySelector('button[type="submit"]');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Syncing Engine...';
+        btn.classList.add('opacity-80', 'pointer-events-none');
+    });
+</script>
+{% endblock %}

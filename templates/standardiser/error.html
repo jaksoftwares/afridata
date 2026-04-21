@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}System Exception | AfriData{% endblock %}
+
+{% block content %}
+<div class="min-h-[70vh] flex flex-col items-center justify-center py-24 px-6 text-center">
+    
+    <div class="relative mb-12">
+        <div class="absolute inset-0 bg-red-500/10 blur-[80px] rounded-full scale-150 animate-pulse"></div>
+        <div class="relative w-24 h-24 rounded-full bg-red-50 flex items-center justify-center text-red-500 shadow-2xl">
+            <i class="fas fa-triangle-exclamation text-4xl"></i>
+        </div>
+    </div>
+
+    <div class="max-w-xl mx-auto space-y-6">
+        <h2 class="text-3xl md:text-5xl font-serif font-bold text-brand-blue leading-tight">
+            Pipeline Exception
+        </h2>
+        
+        <div class="p-6 bg-red-50/50 border border-red-100 rounded-2xl">
+            <p class="font-mono text-sm text-red-700 leading-relaxed">
+                {{ error|default:"An unexpected interruption occurred during the data standardization sequence." }}
+            </p>
+        </div>
+
+        <p class="text-brand-grey/60 text-lg font-light leading-relaxed">
+            Don't worry, your data is safe. This usually happens due to schema inconsistencies or transient network issues during AI analysis.
+        </p>
+
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
+            <a href="{% url 'standardiser:job_list' %}" class="btn-primary !px-10">
+                <i class="fas fa-list-ul mr-2 text-sm opacity-50"></i> Review Job History
+            </a>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

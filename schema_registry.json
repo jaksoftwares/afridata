@@ -1,0 +1,189 @@
+{
+  "human_resources_human_resources": {
+    "domain": "human resources",
+    "dataset_name": "human resources",
+    "raw_columns": [
+      "id",
+      "first_name",
+      "last_name",
+      "birthdate",
+      "gender",
+      "race",
+      "department",
+      "jobtitle",
+      "location",
+      "hire_date",
+      "termdate",
+      "location_city",
+      "location_state"
+    ],
+    "schema": {
+      "domain": "Human Resources",
+      "alignment_confidence": 0.92,
+      "official_standard": {
+        "employee_id": "Utf8",
+        "given_name": "Utf8",
+        "family_name": "Utf8",
+        "birth_date": "Date",
+        "gender": "Utf8",
+        "ethnicity": "Utf8",
+        "department": "Utf8",
+        "job_title": "Utf8",
+        "work_location_type": "Utf8",
+        "hire_date": "Date",
+        "termination_date": "Datetime",
+        "city_name": "Utf8",
+        "subnational_region": "Utf8"
+      },
+      "mapping_instructions": {
+        "id": "employee_id",
+        "first_name": "given_name",
+        "last_name": "family_name",
+        "birthdate": "birth_date",
+        "gender": "gender",
+        "race": "ethnicity",
+        "department": "department",
+        "jobtitle": "job_title",
+        "location": "work_location_type",
+        "hire_date": "hire_date",
+        "termdate": "termination_date",
+        "location_city": "city_name",
+        "location_state": "subnational_region"
+      },
+      "transformation_needed": {
+        "employee_id": null,
+        "given_name": null,
+        "family_name": null,
+        "birth_date": "strptime('%m/%d/%Y')",
+        "gender": null,
+        "ethnicity": null,
+        "department": null,
+        "job_title": null,
+        "work_location_type": null,
+        "hire_date": "strptime('%m/%d/%Y')",
+        "termination_date": "strptime('%Y-%m-%d %H:%M:%S %Z')",
+        "city_name": null,
+        "subnational_region": null
+      }
+    },
+    "created_at": "2026-04-12T12:18:37.282956"
+  },
+  "trade_and_commerce_coffe_sales": {
+    "domain": "trade and commerce",
+    "dataset_name": "coffe_sales",
+    "raw_columns": [
+      "hour_of_day",
+      "cash_type",
+      "money",
+      "coffee_name",
+      "Time_of_Day",
+      "Weekday",
+      "Month_name",
+      "Weekdaysort",
+      "Monthsort",
+      "Date",
+      "Time"
+    ],
+    "schema": {
+      "domain": "Trade and Commerce",
+      "alignment_confidence": 0.9,
+      "official_standard": {
+        "transaction_hour": "Int64",
+        "payment_method": "Utf8",
+        "transaction_amount": "Float64",
+        "product_name": "Utf8",
+        "time_period": "Utf8",
+        "day_of_week_name": "Utf8",
+        "month_name": "Utf8",
+        "day_of_week_index": "Int64",
+        "month_index": "Int64",
+        "transaction_date": "Date",
+        "transaction_time": "Utf8"
+      },
+      "mapping_instructions": {
+        "hour_of_day": "transaction_hour",
+        "cash_type": "payment_method",
+        "money": "transaction_amount",
+        "coffee_name": "product_name",
+        "Time_of_Day": "time_period",
+        "Weekday": "day_of_week_name",
+        "Month_name": "month_name",
+        "Weekdaysort": "day_of_week_index",
+        "Monthsort": "month_index",
+        "Date": "transaction_date",
+        "Time": "transaction_time"
+      },
+      "transformation_needed": {
+        "transaction_hour": "cast(Int64)",
+        "payment_method": null,
+        "transaction_amount": "cast(Float64)",
+        "product_name": null,
+        "time_period": null,
+        "day_of_week_name": null,
+        "month_name": null,
+        "day_of_week_index": "cast(Int64)",
+        "month_index": "cast(Int64)",
+        "transaction_date": "strptime('%Y-%m-%d')",
+        "transaction_time": null
+      }
+    },
+    "created_at": "2026-04-12T13:56:10.823483"
+  },
+  "climate_and_environment_climate_data_in_the_savannah": {
+    "domain": "climate and environment",
+    "dataset_name": "climate data in the savannah",
+    "raw_columns": [
+      "Year",
+      "Country",
+      "Avg Temperature (\u00b0C)",
+      "CO2 Emissions (Tons/Capita)",
+      "Sea Level Rise (mm)",
+      "Rainfall (mm)",
+      "Population",
+      "Renewable Energy (%)",
+      "Extreme Weather Events",
+      "Forest Area (%)"
+    ],
+    "schema": {
+      "domain": "Climate and Environment",
+      "alignment_confidence": 0.9,
+      "official_standard": {
+        "reporting_year": "Int32",
+        "country_iso_code": "Utf8",
+        "average_temperature_celsius": "Float64",
+        "co2_emissions_per_capita_metric_tons": "Float64",
+        "sea_level_rise_mm": "Float64",
+        "annual_rainfall_mm": "Float64",
+        "total_population": "Int64",
+        "renewable_energy_share_percentage": "Float64",
+        "extreme_weather_events_count": "Int32",
+        "forest_area_percentage": "Float64"
+      },
+      "mapping_instructions": {
+        "Year": "reporting_year",
+        "Country": "country_iso_code",
+        "Avg Temperature (\u00b0C)": "average_temperature_celsius",
+        "CO2 Emissions (Tons/Capita)": "co2_emissions_per_capita_metric_tons",
+        "Sea Level Rise (mm)": "sea_level_rise_mm",
+        "Rainfall (mm)": "annual_rainfall_mm",
+        "Population": "total_population",
+        "Renewable Energy (%)": "renewable_energy_share_percentage",
+        "Extreme Weather Events": "extreme_weather_events_count",
+        "Forest Area (%)": "forest_area_percentage"
+      },
+      "transformation_needed": {
+        "reporting_year": "cast(Int32)",
+        "country_iso_code": null,
+        "average_temperature_celsius": "cast(Float64)",
+        "co2_emissions_per_capita_metric_tons": "cast(Float64)",
+        "sea_level_rise_mm": "cast(Float64)",
+        "annual_rainfall_mm": "cast(Float64)",
+        "total_population": "cast(Int64)",
+        "renewable_energy_share_percentage": "cast(Float64)",
+        "extreme_weather_events_count": "cast(Int32)",
+        "forest_area_percentage": "cast(Float64)"
+      }
+    },
+    "created_at": "2026-04-21T10:10:06.956729"
+  }
+}

@@ -519,9 +519,10 @@
                         <div class="dataset-card">
                             <div class="dataset-header">
                                 <div style="flex: 1;">
-                                    <a href="{% url 'dataset_detail' dataset.id %}" class="dataset-title">
+                                    <a href="{% url 'dataset_detail' dataset.slug %}" class="dataset-title">
                                         {{ dataset.title }}
                                     </a>
+
                                     
                                     <div class="dataset-meta">
                                         <div class="dataset-meta-item">

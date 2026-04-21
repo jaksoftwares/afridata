@@ -11,6 +11,7 @@ urlpatterns = [
     path('dataset/', include('dataset.urls')),
     path('community/', include('community.urls')),
     path('mpesa/', include('mpesa.urls')),
+    path('standardiser/', include('standardiser.urls', namespace='standardiser')),
 
     #url to schema diagram
     path("schema/", Schema.as_view()),

@@ -206,7 +206,9 @@ def search_datasets(request):
         
         results.append({
             'id': dataset.id,
+            'slug': dataset.slug,
             'title': dataset.title,
+
             'author': dataset.author.username,
             'short_bio': short_bio,
             'dataset_type': dataset.get_dataset_type_display(),
@@ -256,7 +258,9 @@ def trending_datasets(request):
         
         results.append({
             'id': dataset.id,
+            'slug': dataset.slug,
             'title': dataset.title,
+
             'author': dataset.author.username,
             'short_bio': short_bio,
             'dataset_type': dataset.get_dataset_type_display(),
@@ -325,7 +329,9 @@ def filter_datasets(request):
         
         result = {
             'id': dataset.id,
+            'slug': dataset.slug,
             'title': dataset.title,
+
             'author': dataset.author.username,
             'bio': bio_excerpt,
             'dataset_type': dataset.get_dataset_type_display(),
