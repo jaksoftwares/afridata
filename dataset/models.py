@@ -5,9 +5,13 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from decimal import Decimal
 import os
 from django.utils.text import slugify
+from typing import Any
 
 
 class Dataset(models.Model):
+    # Declared for Pyrefly — Django injects this via metaclass at runtime
+    objects: Any
+
     DATASET_TYPES = [
         ('csv', 'CSV'),
         ('excel', 'Excel'),
@@ -61,11 +65,11 @@ class Dataset(models.Model):
     temporal_coverage = models.CharField(max_length=255, blank=True, null=True, help_text="Time period covered (e.g., 2020-2023)")
     usage_notes = models.TextField(blank=True, null=True, help_text="Instructions or notes on how to use the dataset")
     
-    def __str__(self):
-        return self.title
+    def __str__(self) -> str:
+        return str(self.title)
     
-    def get_topics_list(self):
-        return [topic.strip() for topic in self.topics.split(',') if topic.strip()]
+    def get_topics_list(self) -> list[str]:
+        return [topic.strip() for topic in str(self.topics).split(',') if topic.strip()]
     
     def calculate_token_cost(self):
         """Calculate token cost based on file size"""
@@ -73,8 +77,10 @@ class Dataset(models.Model):
             return 0
             
         # Get file size in MB
-        file_size = self.file.size / (1024 * 1024)
-        self.file_size_mb = file_size
+        # self.file is a FieldFile at runtime (has .size); FileField per static analysis
+        # float() eliminates the Unknown type that getattr produces for Pyrefly
+        file_size: float = float(getattr(self.file, 'size', 0)) / (1024 * 1024)
+        self.file_size_mb = file_size  # pyrefly: ignore[bad-assignment]
         
         if file_size < 10:
             return 5
@@ -102,17 +108,18 @@ class Dataset(models.Model):
         quality_bonus = 0
         if self.has_documentation:
             quality_bonus += 10
-        if self.metadata_quality_score >= 0.8:
+        score = float(self.metadata_quality_score)  # pyrefly: ignore[bad-argument-type]
+        if score >= 0.8:
             quality_bonus += 20
-        elif self.metadata_quality_score >= 0.6:
+        elif score >= 0.6:
             quality_bonus += 10
             
         return upload_bonus + quality_bonus
     
-    def can_user_download(self, user):
+    def can_user_download(self, user) -> bool:
         """Check if user can download this dataset"""
         if not self.is_premium:
-            return user.profile.token_balance >= self.token_cost
+            return int(user.profile.token_balance) >= int(self.token_cost)  # pyrefly: ignore[bad-argument-type]
         return True  # Premium datasets have separate payment logic
     
     def save(self, *args, **kwargs):
@@ -122,12 +129,12 @@ class Dataset(models.Model):
         
         # Auto-generate slug if not present
         if not self.slug:
-            self.slug = slugify(self.title)
+            self.slug = slugify(str(self.title))  # pyrefly: ignore[bad-assignment]
             # Ensure slug is unique
-            original_slug = self.slug
+            original_slug = str(self.slug)
             counter = 1
-            while Dataset.objects.filter(slug=self.slug).exists():
-                self.slug = f"{original_slug}-{counter}"
+            while Dataset.objects.filter(slug=self.slug).exists():  # pyrefly: ignore[missing-attribute]
+                self.slug = f"{original_slug}-{counter}"  # pyrefly: ignore[bad-assignment]
                 counter += 1
                 
         super().save(*args, **kwargs)
@@ -138,6 +145,9 @@ class Dataset(models.Model):
 
 
 class Comment(models.Model):
+    # Declared for Pyrefly — Django injects this via metaclass at runtime
+    objects: Any
+
     id = models.AutoField(primary_key=True)
     dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE, related_name='comments')
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='authored_comments')
@@ -148,10 +158,13 @@ class Comment(models.Model):
     class Meta:
         ordering = ['-upvotes', '-created_at']
     
-    def __str__(self):
-        return f"Comment by {self.author.username} on {self.dataset.title}"
+    def __str__(self) -> str:
+        return f"Comment by {self.author.username} on {self.dataset.title}"  # pyrefly: ignore[missing-attribute]
 
 class TokenTransaction(models.Model):
+    # Declared for Pyrefly — Django injects this via metaclass at runtime
+    objects: Any
+
     TRANSACTION_TYPES = [
         ('signup_bonus', 'Signup Bonus'),
         ('upload_bonus', 'Upload Bonus'),
@@ -172,10 +185,13 @@ class TokenTransaction(models.Model):
     class Meta:
         ordering = ['-created_at']
     
-    def __str__(self):
-        return f"{self.user.username}: {self.amount} tokens ({self.transaction_type})"
+    def __str__(self) -> str:
+        return f"{self.user.username}: {self.amount} tokens ({self.transaction_type})"  # pyrefly: ignore[missing-attribute]
 
 class PremiumPurchase(models.Model):
+    # Declared for Pyrefly — Django injects this via metaclass at runtime
+    objects: Any
+
     PAYMENT_STATUS = [
         ('pending', 'Pending'),
         ('completed', 'Completed'),
@@ -202,10 +218,13 @@ class PremiumPurchase(models.Model):
     class Meta:
         unique_together = ('user', 'dataset')
     
-    def __str__(self):
-        return f"{self.user.username} - {self.dataset.title} (${self.usd_amount} + {self.tokens_used} tokens)"
+    def __str__(self) -> str:
+        return f"{self.user.username} - {self.dataset.title} (${self.usd_amount} + {self.tokens_used} tokens)"  # pyrefly: ignore[missing-attribute]
 
 class Download(models.Model):
+    # Declared for Pyrefly — Django injects this via metaclass at runtime
+    objects: Any
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='downloads')
     dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE, related_name='download_records')
     tokens_spent = models.PositiveIntegerField(default=0)
@@ -216,10 +235,13 @@ class Download(models.Model):
     class Meta:
         unique_together = ('user', 'dataset')
     
-    def __str__(self):
-        return f"{self.user.username} downloaded {self.dataset.title}"
+    def __str__(self) -> str:
+        return f"{self.user.username} downloaded {self.dataset.title}"  # pyrefly: ignore[missing-attribute]
 
 class Referral(models.Model):
+    # Declared for Pyrefly — Django injects this via metaclass at runtime
+    objects: Any
+
     referrer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='referrals_made')
     referred_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='referrals_received')
     bonus_awarded = models.BooleanField(default=False)
@@ -229,5 +251,5 @@ class Referral(models.Model):
     class Meta:
         unique_together = ('referrer', 'referred_user')
     
-    def __str__(self):
-        return f"{self.referrer.username} referred {self.referred_user.username}"
+    def __str__(self) -> str:
+        return f"{self.referrer.username} referred {self.referred_user.username}"  # pyrefly: ignore[missing-attribute]

@@ -41,10 +41,10 @@
             </p>
             
             <div class="flex flex-wrap justify-center gap-4 mb-14">
-                <button onclick="window.location.href='{% url 'login_signup' %}?mode=signup'" class="btn-primary !px-8 py-3.5">
+                <button onclick="window.location.href=`{% url 'login_signup' %}?mode=signup`" class="btn-primary !px-8 py-3.5">
                     Create Account
                 </button>
-                <button onclick="window.location.href='{% url 'dataset_list' %}'" class="btn-secondary !text-white !border-white/20 hover:!bg-white/10 !px-8 py-3.5">
+                <button onclick="window.location.href=`{% url 'dataset_list' %}`" class="btn-secondary !text-white !border-white/20 hover:!bg-white/10 !px-8 py-3.5">
                     Browse Datasets
                 </button>
             </div>
@@ -140,7 +140,7 @@
                         {% endfor %}
                     </div>
                     
-                    <button onclick="window.location.href='{% url 'dataset_list' %}?sort=downloads'" class="w-full mt-6 text-brand-teal font-bold text-sm hover:underline">
+                    <button onclick="window.location.href=`{% url 'dataset_list' %}?sort=downloads`" class="w-full mt-6 text-brand-teal font-bold text-sm hover:underline">
                         View All Trends
                     </button>
                 </div>
@@ -224,7 +224,7 @@
                         {% else %}
                             Verified high-integrity datasets
                             {% if not user.is_authenticated %}
-                                — <a href="{% url 'login' %}" class="text-brand-teal hover:underline">Log in</a> for personalized recommendations
+                                — <a href="{% url 'login_signup' %}" class="text-brand-teal hover:underline">Log in</a> for personalized recommendations
                             {% endif %}
                         {% endif %}
                     </p>
@@ -300,14 +300,14 @@
                     </div>
                     <h3 class="text-xl font-bold mb-3">Expanding the Library</h3>
                     <p class="text-gray-500 max-w-sm mb-10 leading-relaxed text-sm">We are currently curating new high-integrity datasets. Check back soon or contribute your research to our community.</p>
-                    <button onclick="window.location.href='{% url 'login_signup' %}'" class="btn-primary !px-12 !py-4 shadow-xl">Join AfriData Ecosystem</button>
+                    <button onclick="window.location.href=`{% url 'login_signup' %}`" class="btn-primary !px-12 !py-4 shadow-xl">Join AfriData Ecosystem</button>
                 </div>
                 {% endfor %}
             </div>
             
             {% if recommended_datasets %}
             <div class="mt-16 text-center">
-                <button onclick="window.location.href='{% url 'dataset_list' %}'" class="btn-secondary !px-14 !py-4 !border-gray-200 !text-gray-500 hover:!border-brand-teal hover:!text-brand-teal hover:!bg-brand-teal/5 font-bold tracking-widest text-xs uppercase">
+                <button onclick="window.location.href=`{% url 'dataset_list' %}`" class="btn-secondary !px-14 !py-4 !border-gray-200 !text-gray-500 hover:!border-brand-teal hover:!text-brand-teal hover:!bg-brand-teal/5 font-bold tracking-widest text-xs uppercase">
                     View Entire Dataset Pipeline <i class="fas fa-chevron-right ml-3 text-[10px]"></i>
                 </button>
             </div>

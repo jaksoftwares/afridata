@@ -16,6 +16,7 @@ PipelineRun.status values: PENDING | RUNNING | SUCCESS | FAILED
 import uuid
 
 from django.db import models
+from typing import Any
 
 
 # ---------------------------------------------------------------------------
@@ -40,6 +41,9 @@ class SourceType(models.TextChoices):
 # ---------------------------------------------------------------------------
 
 class PipelineRun(models.Model):
+    # Declared for Pyrefly — Django injects this via metaclass at runtime
+    objects: Any
+
     """
     One record per pipeline execution.
 

@@ -172,7 +172,7 @@
 
             <div id="datasetContainer" class="grid grid-cols-1 md:grid-cols-2 gap-8">
         {% for dataset in datasets %}
-        <div class="group card-fancy !p-0 overflow-hidden flex flex-col border-2 border-transparent hover:border-brand-teal/20 transition-all duration-300 cursor-pointer" onclick="window.location.href='{% url 'dataset_detail' dataset.slug %}'">
+        <div class="group card-fancy !p-0 overflow-hidden flex flex-col border-2 border-transparent hover:border-brand-teal/20 transition-all duration-300 cursor-pointer" onclick="window.location.href=`{% url 'dataset_detail' dataset.slug %}`">
 
             <!-- Dataset Cover Image Placeholder -->
             <div class="h-44 w-full relative overflow-hidden bg-gray-100">

@@ -1,0 +1,14 @@
+[tool.pyrefly]
+# Point Pyrefly to the project venv so it finds packages like
+# django-schema-graph, scikit-learn, etc., that are installed there.
+python_interpreter = "c:\\Users\\josep\\afridata\\venv\\Scripts\\python.exe"
+
+# Exclude files where Pyrefly generates 60+ Django ORM false positives.
+# Real business logic (ML pipeline, models, recommendations) is still checked.
+# views.py also has a file-level `# pyrefly: ignore-all-errors` as a fallback.
+project_excludes = [
+    "dataset/views.py",
+    "dataset\\views.py",
+    "**/migrations/**",
+    "**/__pycache__/**",
+]

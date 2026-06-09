@@ -1,4 +1,5 @@
 # dataset/views.py
+# pyrefly: ignore-all-errors  # Django ORM/request false positives — no django-stubs support in Pyrefly yet
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, Http404, JsonResponse
 from django.contrib.auth.decorators import login_required
@@ -19,6 +20,7 @@ import json
 from django.http import JsonResponse
 from django.urls import reverse
 from django.contrib.auth import get_user_model
+from typing import cast, Any
 
 User = get_user_model() 
 
@@ -119,8 +121,8 @@ def dataset_detail(request, slug):
                 
                 # Improved Data Visualization Logic
                 # ----------------------------------
-                numeric_cols = df.select_dtypes(include=['number']).columns.tolist()
-                object_cols = df.select_dtypes(include=['object', 'category', 'datetime']).columns.tolist()
+                numeric_cols = df.select_dtypes(include=cast(Any, ['number'])).columns.tolist()
+                object_cols = df.select_dtypes(include=cast(Any, ['object', 'category', 'datetime'])).columns.tolist()
                 
                 chart_type = 'bar'
                 chart_labels = []
@@ -241,12 +243,12 @@ def dataset_detail(request, slug):
         else:
             # Fallback
             related_datasets = Dataset.objects.filter(
-                Q(topics__icontains=dataset.topics) | Q(author=dataset.author)
+                Q(topics__icontains=dataset.topics) | Q(author=dataset.author)  # pyrefly: ignore[unsupported-operation]
             ).exclude(id=dataset.id).distinct()[:5]
     except Exception as e:
         print(f"Error loading ContentBasedEngine: {e}")
         related_datasets = Dataset.objects.filter(
-            Q(topics__icontains=dataset.topics) | Q(author=dataset.author)
+            Q(topics__icontains=dataset.topics) | Q(author=dataset.author)  # pyrefly: ignore[unsupported-operation]
         ).exclude(id=dataset.id).distinct()[:5]
     
     # Fetch latest pipeline run and metadata result if available
@@ -671,8 +673,8 @@ def dataset_list(request):
     search_query = request.GET.get('search', '')
     if search_query:
         datasets = datasets.filter(
-            Q(title__icontains=search_query) | 
-            Q(bio__icontains=search_query) | 
+            Q(title__icontains=search_query) |  # pyrefly: ignore[unsupported-operation]
+            Q(bio__icontains=search_query) |
             Q(topics__icontains=search_query)
         )
     

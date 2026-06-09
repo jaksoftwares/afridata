@@ -242,3 +242,9 @@ LLM_BACKEND = env('LLM_BACKEND', default='gemini')
 LLM_MODEL = env('LLM_MODEL', default='gemini-2.5-flash')
 LLM_MAX_TOKENS = env('LLM_MAX_TOKENS', default=4096)
 SCHEMA_REGISTRY_FILE = BASE_DIR / 'schema_registry.json'
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = 524288000
+FILE_UPLOAD_MAX_MEMORY_SIZE = 524288000

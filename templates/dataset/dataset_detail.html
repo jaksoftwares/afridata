@@ -225,7 +225,7 @@
                         </div>
                     </div>
                     <div class="w-8 h-8 rounded-full bg-brand-offwhite flex items-center justify-center text-gray-500 border border-gray-100 hover:bg-brand-teal/5 hover:text-brand-teal transition-all" id="metadata-toggle-icon-container">
-                        <i class="fas fa-chevron-down transform transition-transform duration-300" style="{% if pipeline_run and pipeline_run.status == 'PENDING' or pipeline_run and pipeline_run.status == 'RUNNING' %}transform: rotate(180deg);{% endif %}" id="metadata-toggle-icon"></i>
+                        <i class="fas fa-chevron-down transform transition-transform duration-300 {% if pipeline_run and pipeline_run.status == 'PENDING' or pipeline_run and pipeline_run.status == 'RUNNING' %}rotate-180{% endif %}" id="metadata-toggle-icon"></i>
                     </div>
                 </div>
 
@@ -713,9 +713,13 @@
     }
 
     // Call initiatePolling immediately if page loads in a pending/running state
-    {% if pipeline_run and pipeline_run.status == 'PENDING' or pipeline_run and pipeline_run.status == 'RUNNING' %}
-    initiatePolling("{{ pipeline_run.id }}");
-    {% endif %}
+    const pipelineStatus = "{{ pipeline_run.status|default:'' }}";
+    const pipelineId = "{{ pipeline_run.id|default:'' }}";
+    if (pipelineStatus === 'PENDING' || pipelineStatus === 'RUNNING') {
+        if (pipelineId) {
+            initiatePolling(pipelineId);
+        }
+    }
 
     // Trigger metadata manual generation event listener
     const triggerBtns = document.querySelectorAll('.trigger-metadata-btn');

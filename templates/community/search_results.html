@@ -4,236 +4,213 @@
 {% block title %}Search Results{% if query %} - "{{ query }}"{% endif %}{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <!-- Page Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h1 class="h3 mb-1">Search Results</h1>
-                    {% if query %}
-                        <p class="text-muted mb-0">
-                            Found {{ page_obj.paginator.count }} result{{ page_obj.paginator.count|pluralize }} for "<strong>{{ query }}</strong>"
-                        </p>
-                    {% else %}
-                        <p class="text-muted mb-0">Browse all threads</p>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b border-gray-100 pb-6">
+        <div>
+            <h1 class="text-3xl font-bold font-serif mb-2">Search Results</h1>
+            {% if query %}
+                <p class="text-gray-500 text-sm">
+                    Found <span class="font-bold text-gray-800">{{ page_obj.paginator.count }}</span> result{{ page_obj.paginator.count|pluralize }} for "<span class="font-bold text-brand-teal">{{ query }}</span>"
+                </p>
+            {% else %}
+                <p class="text-gray-500 text-sm">Browse all community discussions</p>
+            {% endif %}
+        </div>
+        <a href="{% url 'community:community' %}" class="btn-secondary !text-gray-500 !border-gray-200 hover:!text-brand-teal hover:!border-brand-teal hover:!bg-brand-teal/5 !py-2.5 !px-6 text-xs uppercase tracking-widest font-bold">
+            <i class="fas fa-arrow-left mr-2"></i> Back to Community
+        </a>
+    </div>
+
+    <div class="flex flex-col lg:flex-row gap-8">
+        <!-- Search Filters Sidebar -->
+        <div class="lg:w-1/4">
+            <div class="card-fancy !p-6 sticky top-24">
+                <h6 class="text-xs font-bold uppercase tracking-widest text-gray-800 mb-6">
+                    <i class="fas fa-filter mr-2 text-brand-teal"></i> Refine Search
+                </h6>
+                <form method="get" action="{% url 'community:search' %}" class="space-y-6">
+                    <!-- Search Query -->
+                    <div>
+                        <label for="search-query" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Search Terms</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <input type="text" 
+                                   class="w-full pl-10 pr-4 py-3 bg-brand-offwhite border border-gray-100 rounded-xl text-sm focus:ring-4 focus:ring-brand-teal/10 focus:border-brand-teal/30 focus:bg-white transition-all outline-none" 
+                                   id="search-query"
+                                   name="q" 
+                                   value="{{ query }}" 
+                                   placeholder="Enter keywords...">
+                        </div>
+                    </div>
+
+                    <!-- Topic Filter -->
+                    <div>
+                        <label for="topic-filter" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Filter by Topic</label>
+                        <select class="w-full p-3 bg-brand-offwhite border border-gray-100 rounded-xl text-sm text-gray-700 focus:ring-4 focus:ring-brand-teal/10 focus:border-brand-teal/30 focus:bg-white transition-all outline-none cursor-pointer appearance-none" id="topic-filter" name="topic">
+                            <option value="">All Topics</option>
+                            {% for topic in topics %}
+                                <option value="{{ topic.pk }}" 
+                                        {% if topic.pk|stringformat:"s" == topic_filter %}selected{% endif %}>
+                                    {{ topic.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Search Button -->
+                    <button type="submit" class="btn-primary w-full !py-3 shadow-lg">
+                        Update Results
+                    </button>
+                    
+                    <!-- Clear Filters -->
+                    {% if query or topic_filter %}
+                        <a href="{% url 'community:search' %}" class="block text-center text-xs font-bold text-gray-400 hover:text-red-500 uppercase tracking-widest transition-colors mt-4">
+                            <i class="fas fa-times mr-1"></i> Clear Filters
+                        </a>
                     {% endif %}
-                </div>
-                <a href="{% url 'community:community' %}" class="btn btn-outline-primary">
-                    Back to Community
-                </a>
+                </form>
             </div>
+        </div>
 
-            <div class="row">
-                <!-- Search Filters Sidebar -->
-                <div class="col-lg-3 mb-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h6 class="card-title mb-0">
-                                Search & Filter
-                            </h6>
-                        </div>
-                        <div class="card-body">
-                            <form method="get" action="{% url 'community:search' %}">
-                                <!-- Search Query -->
-                                <div class="mb-3">
-                                    <label for="search-query" class="form-label">Search Terms</label>
-                                    <input type="text" 
-                                           class="form-control" 
-                                           id="search-query"
-                                           name="q" 
-                                           value="{{ query }}" 
-                                           placeholder="Enter search terms...">
-                                </div>
-
-                                <!-- Topic Filter -->
-                                <div class="mb-3">
-                                    <label for="topic-filter" class="form-label">Filter by Topic</label>
-                                    <select class="form-select" id="topic-filter" name="topic">
-                                        <option value="">All Topics</option>
-                                        {% for topic in topics %}
-                                            <option value="{{ topic.pk }}" 
-                                                    {% if topic.pk|stringformat:"s" == topic_filter %}selected{% endif %}>
-                                                {{ topic.name }}
-                                            </option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-
-                                <!-- Search Button -->
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="fas fa-search me-2"></i>Search
-                                </button>
-                                
-                                <!-- Clear Filters -->
-                                {% if query or topic_filter %}
-                                    <a href="{% url 'community:search' %}" class="btn btn-outline-secondary w-100 mt-2">
-                                        <i class="fas fa-times me-2"></i>Clear Filters
-                                    </a>
-                                {% endif %}
-                            </form>
-                        </div>
+        <!-- Search Results -->
+        <div class="lg:w-3/4">
+            {% if threads %}
+                <!-- Results Header -->
+                <div class="flex justify-between items-center mb-6">
+                    <div class="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                        Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }}
                     </div>
                 </div>
 
-                <!-- Search Results -->
-                <div class="col-lg-9">
-                    {% if threads %}
-                        <!-- Results Header -->
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div class="text-muted">
-                                Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }} results
-                            </div>
-                        </div>
-
-                        <!-- Thread Results -->
-                        <div class="card">
-                            <div class="list-group list-group-flush">
-                                {% for thread in threads %}
-                                    <div class="list-group-item list-group-item-action">
-                                        <div class="d-flex w-100 justify-content-between align-items-start">
-                                            <div class="flex-grow-1">
-                                                <!-- Thread Title -->
-                                                <h6 class="mb-2">
-                                                    <a href="{% url 'community:thread_detail' thread.pk %}" 
-                                                       class="text-decoration-none fw-bold">
-                                                        {{ thread.title }}
-                                                    </a>
-                                                    {% if thread.is_pinned %}
-                                                        <span class="badge bg-warning text-dark ms-2">
-                                                             Pinned
-                                                        </span>
-                                                    {% endif %}
-                                                    {% if thread.is_locked %}
-                                                        <span class="badge bg-secondary ms-2">
-                                                             Locked
-                                                        </span>
-                                                    {% endif %}
-                                                </h6>
-
-                                                <!-- Thread Meta -->
-                                                <div class="text-muted small mb-2">
-                                                    <span class="me-3">
-                                                        
-                                                        <a href="{% url 'community:topic_detail' thread.topic.pk %}" 
-                                                           class="text-muted text-decoration-none">
-                                                            {{ thread.topic.name }}
-                                                        </a>
-                                                    </span>
-                                                    <span class="me-3">
-                                                        
-                                                        <a href="{% url 'community:user_profile' thread.author.username %}" 
-                                                           class="text-muted text-decoration-none">
-                                                            {{ thread.author.username }}
-                                                        </a>
-                                                    </span>
-                                                    <span class="me-3">
-                                                        
-                                                        {{ thread.created_at|date:"M d, Y" }}
-                                                    </span>
-                                                </div>
-
-                                                <!-- Thread Preview -->
-                                                <p class="mb-2 text-muted">
-                                                    {{ thread.content|truncatewords:25 }}
-                                                </p>
-                                            </div>
-
-                                            <!-- Thread Stats -->
-                                            <div class="text-end ms-3">
-                                                <div class="small text-muted">
-                                                    <div><strong>{{ thread.post_count }}</strong> replies</div>
-                                                    <div><strong>{{ thread.view_count }}</strong> views</div>
-                                                    {% if thread.updated_at %}
-                                                        <div class="mt-1">
-                                                            Last: {{ thread.updated_at|timesince }} ago
-                                                        </div>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-
-                        <!-- Pagination -->
-                        {% if page_obj.has_other_pages %}
-                            <nav aria-label="Search results pagination" class="mt-4">
-                                <ul class="pagination justify-content-center">
-                                    {% if page_obj.has_previous %}
-                                        <li class="page-item">
-                                            <a class="page-link" href="?q={{ query }}&topic={{ topic_filter }}&page=1">
-                                                
-                                            </a>
-                                        </li>
-                                        <li class="page-item">
-                                            <a class="page-link" href="?q={{ query }}&topic={{ topic_filter }}&page={{ page_obj.previous_page_number }}">
-                                                
-                                            </a>
-                                        </li>
-                                    {% endif %}
-
-                                    {% for num in page_obj.paginator.page_range %}
-                                        {% if page_obj.number == num %}
-                                            <li class="page-item active">
-                                                <span class="page-link">{{ num }}</span>
-                                            </li>
-                                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                                            <li class="page-item">
-                                                <a class="page-link" href="?q={{ query }}&topic={{ topic_filter }}&page={{ num }}">{{ num }}</a>
-                                            </li>
+                <!-- Thread Results -->
+                <div class="space-y-4">
+                    {% for thread in threads %}
+                        <div class="card-fancy !p-6 group hover:border-brand-teal/20 transition-all duration-300">
+                            <div class="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+                                <div class="flex-1">
+                                    <!-- Thread Title -->
+                                    <div class="flex items-center flex-wrap gap-2 mb-2">
+                                        <a href="{% url 'community:thread_detail' thread.pk %}" class="text-lg font-bold text-gray-800 hover:text-brand-blue transition-colors">
+                                            {{ thread.title }}
+                                        </a>
+                                        {% if thread.is_pinned %}
+                                            <span class="bg-brand-amber/10 text-brand-amber text-[9px] px-2 py-0.5 rounded font-bold uppercase tracking-widest border border-brand-amber/20">
+                                                <i class="fas fa-thumbtack mr-1"></i> Pinned
+                                            </span>
                                         {% endif %}
-                                    {% endfor %}
-
-                                    {% if page_obj.has_next %}
-                                        <li class="page-item">
-                                            <a class="page-link" href="?q={{ query }}&topic={{ topic_filter }}&page={{ page_obj.next_page_number }}">
-                                                
-                                            </a>
-                                        </li>
-                                        <li class="page-item">
-                                            <a class="page-link" href="?q={{ query }}&topic={{ topic_filter }}&page={{ page_obj.paginator.num_pages }}">
-                                                
-                                            </a>
-                                        </li>
-                                    {% endif %}
-                                </ul>
-                            </nav>
-                        {% endif %}
-
-                    {% else %}
-                        <!-- No Results -->
-                        <div class="card">
-                            <div class="card-body text-center py-5">
-                                <div class="mb-4">
-                                    <i class="fas fa-search fa-3x text-muted"></i>
-                                </div>
-                                <h5 class="mb-3">No Results Found</h5>
-                                {% if query %}
-                                    <p class="text-muted mb-4">
-                                        We couldn't find any threads matching "<strong>{{ query }}</strong>"
-                                        {% if topic_filter %}in the selected topic{% endif %}.
-                                    </p>
-                                    <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center">
-                                        <a href="{% url 'community:search' %}" class="btn btn-outline-primary">
-                                            <i class="fas fa-search me-2"></i>Try a different search
-                                        </a>
-                                        <a href="{% url 'community:community' %}" class="btn btn-primary">
-                                            Browse Community
-                                        </a>
+                                        {% if thread.is_locked %}
+                                            <span class="bg-gray-100 text-gray-500 text-[9px] px-2 py-0.5 rounded font-bold uppercase tracking-widest border border-gray-200">
+                                                <i class="fas fa-lock mr-1"></i> Locked
+                                            </span>
+                                        {% endif %}
                                     </div>
-                                {% else %}
-                                    <p class="text-muted mb-4">Enter search terms to find threads in the community.</p>
-                                    <a href="{% url 'community:community' %}" class="btn btn-primary">
-                                        Browse Community
+
+                                    <!-- Thread Meta -->
+                                    <div class="flex flex-wrap items-center text-[10px] text-gray-400 font-bold uppercase tracking-widest gap-4 mb-3">
+                                        <a href="{% url 'community:topic_detail' thread.topic.pk %}" class="text-brand-teal hover:underline flex items-center">
+                                            <i class="fas fa-hashtag mr-1"></i> {{ thread.topic.name }}
+                                        </a>
+                                        <a href="{% url 'community:user_profile' thread.author.username %}" class="hover:text-gray-600 flex items-center">
+                                            <i class="far fa-user mr-1"></i> {{ thread.author.username }}
+                                        </a>
+                                        <span class="flex items-center">
+                                            <i class="far fa-calendar-alt mr-1"></i> {{ thread.created_at|date:"M d, Y" }}
+                                        </span>
+                                    </div>
+
+                                    <!-- Thread Preview -->
+                                    <p class="text-gray-500 text-sm leading-relaxed mb-4 md:mb-0 line-clamp-2">
+                                        {{ thread.content|striptags|truncatewords:30 }}
+                                    </p>
+                                </div>
+
+                                <!-- Thread Stats -->
+                                <div class="md:text-right flex flex-row md:flex-col gap-4 md:gap-2 shrink-0 bg-brand-offwhite p-3 rounded-xl border border-gray-50">
+                                    <div class="text-[10px] text-gray-500 font-medium">
+                                        <strong class="text-gray-800 text-sm">{{ thread.post_count }}</strong> replies
+                                    </div>
+                                    <div class="text-[10px] text-gray-500 font-medium">
+                                        <strong class="text-gray-800 text-sm">{{ thread.view_count }}</strong> views
+                                    </div>
+                                    {% if thread.updated_at %}
+                                        <div class="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-1 md:mt-2">
+                                            Active {{ thread.updated_at|timesince }} ago
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                    <div class="mt-10 flex justify-center">
+                        <nav class="inline-flex rounded-xl shadow-sm overflow-hidden border border-gray-100">
+                            {% if page_obj.has_previous %}
+                                <a href="?q={{ query }}&topic={{ topic_filter }}&page=1" class="px-3 py-2 bg-white text-gray-500 hover:bg-brand-offwhite hover:text-brand-teal text-sm font-bold border-r border-gray-100 transition-colors">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                                <a href="?q={{ query }}&topic={{ topic_filter }}&page={{ page_obj.previous_page_number }}" class="px-3 py-2 bg-white text-gray-500 hover:bg-brand-offwhite hover:text-brand-teal text-sm font-bold border-r border-gray-100 transition-colors">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            {% endif %}
+
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <span class="px-4 py-2 bg-brand-teal text-white text-sm font-bold border-r border-gray-100">
+                                        {{ num }}
+                                    </span>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <a href="?q={{ query }}&topic={{ topic_filter }}&page={{ num }}" class="px-4 py-2 bg-white text-gray-600 hover:bg-brand-offwhite hover:text-brand-teal text-sm font-bold border-r border-gray-100 transition-colors">
+                                        {{ num }}
                                     </a>
                                 {% endif %}
-                            </div>
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                                <a href="?q={{ query }}&topic={{ topic_filter }}&page={{ page_obj.next_page_number }}" class="px-3 py-2 bg-white text-gray-500 hover:bg-brand-offwhite hover:text-brand-teal text-sm font-bold border-r border-gray-100 transition-colors">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                                <a href="?q={{ query }}&topic={{ topic_filter }}&page={{ page_obj.paginator.num_pages }}" class="px-3 py-2 bg-white text-gray-500 hover:bg-brand-offwhite hover:text-brand-teal text-sm font-bold transition-colors">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            {% endif %}
+                        </nav>
+                    </div>
+                {% endif %}
+
+            {% else %}
+                <!-- No Results -->
+                <div class="card-fancy !p-16 text-center border-dashed border-2 border-gray-200 bg-transparent flex flex-col items-center">
+                    <div class="w-20 h-20 bg-brand-blue/5 rounded-full flex items-center justify-center text-brand-blue/20 text-4xl mb-6">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">No Results Found</h3>
+                    {% if query %}
+                        <p class="text-gray-500 max-w-sm mb-8 leading-relaxed text-sm">
+                            We couldn't find any discussions matching "<strong class="text-gray-800">{{ query }}</strong>"
+                            {% if topic_filter %}in the selected topic{% endif %}.
+                        </p>
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                            <a href="{% url 'community:search' %}" class="btn-secondary !border-gray-200 !text-gray-600 hover:!border-brand-teal hover:!text-brand-teal !px-8 shadow-sm">
+                                <i class="fas fa-redo-alt mr-2"></i> Reset Search
+                            </a>
+                            <a href="{% url 'community:community' %}" class="btn-primary !px-8 shadow-xl">
+                                Browse All Topics
+                            </a>
                         </div>
+                    {% else %}
+                        <p class="text-gray-500 max-w-sm mb-8 leading-relaxed text-sm">Enter keywords above to search through our community discussions.</p>
+                        <a href="{% url 'community:community' %}" class="btn-primary !px-8 shadow-xl">
+                            Browse Community
+                        </a>
                     {% endif %}
                 </div>
-            </div>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -246,23 +223,31 @@ document.addEventListener('DOMContentLoaded', function() {
     const topicFilter = document.getElementById('topic-filter');
     if (topicFilter) {
         topicFilter.addEventListener('change', function() {
-            // Optional: Auto-submit on topic change
-            // this.form.submit();
+            this.form.submit();
         });
     }
     
     // Highlight search terms in results
     const searchQuery = '{{ query|escapejs }}';
-    if (searchQuery) {
-        const results = document.querySelectorAll('.list-group-item h6 a, .list-group-item p');
-        results.forEach(function(element) {
-            const text = element.innerHTML;
-            const highlightedText = text.replace(
-                new RegExp(searchQuery, 'gi'),
-                '<mark>$&</mark>'
-            );
-            element.innerHTML = highlightedText;
-        });
+    if (searchQuery && searchQuery.trim() !== '') {
+        // Find all thread titles and content paragraphs
+        const results = document.querySelectorAll('.card-fancy a.text-lg, .card-fancy p.line-clamp-2');
+        
+        // Escape special regex characters in the search query
+        const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const safeQuery = escapeRegExp(searchQuery.trim());
+        
+        if (safeQuery) {
+            results.forEach(function(element) {
+                const text = element.innerHTML;
+                const regex = new RegExp('(' + safeQuery + ')', 'gi');
+                const highlightedText = text.replace(
+                    regex,
+                    '<mark class="bg-brand-amber/30 text-brand-amber font-bold px-1 rounded">\$1</mark>'
+                );
+                element.innerHTML = highlightedText;
+            });
+        }
     }
 });
 </script>

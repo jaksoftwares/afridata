@@ -573,6 +573,10 @@ class SemanticClassifier:
             top-class probability.
         """
         vec = self._feature_extractor.transform(profile).reshape(1, -1)
+        assert self._model is not None, (
+            "_apply_ml() called with no trained model. "
+            "Always check `self._model is not None` before calling this method."
+        )
         proba = self._model.predict_proba(vec)[0]
         top_idx = int(np.argmax(proba))
         return self._model.classes_[top_idx], float(proba[top_idx])
