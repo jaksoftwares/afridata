@@ -547,3 +547,42 @@ class ContentBasedEngine:
             return {item_id: 0.0 for item_id in candidate_item_ids}
 
         return {item_id: score / max_pop for item_id, score in raw_scores.items()}
+
+    def get_similar_items(
+        self,
+        dataset_id: int,
+        limit: int = 5,
+    ) -> list[int]:
+        """
+        Get similar datasets for a given dataset using the TF-IDF matrix.
+        Returns a list of dataset IDs, excluding the target dataset itself.
+        """
+        self._require_loaded()
+        assert self._tfidf_matrix is not None
+        assert self._item_ids is not None
+
+        # Find row index for dataset_id
+        id_to_row = {int(iid): idx for idx, iid in enumerate(self._item_ids)}
+        row_idx = id_to_row.get(int(dataset_id))
+
+        if row_idx is None:
+            return []
+
+        # Get the profile vector for this single item
+        profile = self._tfidf_matrix[row_idx]
+
+        # Compute cosine similarity
+        scores = _cosine_scores(self._tfidf_matrix, profile)
+
+        # Build a list of (item_id, score), excluding the target dataset itself
+        id_score_pairs = [
+            (int(iid), float(scores[idx]))
+            for idx, iid in enumerate(self._item_ids)
+            if int(iid) != int(dataset_id)
+        ]
+
+        # Sort by score descending
+        id_score_pairs.sort(key=lambda x: x[1], reverse=True)
+
+        # Return top N IDs
+        return [iid for iid, score in id_score_pairs[:limit]]

@@ -17,14 +17,21 @@ import logging
 User = get_user_model()
 logger = logging.getLogger(__name__)
 
-def get_featured_datasets(request):
+def get_recommended_datasets(request):
     """
-    Get featured datasets for display on homepage.
+    Get recommended datasets for display on homepage.
     For logged-in users: personalized recommendations (with cold-start fallback)
-    For anonymous users: popularity-based/random datasets
+    For anonymous users: public recommendations (Discover mode)
     """
-    featured = []
-    featured_source = "popular"  # For template context
+    recommended = []
+    recommended_source = "discover"  # For template context
+    
+    # "Discover" fallback for cold start or anonymous users
+    # Focuses on high ratings and recency rather than pure downloads (which is Trending)
+    def get_discover_datasets():
+        return Dataset.objects.select_related('author').order_by(
+            '-rating', '-created_at', '-views'
+        )[:10]
     
     if request.user.is_authenticated:
         try:
@@ -38,40 +45,34 @@ def get_featured_datasets(request):
             if recommendations and len(recommendations.get('ranked_dataset_ids', [])) > 0:
                 # User has recommendations
                 dataset_ids = recommendations['ranked_dataset_ids'][:10]
-                featured = Dataset.objects.filter(id__in=dataset_ids).select_related('author')
-                featured_source = "personalized"
+                from django.db.models import Case, When
+                preserved_order = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(dataset_ids)])
+                recommended = Dataset.objects.filter(id__in=dataset_ids).select_related('author').order_by(preserved_order)
+                recommended_source = "personalized"
                 logger.info(f"Recommendations found for user {request.user.pk}")
             else:
                 # Cold start: User is new or has no interactions
-                # Fall back to popularity-based for warm start experience
-                featured = Dataset.objects.select_related('author').order_by(
-                    '-downloads', '-views', '-rating'
-                )[:10]
-                featured_source = "warm_start"
-                logger.info(f"Cold start fallback for user {request.user.pk} - showing popular datasets")
+                # Fall back to Discover mode
+                recommended = get_discover_datasets()
+                recommended_source = "warm_start"
+                logger.info(f"Cold start fallback for user {request.user.pk} - showing discover datasets")
                 
         except ImportError:
             # Recommendations module not fully initialized
-            logger.warning("Recommendations module not available, using popular datasets")
-            featured = Dataset.objects.select_related('author').order_by(
-                '-downloads', '-views', '-rating'
-            )[:10]
-            featured_source = "popular"
+            logger.warning("Recommendations module not available, using discover datasets")
+            recommended = get_discover_datasets()
+            recommended_source = "discover"
         except Exception as e:
             # Any error in recommendations, fall back gracefully
             logger.error(f"Error fetching recommendations for user {request.user.pk}: {e}")
-            featured = Dataset.objects.select_related('author').order_by(
-                '-downloads', '-views', '-rating'
-            )[:10]
-            featured_source = "popular"
+            recommended = get_discover_datasets()
+            recommended_source = "discover"
     else:
-        # Anonymous user: show popular and trending datasets
-        featured = Dataset.objects.select_related('author').order_by(
-            '-downloads', '-views', '-rating'
-        )[:10]
-        featured_source = "popular"
+        # Anonymous user: show public recommendations (Discover mode)
+        recommended = get_discover_datasets()
+        recommended_source = "public"
     
-    return featured, featured_source
+    return recommended, recommended_source
 
 def default_home(request):
     """
@@ -131,8 +132,8 @@ def default_home(request):
     if len(top_topics) < 4:
         top_topics.extend(default_topics)
     
-    # Get featured datasets with recommendations for logged-in users
-    featured_datasets, featured_source = get_featured_datasets(request)
+    # Get recommended datasets with recommendations for logged-in users and discover for anonymous
+    recommended_datasets, recommended_source = get_recommended_datasets(request)
     
     # Get popular search terms (simplified - you might want to track actual searches)
     popular_terms = []
@@ -188,8 +189,9 @@ def default_home(request):
         'term_4': popular_terms[3] if len(popular_terms) > 3 else 'Egypt Tourism',
         'term_5': popular_terms[4] if len(popular_terms) > 4 else 'Ethiopia Demographics',
         
-        # Featured datasets
-        'featured_datasets': featured_datasets,
+        # Recommended datasets
+        'recommended_datasets': recommended_datasets,
+        'recommended_source': recommended_source,
         
         # Category counts (you might want to add categories to your model)
         'category_counts': {

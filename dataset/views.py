@@ -227,10 +227,27 @@ def dataset_detail(request, slug):
         dataset=dataset
     ).select_related('author').order_by('-upvotes', '-created_at')[:5]
     
-    # Get related datasets (same topics or author)
-    related_datasets = Dataset.objects.filter(
-        Q(topics__icontains=dataset.topics) | Q(author=dataset.author)
-    ).exclude(id=dataset.id).distinct()[:5]
+    # Get related datasets (AI Curated Content-Based Filtering)
+    try:
+        from recommendations.domain.engines.content_based import ContentBasedEngine
+        from django.db.models import Case, When
+        cbf_engine = ContentBasedEngine()
+        cbf_engine.load()
+        similar_ids = cbf_engine.get_similar_items(dataset.id, limit=5)
+        
+        if similar_ids:
+            preserved_order = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(similar_ids)])
+            related_datasets = Dataset.objects.filter(id__in=similar_ids).order_by(preserved_order)
+        else:
+            # Fallback
+            related_datasets = Dataset.objects.filter(
+                Q(topics__icontains=dataset.topics) | Q(author=dataset.author)
+            ).exclude(id=dataset.id).distinct()[:5]
+    except Exception as e:
+        print(f"Error loading ContentBasedEngine: {e}")
+        related_datasets = Dataset.objects.filter(
+            Q(topics__icontains=dataset.topics) | Q(author=dataset.author)
+        ).exclude(id=dataset.id).distinct()[:5]
     
     # Fetch latest pipeline run and metadata result if available
     pipeline_run = None

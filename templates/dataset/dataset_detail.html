@@ -556,7 +556,7 @@
             <!-- Related -->
             {% if related_datasets %}
             <div class="space-y-4">
-                <h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 px-2">Related Pipelines</h4>
+                <h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 px-2">Similar Datasets (AI Curated)</h4>
                 {% for related in related_datasets %}
                 <a href="{% url 'dataset_detail' related.slug %}" class="card-fancy !p-4 group flex items-center gap-4 hover:border-brand-teal/20">
                     <div class="w-10 h-10 rounded-lg bg-brand-offwhite flex-shrink-0 flex items-center justify-center text-gray-400 group-hover:bg-brand-teal/5 group-hover:text-brand-teal transition-all">
