@@ -148,6 +148,7 @@ def _infer_and_merge_dataset_metadata(run, result, column_count) -> None:
         logger.warning("Failed to parse dataset file preview for LLM: %s", e)
 
     # 2. Build prompt for Gemini AI
+    preview_section = f"PREVIEW:\n{preview_text}" if preview_text else ""
     prompt = f"""
     You are an expert data cataloger. Given the following information about a dataset, extract/infer the standard metadata fields.
     
@@ -155,7 +156,7 @@ def _infer_and_merge_dataset_metadata(run, result, column_count) -> None:
     DESCRIPTION/BIO: {dataset.bio}
     TOPICS: {dataset.topics}
     
-    {f"PREVIEW:\n{preview_text}" if preview_text else ""}
+    {preview_section}
     
     You MUST provide a reasonable, specific value for every single field listed below. Do not return null, empty, or 'Not specified' values. If a field is not explicitly mentioned, make your best guess/inference based on the title, bio, topics, and data preview (e.g. geographic coverage might be 'Global' or the country of origin of the topic; collection_date should be a specific date in YYYY-MM-DD format, such as the estimated release date or the current year).
     Format your response as a valid JSON object with the following keys and values:
