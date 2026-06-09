@@ -12,13 +12,73 @@ from collections import Counter
 from django.contrib.auth import get_user_model
 from django.contrib import messages
 from .forms import ContactForm
+import logging
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
+
+def get_featured_datasets(request):
+    """
+    Get featured datasets for display on homepage.
+    For logged-in users: personalized recommendations (with cold-start fallback)
+    For anonymous users: popularity-based/random datasets
+    """
+    featured = []
+    featured_source = "popular"  # For template context
+    
+    if request.user.is_authenticated:
+        try:
+            # Try to get recommendations for the user
+            from recommendations.models import RecommendationResult
+            from recommendations.infrastructure.cache import get_cached_recommendations
+            
+            # Try cache first
+            recommendations = get_cached_recommendations(user_id=request.user.pk)
+            
+            if recommendations and len(recommendations.get('ranked_dataset_ids', [])) > 0:
+                # User has recommendations
+                dataset_ids = recommendations['ranked_dataset_ids'][:10]
+                featured = Dataset.objects.filter(id__in=dataset_ids).select_related('author')
+                featured_source = "personalized"
+                logger.info(f"Recommendations found for user {request.user.pk}")
+            else:
+                # Cold start: User is new or has no interactions
+                # Fall back to popularity-based for warm start experience
+                featured = Dataset.objects.select_related('author').order_by(
+                    '-downloads', '-views', '-rating'
+                )[:10]
+                featured_source = "warm_start"
+                logger.info(f"Cold start fallback for user {request.user.pk} - showing popular datasets")
+                
+        except ImportError:
+            # Recommendations module not fully initialized
+            logger.warning("Recommendations module not available, using popular datasets")
+            featured = Dataset.objects.select_related('author').order_by(
+                '-downloads', '-views', '-rating'
+            )[:10]
+            featured_source = "popular"
+        except Exception as e:
+            # Any error in recommendations, fall back gracefully
+            logger.error(f"Error fetching recommendations for user {request.user.pk}: {e}")
+            featured = Dataset.objects.select_related('author').order_by(
+                '-downloads', '-views', '-rating'
+            )[:10]
+            featured_source = "popular"
+    else:
+        # Anonymous user: show popular and trending datasets
+        featured = Dataset.objects.select_related('author').order_by(
+            '-downloads', '-views', '-rating'
+        )[:10]
+        featured_source = "popular"
+    
+    return featured, featured_source
 
 def default_home(request):
     """
     Enhanced default homepage view with dynamic data.
     Accessible to all users (no login required).
+    For authenticated users: shows personalized recommendations.
+    For anonymous users: shows popular/trending datasets.
     """
     # Get overall statistics
     stats = Dataset.objects.aggregate(
@@ -71,10 +131,8 @@ def default_home(request):
     if len(top_topics) < 4:
         top_topics.extend(default_topics)
     
-    # Get featured datasets (highest rated and most downloaded)
-    featured_datasets = Dataset.objects.select_related('author').annotate(
-        combined_score=(Count('downloads') * 0.6 + Count('views') * 0.4)
-    ).order_by('-rating', '-combined_score')[:3]
+    # Get featured datasets with recommendations for logged-in users
+    featured_datasets, featured_source = get_featured_datasets(request)
     
     # Get popular search terms (simplified - you might want to track actual searches)
     popular_terms = []

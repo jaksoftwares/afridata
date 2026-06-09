@@ -22,6 +22,18 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model() 
 
+import threading
+from metadata.models import PipelineRun, RunStatus, SourceType
+from metadata.tasks import run_pipeline_task 
+
+def _run_pipeline_task_with_db_cleanup(*args, **kwargs):
+    from django.db import connections
+    try:
+        run_pipeline_task(*args, **kwargs)
+    finally:
+        connections.close_all()
+
+
 
 def dataset_detail(request, slug):
     """View to display dataset details and bio with enhanced functionality"""
@@ -208,6 +220,18 @@ def dataset_detail(request, slug):
         Q(topics__icontains=dataset.topics) | Q(author=dataset.author)
     ).exclude(id=dataset.id).distinct()[:5]
     
+    # Fetch latest pipeline run and metadata result if available
+    pipeline_run = None
+    metadata_result = None
+    try:
+        pipeline_run = PipelineRun.objects.filter(
+            dataset=dataset
+        ).order_by('-created_at').first()
+        if pipeline_run and hasattr(pipeline_run, 'metadata_result'):
+            metadata_result = pipeline_run.metadata_result
+    except Exception:
+        pass
+
     context = {
         'dataset': dataset,
         'author_name': dataset.author.get_full_name() or dataset.author.username,
@@ -222,6 +246,8 @@ def dataset_detail(request, slug):
         'insufficient_tokens': insufficient_tokens,
         'monthly_limit_exceeded': monthly_limit_exceeded,
         'user_token_balance': user_token_balance,
+        'pipeline_run': pipeline_run,
+        'metadata_result': metadata_result,
     }
     
     return render(request, 'dataset/dataset_detail.html', context)
@@ -448,8 +474,36 @@ def upload_dataset(request):
             dataset.author = request.user
             
             # Calculate token cost based on file size
+            # Calculate token cost based on file size
             dataset.token_cost = dataset.calculate_token_cost()
             dataset.save()
+            
+            # Trigger metadata AI engine asynchronously
+            try:
+                source = SourceType.EXCEL if dataset.dataset_type == 'excel' else SourceType.CSV
+                run = PipelineRun.objects.create(
+                    dataset=dataset,
+                    source=source,
+                    source_path=dataset.file.path,
+                    dataset_title=dataset.title,
+                    dataset_description=dataset.bio,
+                    status=RunStatus.PENDING,
+                )
+                threading.Thread(
+                    target=_run_pipeline_task_with_db_cleanup,
+                    kwargs={
+                        "run_id": str(run.id),
+                        "source": source,
+                        "source_path": dataset.file.path,
+                        "dataset_title": dataset.title,
+                        "dataset_description": dataset.bio,
+                    },
+                    daemon=True
+                ).start()
+            except Exception as e:
+                # Log error but don't fail upload
+                import logging
+                logging.getLogger(__name__).exception("Failed to trigger metadata pipeline: %s", e)
             
             # Award upload bonus tokens to the user
             upload_bonus = dataset.get_upload_bonus_tokens()

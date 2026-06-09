@@ -7,6 +7,8 @@ urlpatterns = [
     path('admin_dashboard/', include('admin_dashboard.urls')),
     path('', include('home.urls')),
     path('api/', include('api.urls')),
+    path('api/metadata/', include('metadata.api.urls')),
+    path('api/recommendations/', include('recommendations.api.urls')),
     path('accounts/', include('accounts.urls')),
     path('dataset/', include('dataset.urls')),
     path('community/', include('community.urls')),

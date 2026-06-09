@@ -112,7 +112,13 @@
         </div>
         <div class="stat-card">
             <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Quality Score</span>
-            <span class="text-2xl font-bold text-brand-teal">{{ dataset.metadata_quality_score|default:"92" }}%</span>
+            <span class="text-2xl font-bold text-brand-teal">
+                {% if dataset.metadata_quality_score %}
+                    {% widthratio dataset.metadata_quality_score 1 100 %}%
+                {% else %}
+                    92%
+                {% endif %}
+            </span>
         </div>
         <div class="stat-card">
             <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">File Size</span>
@@ -122,7 +128,7 @@
 
     <div class="flex flex-col lg:flex-row gap-10">
         <!-- Main Content Area -->
-        <div class="flex-1 space-y-10">
+        <div class="flex-1 space-y-10 min-w-0">
             <!-- Data Insights & Visualization -->
             <div class="card-fancy !p-8">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -204,6 +210,173 @@
                     {% endif %}
                 </div>
             </div>
+
+            {% if metadata_result or dataset.geographic_coverage or dataset.temporal_coverage or dataset.data_source or dataset.original_author or dataset.update_frequency or dataset.collection_date or dataset.usage_notes or columns %}
+            <!-- AI Metadata & JSON Schema -->
+            <div class="card-fancy !p-8 mb-8">
+                <div class="flex items-center justify-between cursor-pointer select-none" id="metadata-toggle-btn">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 rounded-2xl bg-brand-teal/10 flex items-center justify-center text-brand-teal shadow-inner">
+                            <i class="fas fa-brain text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold font-serif text-gray-800">AI Metadata & Column Schema</h3>
+                            <p class="text-xs text-gray-400">GenAI-enriched technical profiling and JSON Schema draft-07</p>
+                        </div>
+                    </div>
+                    <div class="w-8 h-8 rounded-full bg-brand-offwhite flex items-center justify-center text-gray-500 border border-gray-100 hover:bg-brand-teal/5 hover:text-brand-teal transition-all" id="metadata-toggle-icon-container">
+                        <i class="fas fa-chevron-down transform transition-transform duration-300" id="metadata-toggle-icon"></i>
+                    </div>
+                </div>
+
+                <div id="metadata-content" class="hidden mt-8 pt-8 border-t border-gray-100 space-y-8">
+                    {% if pipeline_run and pipeline_run.status == 'PENDING' or pipeline_run and pipeline_run.status == 'RUNNING' %}
+                    <!-- Loading state -->
+                    <div class="flex flex-col items-center justify-center py-12 text-center">
+                        <div class="w-12 h-12 border-4 border-brand-teal/20 border-t-brand-teal rounded-full animate-spin mb-4"></div>
+                        <h4 class="text-sm font-bold text-gray-700">AI Metadata Generation in Progress</h4>
+                        <p class="text-xs text-gray-400 mt-1 max-w-sm">
+                            We are analyzing your dataset's columns and content structure. This profile will be fully populated in a few seconds. Feel free to refresh the page.
+                        </p>
+                    </div>
+                    {% else %}
+                    <!-- Grid showing inferred metadata fields -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 font-sans">
+                        <div class="bg-brand-offwhite p-5 rounded-2xl border border-gray-50">
+                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Geographic Coverage</span>
+                            <span class="text-sm font-semibold text-gray-800">{{ dataset.geographic_coverage|default:"Not specified" }}</span>
+                        </div>
+                        <div class="bg-brand-offwhite p-5 rounded-2xl border border-gray-50">
+                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Temporal Coverage</span>
+                            <span class="text-sm font-semibold text-gray-800">{{ dataset.temporal_coverage|default:"Not specified" }}</span>
+                        </div>
+                        <div class="bg-brand-offwhite p-5 rounded-2xl border border-gray-50">
+                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Data Source</span>
+                            <span class="text-sm font-semibold text-gray-800">{{ dataset.data_source|default:"Not specified" }}</span>
+                        </div>
+                        <div class="bg-brand-offwhite p-5 rounded-2xl border border-gray-50">
+                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Original Creator</span>
+                            <span class="text-sm font-semibold text-gray-800">{{ dataset.original_author|default:"Not specified" }}</span>
+                        </div>
+                        <div class="bg-brand-offwhite p-5 rounded-2xl border border-gray-50">
+                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Update Frequency</span>
+                            <span class="text-sm font-semibold text-gray-800">{{ dataset.update_frequency|default:"Not specified" }}</span>
+                        </div>
+                        <div class="bg-brand-offwhite p-5 rounded-2xl border border-gray-50">
+                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Collection Date</span>
+                            <span class="text-sm font-semibold text-gray-800">
+                                {% if dataset.collection_date %}
+                                    {{ dataset.collection_date|date:"F d, Y" }}
+                                {% else %}
+                                    Not specified
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    {% if dataset.usage_notes %}
+                    <!-- Usage Notes -->
+                    <div class="bg-brand-offwhite p-6 rounded-2xl border border-gray-50 font-sans">
+                        <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Usage Notes / Cautions</span>
+                        <p class="text-xs text-gray-600 leading-relaxed">{{ dataset.usage_notes }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Column Profiles Table -->
+                    {% if metadata_result and metadata_result.run.column_profiles.exists %}
+                    <div class="space-y-4 font-sans">
+                        <h4 class="text-sm font-bold text-gray-800">Column Schema Details</h4>
+                        <div class="overflow-x-auto border border-gray-100 rounded-2xl">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-brand-offwhite border-b border-gray-100">
+                                        <th class="p-4 text-[10px] font-bold text-gray-500 uppercase">Column Name</th>
+                                        <th class="p-4 text-[10px] font-bold text-gray-500 uppercase">Dtype</th>
+                                        <th class="p-4 text-[10px] font-bold text-gray-500 uppercase">Semantic Type</th>
+                                        <th class="p-4 text-[10px] font-bold text-gray-500 uppercase">Description</th>
+                                        <th class="p-4 text-[10px] font-bold text-gray-500 uppercase">Tags</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100 text-xs">
+                                    {% for col in metadata_result.run.column_profiles.all %}
+                                    <tr class="hover:bg-brand-offwhite/30 transition-colors">
+                                        <td class="p-4 font-semibold text-gray-800">{{ col.column_name }}</td>
+                                        <td class="p-4 text-gray-400 font-mono">{{ col.dtype }}</td>
+                                        <td class="p-4">
+                                            {% if col.semantic_type %}
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-brand-teal/10 text-brand-teal">
+                                                    {{ col.semantic_type }}
+                                                </span>
+                                            {% else %}
+                                                <span class="text-gray-300">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="p-4">
+                                            <div class="text-gray-500 max-w-xs truncate" title="{{ col.profile_data.description|default:'' }}">
+                                                {{ col.profile_data.description|default:"-" }}
+                                            </div>
+                                        </td>
+                                        <td class="p-4">
+                                            <div class="flex flex-wrap gap-1">
+                                                {% for tag in col.profile_data.tags %}
+                                                    <span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-[9px] font-medium">
+                                                        {{ tag }}
+                                                    </span>
+                                                {% empty %}
+                                                    <span class="text-gray-300">-</span>
+                                                {% endfor %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% elif columns %}
+                    <div class="space-y-4 font-sans">
+                        <h4 class="text-sm font-bold text-gray-800">Column Schema Details</h4>
+                        <div class="overflow-x-auto border border-gray-100 rounded-2xl">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-brand-offwhite border-b border-gray-100">
+                                        <th class="p-4 text-[10px] font-bold text-gray-500 uppercase">Column Name</th>
+                                        <th class="p-4 text-[10px] font-bold text-gray-500 uppercase">Dtype</th>
+                                        <th class="p-4 text-[10px] font-bold text-gray-500 uppercase">Semantic Type</th>
+                                        <th class="p-4 text-[10px] font-bold text-gray-500 uppercase">Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100 text-xs">
+                                    {% for column in columns %}
+                                    <tr class="hover:bg-brand-offwhite/30 transition-colors">
+                                        <td class="p-4 font-semibold text-gray-800">{{ column }}</td>
+                                        <td class="p-4 text-gray-400 font-mono">unknown</td>
+                                        <td class="p-4 text-gray-400">Not analyzed</td>
+                                        <td class="p-4 text-gray-400">Run metadata analysis to extract details</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Expandable Accordion for JSON Schema -->
+                    {% if metadata_result.json_schema %}
+                    <div class="border border-gray-100 rounded-2xl overflow-hidden font-sans">
+                        <div class="p-4 bg-brand-offwhite flex items-center justify-between cursor-pointer select-none" id="schema-toggle-btn">
+                            <span class="text-xs font-bold text-gray-700">Raw JSON Schema (Draft-07)</span>
+                            <span class="text-xs text-brand-teal hover:underline font-semibold cursor-pointer">Toggle Code View</span>
+                        </div>
+                        <div class="hidden bg-gray-950 p-6 border-t border-gray-900" id="schema-content">
+                            <pre class="text-green-400 font-mono text-xs overflow-x-auto leading-relaxed max-h-96 w-full whitespace-pre-wrap break-all"><code>{{ metadata_result.json_schema }}</code></pre>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
 
             <!-- Comments & Discussion -->
             <div class="card-fancy !p-8">
@@ -313,10 +486,10 @@
                     <div>
                         <div class="flex justify-between items-center mb-2">
                             <span class="text-[10px] font-bold text-gray-600 uppercase">Usability Index</span>
-                            <span class="text-[10px] font-bold text-brand-teal">{% widthratio dataset.metadata_quality_score 1 1 %}.0</span>
+                            <span class="text-[10px] font-bold text-brand-teal">{% if dataset.metadata_quality_score %}{% widthratio dataset.metadata_quality_score 1 100 %}%{% else %}92%{% endif %}</span>
                         </div>
                         <div class="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                            <div class="h-full bg-brand-teal rounded-full" style="width: {{ dataset.metadata_quality_score }}%"></div>
+                            <div class="h-full bg-brand-teal rounded-full" style="--usability-width: {% if dataset.metadata_quality_score %}{% widthratio dataset.metadata_quality_score 1 100 %}{% else %}92{% endif %}%; width: var(--usability-width);"></div>
                         </div>
                     </div>
                     
@@ -430,5 +603,31 @@
             }
         }
     })();
+
+    // Toggle Metadata panel
+    const metadataBtn = document.getElementById('metadata-toggle-btn');
+    const metadataContent = document.getElementById('metadata-content');
+    const metadataIcon = document.getElementById('metadata-toggle-icon');
+
+    if (metadataBtn && metadataContent && metadataIcon) {
+        metadataBtn.addEventListener('click', function() {
+            metadataContent.classList.toggle('hidden');
+            if (metadataContent.classList.contains('hidden')) {
+                metadataIcon.style.transform = 'rotate(0deg)';
+            } else {
+                metadataIcon.style.transform = 'rotate(180deg)';
+            }
+        });
+    }
+
+    // Toggle raw Schema code block
+    const schemaBtn = document.getElementById('schema-toggle-btn');
+    const schemaContent = document.getElementById('schema-content');
+
+    if (schemaBtn && schemaContent) {
+        schemaBtn.addEventListener('click', function() {
+            schemaContent.classList.toggle('hidden');
+        });
+    }
   </script>
 {% endblock %}

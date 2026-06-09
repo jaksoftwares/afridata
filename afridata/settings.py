@@ -58,6 +58,8 @@ INSTALLED_APPS = [
     'api',
     'admin_dashboard',
     'mpesa',
+    'metadata',
+    'recommendations',
 
     # Third-party apps
     'rest_framework',
@@ -236,4 +238,7 @@ GRAPH_MODELS = {
 
 # Standardisation Settings
 GEMINI_API_KEY = env('GEMINI_API_KEY', default='')
+LLM_BACKEND = env('LLM_BACKEND', default='gemini')
+LLM_MODEL = env('LLM_MODEL', default='gemini-2.5-flash')
+LLM_MAX_TOKENS = env('LLM_MAX_TOKENS', default=4096)
 SCHEMA_REGISTRY_FILE = BASE_DIR / 'schema_registry.json'

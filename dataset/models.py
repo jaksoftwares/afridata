@@ -30,8 +30,8 @@ class Dataset(models.Model):
     slug = models.SlugField(max_length=255, unique=True, null=True, blank=True)
 
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='authored_datasets')
-    file = models.FileField(upload_to='datasets/')
-    dataset_type = models.CharField(max_length=20, choices=DATASET_TYPES)
+    file = models.FileField(upload_to='datasets/', db_column='file_path')
+    dataset_type = models.CharField(max_length=20, choices=DATASET_TYPES, db_column='file_type')
     bio = models.TextField()
     topics = models.CharField(max_length=500, help_text="Comma-separated topics")
     rating = models.FloatField(default=0.0, validators=[MinValueValidator(0.0), MaxValueValidator(5.0)])
@@ -48,7 +48,7 @@ class Dataset(models.Model):
     quality_tier = models.CharField(max_length=10, choices=QUALITY_TIERS, default='basic')
     file_size_mb = models.FloatField(default=0.0, help_text="File size in MB")
     has_documentation = models.BooleanField(default=False)
-    metadata_quality_score = models.PositiveIntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])
+    metadata_quality_score = models.FloatField(default=0.0, validators=[MinValueValidator(0.0), MaxValueValidator(1.0)], db_column='metadata_score', help_text="Score from 0.0 to 1.0")
     
     # Detailed Metadata Fields
     original_author = models.CharField(max_length=255, blank=True, null=True, help_text="The original person or organization who created the dataset")
@@ -132,6 +132,10 @@ class Dataset(models.Model):
                 
         super().save(*args, **kwargs)
 
+    class Meta:
+        db_table = 'dataset_files' 
+        
+
 
 class Comment(models.Model):
     id = models.AutoField(primary_key=True)
@@ -188,7 +192,7 @@ class PremiumPurchase(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='premium_purchases')
     dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE, related_name='premium_purchases')
     payment_method = models.CharField(max_length=15, choices=PAYMENT_METHODS)
-    usd_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    usd_amount = models.DecimalField(max_digits=10, decimal_places=2, default=1.00)
     tokens_used = models.PositiveIntegerField(default=0)
     payment_status = models.CharField(max_length=10, choices=PAYMENT_STATUS, default='pending')
     stripe_payment_intent_id = models.CharField(max_length=255, blank=True, null=True)
