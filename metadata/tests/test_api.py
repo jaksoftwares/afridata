@@ -1,4 +1,5 @@
 from __future__ import annotations
+# pyrefly: ignore-all-errors  # Pyrefly lacks DRF stubs, causing false-positives on response.status_code and response.data
 # metadata/api/tests/test_api.py
 """
 Test suite for the Metadata Extraction API.
@@ -95,7 +96,7 @@ class IsPipelineAdminPermissionTest(TestCase):
 
     def _request(self, user):
         request = self.factory.get("/")
-        request.user = user
+        request.user = user  # pyrefly: ignore[missing-attribute]
         return request
 
     def test_admin_user_is_allowed(self):
@@ -126,7 +127,7 @@ class IsResultViewerPermissionTest(TestCase):
     def _request(self, user, method="GET"):
         factory_method = getattr(self.factory, method.lower())
         request = factory_method("/")
-        request.user = user
+        request.user = user  # pyrefly: ignore[missing-attribute]
         return request
 
     def test_get_is_allowed_for_authenticated_user(self):
@@ -166,7 +167,7 @@ class IsOwnerOrAdminPermissionTest(TestCase):
 
     def _request(self, user):
         request = self.factory.get("/")
-        request.user = user
+        request.user = user  # pyrefly: ignore[missing-attribute]
         return request
 
     def test_has_permission_returns_true_for_authenticated(self):
@@ -391,21 +392,21 @@ class PipelineRunListViewTest(BaseAPITestCase):
 
     def test_unauthenticated_request_is_rejected(self):
         response = self.client.get(self.run_list_url())
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)  # pyrefly: ignore[missing-attribute]
 
     def test_authenticated_user_can_list_runs(self):
         make_pipeline_run()
         make_pipeline_run()
         client = self.auth_as(self.user)
         response = client.get(self.run_list_url())
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertGreaterEqual(len(response.data["results"]), 2)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)  # pyrefly: ignore[missing-attribute]
+        self.assertGreaterEqual(len(response.data["results"]), 2)  # pyrefly: ignore[missing-attribute]
 
     def test_list_returns_expected_fields(self):
         make_pipeline_run()
         client = self.auth_as(self.user)
         response = client.get(self.run_list_url())
-        run = response.data["results"][0]
+        run = response.data["results"][0]  # pyrefly: ignore[missing-attribute]
         for field in ("id", "status", "source", "source_path", "is_terminal"):
             self.assertIn(field, run)
 
@@ -414,7 +415,7 @@ class PipelineRunListViewTest(BaseAPITestCase):
         run2 = make_pipeline_run(source_path="second.csv")
         client = self.auth_as(self.user)
         response = client.get(self.run_list_url())
-        ids = [str(r["id"]) for r in response.data["results"]]
+        ids = [str(r["id"]) for r in response.data["results"]]  # pyrefly: ignore[missing-attribute]
         self.assertGreater(ids.index(str(run1.id)), ids.index(str(run2.id)))
 
 
@@ -432,7 +433,7 @@ class PipelineRunCreateViewTest(BaseAPITestCase):
         mock_task.delay = MagicMock()
         client = self.auth_as(self.user)
         response = self._post(client, {"source": SourceType.CSV, "source_path": "data.csv"})
-        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)  # pyrefly: ignore[missing-attribute]
 
     @patch("metadata.api.views._run_pipeline_task")
     def test_run_created_with_pending_status(self, mock_task):
@@ -454,18 +455,18 @@ class PipelineRunCreateViewTest(BaseAPITestCase):
         mock_task.delay = MagicMock()
         client = self.auth_as(self.user)
         response = self._post(client, {"source": SourceType.CSV, "source_path": "data.csv"})
-        self.assertIn("id", response.data)
-        self.assertEqual(response.data["status"], RunStatus.PENDING)
+        self.assertIn("id", response.data)  # pyrefly: ignore[missing-attribute]
+        self.assertEqual(response.data["status"], RunStatus.PENDING)  # pyrefly: ignore[missing-attribute]
 
     def test_missing_source_path_returns_400(self):
         client = self.auth_as(self.user)
         response = self._post(client, {"source": SourceType.CSV})
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)  # pyrefly: ignore[missing-attribute]
 
     def test_invalid_source_type_returns_400(self):
         client = self.auth_as(self.user)
         response = self._post(client, {"source": "parquet", "source_path": "x.parquet"})
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)  # pyrefly: ignore[missing-attribute]
 
     def test_sql_schema_with_csv_source_returns_400(self):
         client = self.auth_as(self.user)
@@ -474,7 +475,7 @@ class PipelineRunCreateViewTest(BaseAPITestCase):
             "source_path": "data.csv",
             "sql_schema": "public",
         })
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)  # pyrefly: ignore[missing-attribute]
 
     @patch("metadata.api.views._run_pipeline_task")
     def test_sql_post_dispatches_with_sql_extras(self, mock_task):
@@ -492,7 +493,7 @@ class PipelineRunCreateViewTest(BaseAPITestCase):
 
     def test_unauthenticated_post_is_rejected(self):
         response = self._post(self.client, {"source": SourceType.CSV, "source_path": "x.csv"})
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)  # pyrefly: ignore[missing-attribute]
 
 
 # ---------------------------------------------------------------------------
@@ -505,30 +506,30 @@ class PipelineRunDetailViewTest(BaseAPITestCase):
         run = make_pipeline_run()
         client = self.auth_as(self.user)
         response = client.get(self.run_detail_url(run.id))
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(str(response.data["id"]), str(run.id))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)  # pyrefly: ignore[missing-attribute]
+        self.assertEqual(str(response.data["id"]), str(run.id))  # pyrefly: ignore[missing-attribute]
 
     def test_retrieve_nonexistent_run_returns_404(self):
         client = self.auth_as(self.user)
         response = client.get(self.run_detail_url(uuid.uuid4()))
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)  # pyrefly: ignore[missing-attribute]
 
     def test_retrieve_invalid_pk_returns_404(self):
         client = self.auth_as(self.user)
         response = client.get(self.run_detail_url("not-a-uuid"))
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)  # pyrefly: ignore[missing-attribute]
 
     def test_unauthenticated_request_returns_401(self):
         run = make_pipeline_run()
         response = self.client.get(self.run_detail_url(run.id))
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)  # pyrefly: ignore[missing-attribute]
 
     def test_detail_includes_is_terminal_field(self):
         run = make_pipeline_run(status=RunStatus.SUCCESS)
         client = self.auth_as(self.user)
         response = client.get(self.run_detail_url(run.id))
-        self.assertIn("is_terminal", response.data)
-        self.assertTrue(response.data["is_terminal"])
+        self.assertIn("is_terminal", response.data)  # pyrefly: ignore[missing-attribute]
+        self.assertTrue(response.data["is_terminal"])  # pyrefly: ignore[missing-attribute]
 
 
 # ---------------------------------------------------------------------------
@@ -551,33 +552,33 @@ class PipelineRunSchemaViewTest(BaseAPITestCase):
         self._make_result(run)
         client = self.auth_as(self.user)
         response = client.get(self.run_schema_url(run.id))
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("json_schema", response.data)
-        self.assertEqual(str(response.data["run_id"]), str(run.id))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)  # pyrefly: ignore[missing-attribute]
+        self.assertIn("json_schema", response.data)  # pyrefly: ignore[missing-attribute]
+        self.assertEqual(str(response.data["run_id"]), str(run.id))  # pyrefly: ignore[missing-attribute]
 
     def test_pending_run_returns_409(self):
         run = make_pipeline_run(status=RunStatus.PENDING)
         client = self.auth_as(self.user)
         response = client.get(self.run_schema_url(run.id))
-        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
-        self.assertIn("status", response.data)
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)  # pyrefly: ignore[missing-attribute]
+        self.assertIn("status", response.data)  # pyrefly: ignore[missing-attribute]
 
     def test_running_run_returns_409(self):
         run = make_pipeline_run(status=RunStatus.RUNNING)
         client = self.auth_as(self.user)
         response = client.get(self.run_schema_url(run.id))
-        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)  # pyrefly: ignore[missing-attribute]
 
     def test_failed_run_returns_409(self):
         run = make_pipeline_run(status=RunStatus.FAILED)
         client = self.auth_as(self.user)
         response = client.get(self.run_schema_url(run.id))
-        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)  # pyrefly: ignore[missing-attribute]
 
     def test_nonexistent_run_returns_404(self):
         client = self.auth_as(self.user)
         response = client.get(self.run_schema_url(uuid.uuid4()))
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)  # pyrefly: ignore[missing-attribute]
 
     def test_success_run_missing_result_returns_404(self):
         """Run is SUCCESS but MetadataResult row was deleted / never created."""
@@ -585,19 +586,19 @@ class PipelineRunSchemaViewTest(BaseAPITestCase):
         # Do NOT create a MetadataResult
         client = self.auth_as(self.user)
         response = client.get(self.run_schema_url(run.id))
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)  # pyrefly: ignore[missing-attribute]
 
     def test_409_response_contains_run_id_and_status(self):
         run = make_pipeline_run(status=RunStatus.PENDING)
         client = self.auth_as(self.user)
         response = client.get(self.run_schema_url(run.id))
-        self.assertEqual(str(response.data["run_id"]), str(run.id))
-        self.assertEqual(response.data["status"], RunStatus.PENDING)
+        self.assertEqual(str(response.data["run_id"]), str(run.id))  # pyrefly: ignore[missing-attribute]
+        self.assertEqual(response.data["status"], RunStatus.PENDING)  # pyrefly: ignore[missing-attribute]
 
     def test_unauthenticated_request_returns_401(self):
         run = make_pipeline_run(status=RunStatus.SUCCESS)
         response = self.client.get(self.run_schema_url(run.id))
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)  # pyrefly: ignore[missing-attribute]
 
 
 # ---------------------------------------------------------------------------
@@ -627,8 +628,8 @@ class PipelineRunColumnProfilesViewTest(BaseAPITestCase):
         self._make_profiles(run, count=3)
         client = self.auth_as(self.user)
         response = client.get(self.run_columns_url(run.id))
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data["results"]), 3)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)  # pyrefly: ignore[missing-attribute]
+        self.assertEqual(len(response.data["results"]), 3)  # pyrefly: ignore[missing-attribute]
 
     def test_profiles_ordered_by_column_name(self):
         run = make_pipeline_run(status=RunStatus.SUCCESS)
@@ -640,14 +641,14 @@ class PipelineRunColumnProfilesViewTest(BaseAPITestCase):
             )
         client = self.auth_as(self.user)
         response = client.get(self.run_columns_url(run.id))
-        names = [r["column_name"] for r in response.data["results"]]
+        names = [r["column_name"] for r in response.data["results"]]  # pyrefly: ignore[missing-attribute]
         self.assertEqual(names, sorted(names))
 
     def test_pending_run_returns_400(self):
         run = make_pipeline_run(status=RunStatus.PENDING)
         client = self.auth_as(self.user)
         response = client.get(self.run_columns_url(run.id))
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)  # pyrefly: ignore[missing-attribute]
 
     def test_filter_by_semantic_type(self):
         run = make_pipeline_run(status=RunStatus.SUCCESS)
@@ -663,9 +664,9 @@ class PipelineRunColumnProfilesViewTest(BaseAPITestCase):
         )
         client = self.auth_as(self.user)
         response = client.get(self.run_columns_url(run.id), {"semantic_type": "EMAIL"})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data["results"]), 1)
-        self.assertEqual(response.data["results"][0]["column_name"], "email_col")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)  # pyrefly: ignore[missing-attribute]
+        self.assertEqual(len(response.data["results"]), 1)  # pyrefly: ignore[missing-attribute]
+        self.assertEqual(response.data["results"][0]["column_name"], "email_col")  # pyrefly: ignore[missing-attribute]
 
     def test_filter_by_semantic_type_is_case_insensitive(self):
         run = make_pipeline_run(status=RunStatus.SUCCESS)
@@ -676,8 +677,8 @@ class PipelineRunColumnProfilesViewTest(BaseAPITestCase):
         )
         client = self.auth_as(self.user)
         response = client.get(self.run_columns_url(run.id), {"semantic_type": "email"})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data["results"]), 1)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)  # pyrefly: ignore[missing-attribute]
+        self.assertEqual(len(response.data["results"]), 1)  # pyrefly: ignore[missing-attribute]
 
     def test_filter_nullable_true(self):
         run = make_pipeline_run(status=RunStatus.SUCCESS)
@@ -691,9 +692,9 @@ class PipelineRunColumnProfilesViewTest(BaseAPITestCase):
         )
         client = self.auth_as(self.user)
         response = client.get(self.run_columns_url(run.id), {"nullable": "true"})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data["results"]), 1)
-        self.assertEqual(response.data["results"][0]["column_name"], "a")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)  # pyrefly: ignore[missing-attribute]
+        self.assertEqual(len(response.data["results"]), 1)  # pyrefly: ignore[missing-attribute]
+        self.assertEqual(response.data["results"][0]["column_name"], "a")  # pyrefly: ignore[missing-attribute]
 
     def test_filter_nullable_false(self):
         run = make_pipeline_run(status=RunStatus.SUCCESS)
@@ -707,25 +708,25 @@ class PipelineRunColumnProfilesViewTest(BaseAPITestCase):
         )
         client = self.auth_as(self.user)
         response = client.get(self.run_columns_url(run.id), {"nullable": "false"})
-        self.assertEqual(len(response.data["results"]), 1)
-        self.assertEqual(response.data["results"][0]["column_name"], "b")
+        self.assertEqual(len(response.data["results"]), 1)  # pyrefly: ignore[missing-attribute]
+        self.assertEqual(response.data["results"][0]["column_name"], "b")  # pyrefly: ignore[missing-attribute]
 
     def test_nonexistent_run_returns_404(self):
         client = self.auth_as(self.user)
         response = client.get(self.run_columns_url(uuid.uuid4()))
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)  # pyrefly: ignore[missing-attribute]
 
     def test_unauthenticated_request_returns_401(self):
         run = make_pipeline_run(status=RunStatus.SUCCESS)
         response = self.client.get(self.run_columns_url(run.id))
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)  # pyrefly: ignore[missing-attribute]
 
     def test_profile_response_includes_run_id(self):
         run = make_pipeline_run(status=RunStatus.SUCCESS)
         self._make_profiles(run, count=1)
         client = self.auth_as(self.user)
         response = client.get(self.run_columns_url(run.id))
-        profile = response.data["results"][0]
+        profile = response.data["results"][0]  # pyrefly: ignore[missing-attribute]
         self.assertEqual(str(profile["run_id"]), str(run.id))
 
 

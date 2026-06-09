@@ -119,7 +119,7 @@ class TestDataFrameProfilerConstruction(TestCase):
 
     def test_raises_on_none(self):
         with self.assertRaisesRegex(ValueError, "empty DataFrame"):
-            DataFrameProfiler(None)
+            DataFrameProfiler(None)  # type: ignore
 
     def test_raises_on_empty_dataframe(self):
         with self.assertRaisesRegex(ValueError, "empty DataFrame"):
@@ -337,7 +337,7 @@ class TestDataFrameProfilerString(TestCase):
         self.assertIsNone(p["mean_length"])
 
     def test_all_null_string_column_has_none_lengths(self):
-        df = pd.DataFrame({"s": pd.array([None, None], dtype=object)})
+        df = pd.DataFrame({"s": pd.Series([None, None], dtype=object)})
         p = DataFrameProfiler(df).run()["s"]
         self.assertIsNone(p["min_length"])
         self.assertIsNone(p["max_length"])
@@ -595,7 +595,7 @@ class TestSemanticClassifierDtypeFallback(TestCase):
             "mean": 500.0, "std": 100.0, "min": 0.0, "max": 999.0,
         }
         self.clf.classify({col: profile})
-        return profile["semantic_type"]
+        return str(profile["semantic_type"])
 
     def test_int_dtype_fallback(self):
         self.assertEqual(self._fallback_type("int64"), "count")

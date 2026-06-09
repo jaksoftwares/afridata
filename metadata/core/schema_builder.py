@@ -447,7 +447,7 @@ class SchemaBuilder:
     # ------------------------------------------------------------------
 
     @staticmethod
-    def to_json(schema: dict[str, Any], indent: int = 2) -> str:
+    def to_json(schema: dict[str, Any], indent: int | None = 2) -> str:
         """
         Serialise a schema dict produced by ``build()`` to a JSON string.
 

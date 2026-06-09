@@ -58,7 +58,7 @@ import sys, types
 
 _adapters_mod = types.ModuleType("adapters")
 _base_mod = types.ModuleType("adapters.base_connector")
-_base_mod.BaseConnector = _FakeBaseConnector
+_base_mod.BaseConnector = _FakeBaseConnector  # pyrefly: ignore[missing-attribute]
 sys.modules.setdefault("adapters", _adapters_mod)
 sys.modules.setdefault("adapters.base_connector", _base_mod)
 
@@ -67,8 +67,9 @@ sys.modules.setdefault("adapters.base_connector", _base_mod)
 
 import importlib.util, inspect
 
-def _load_source(name: str, filepath: str):
+def _load_source(name: str, filepath: str | Path):
     spec = importlib.util.spec_from_file_location(name, filepath)
+    assert spec is not None and spec.loader is not None
     mod = importlib.util.module_from_spec(spec)
     # Make sure the relative import ".base_connector" resolves to our stub
     mod.__package__ = "adapters"

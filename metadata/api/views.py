@@ -150,7 +150,7 @@ class PipelineRunListCreateView(
         
         # --- Dispatch Celery task ------------------------------------------
         if CELERY_AVAILABLE and _run_pipeline_task:
-            _run_pipeline_task.delay(
+            _run_pipeline_task.delay(  # pyrefly: ignore[not-callable]
                 run_id              = str(run.id),
                 source              = run.source,
                 source_path         = run.source_path,
@@ -325,7 +325,7 @@ class PipelineRunColumnProfilesView(
             qs = qs.filter(semantic_type__iexact=semantic_type)
 
         nullable = request.query_params.get("nullable")
-        if nullable is not None:
+        if isinstance(nullable, str):
             qs = qs.filter(nullable=(nullable.lower() == "true"))
 
         return qs.order_by("column_name")

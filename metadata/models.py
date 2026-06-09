@@ -41,8 +41,9 @@ class SourceType(models.TextChoices):
 # ---------------------------------------------------------------------------
 
 class PipelineRun(models.Model):
-    # Declared for Pyrefly — Django injects this via metaclass at runtime
+    # Declared for Pyrefly — Django injects these via metaclass at runtime
     objects: Any
+    DoesNotExist: type[Exception]
 
     """
     One record per pipeline execution.
@@ -140,25 +141,25 @@ class PipelineRun(models.Model):
     def mark_running(self) -> None:
         """Transition status → RUNNING and record start timestamp."""
         from django.utils import timezone
-        self.status     = RunStatus.RUNNING
-        self.started_at = timezone.now()
+        self.status     = RunStatus.RUNNING  # pyrefly: ignore[bad-assignment]
+        self.started_at = timezone.now()  # pyrefly: ignore[bad-assignment]
         self.save(update_fields=["status", "started_at"])
 
     def mark_success(self, elapsed_s: float, stage_times: dict) -> None:
         """Transition status → SUCCESS and persist timing data."""
         from django.utils import timezone
-        self.status      = RunStatus.SUCCESS
-        self.elapsed_s   = elapsed_s
-        self.stage_times = stage_times
-        self.finished_at = timezone.now()
+        self.status      = RunStatus.SUCCESS  # pyrefly: ignore[bad-assignment]
+        self.elapsed_s   = elapsed_s  # pyrefly: ignore[bad-assignment]
+        self.stage_times = stage_times  # pyrefly: ignore[bad-assignment]
+        self.finished_at = timezone.now()  # pyrefly: ignore[bad-assignment]
         self.save(update_fields=["status", "elapsed_s", "stage_times", "finished_at"])
 
     def mark_failed(self, error_message: str) -> None:
         """Transition status → FAILED and record the error message."""
         from django.utils import timezone
-        self.status        = RunStatus.FAILED
-        self.error_message = error_message
-        self.finished_at   = timezone.now()
+        self.status        = RunStatus.FAILED  # pyrefly: ignore[bad-assignment]
+        self.error_message = error_message  # pyrefly: ignore[bad-assignment]
+        self.finished_at   = timezone.now()  # pyrefly: ignore[bad-assignment]
         self.save(update_fields=["status", "error_message", "finished_at"])
 
 
@@ -167,6 +168,9 @@ class PipelineRun(models.Model):
 # ---------------------------------------------------------------------------
 
 class MetadataResult(models.Model):
+    # Declared for Pyrefly — Django injects these via metaclass at runtime
+    objects: Any
+    DoesNotExist: type[Exception]
     """
     JSON Schema output produced by a successful PipelineRun.
 
@@ -218,7 +222,7 @@ class MetadataResult(models.Model):
     def save(self, *args, **kwargs):
         # Auto-populate column_count from schema_dict if not explicitly set.
         if self.schema_dict and not self.column_count:
-            self.column_count = len(self.schema_dict.get("properties", {}))
+            self.column_count = len(self.schema_dict.get("properties", {}))  # pyrefly: ignore[bad-assignment, missing-attribute]
         super().save(*args, **kwargs)
 
 
@@ -227,6 +231,9 @@ class MetadataResult(models.Model):
 # ---------------------------------------------------------------------------
 
 class ColumnProfile(models.Model):
+    # Declared for Pyrefly — Django injects these via metaclass at runtime
+    objects: Any
+    DoesNotExist: type[Exception]
     """
     Optional per-column profile record persisted from PipelineResult.profiles.
 

@@ -348,7 +348,7 @@ class TestLLMGenerator(unittest.TestCase):
         profiles = {f"col_{i}": {"dtype": "object"} for i in range(5)}
         gen.enrich(profiles)
         # 5 columns / batch_size 2 → 3 batches → 3 backend calls
-        self.assertEqual(gen._backend.complete.call_count, 3)
+        self.assertEqual(gen._backend.complete.call_count, 3)  # pyrefly: ignore[missing-attribute]
 
     def test_enrich_returns_same_profiles_dict(self):
         payload = {"col": {"description": "D", "tags": [], "business_name": "C", "notes": ""}}

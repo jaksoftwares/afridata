@@ -9,8 +9,9 @@ from typing import Any
 
 
 class Dataset(models.Model):
-    # Declared for Pyrefly — Django injects this via metaclass at runtime
+    # Declared for Pyrefly — Django injects these via metaclass at runtime
     objects: Any
+    DoesNotExist: type[Exception]
 
     DATASET_TYPES = [
         ('csv', 'CSV'),
@@ -162,8 +163,9 @@ class Comment(models.Model):
         return f"Comment by {self.author.username} on {self.dataset.title}"  # pyrefly: ignore[missing-attribute]
 
 class TokenTransaction(models.Model):
-    # Declared for Pyrefly — Django injects this via metaclass at runtime
+    # Declared for Pyrefly — Django injects these via metaclass at runtime
     objects: Any
+    DoesNotExist: type[Exception]
 
     TRANSACTION_TYPES = [
         ('signup_bonus', 'Signup Bonus'),
@@ -189,8 +191,9 @@ class TokenTransaction(models.Model):
         return f"{self.user.username}: {self.amount} tokens ({self.transaction_type})"  # pyrefly: ignore[missing-attribute]
 
 class PremiumPurchase(models.Model):
-    # Declared for Pyrefly — Django injects this via metaclass at runtime
+    # Declared for Pyrefly — Django injects these via metaclass at runtime
     objects: Any
+    DoesNotExist: type[Exception]
 
     PAYMENT_STATUS = [
         ('pending', 'Pending'),
@@ -222,8 +225,9 @@ class PremiumPurchase(models.Model):
         return f"{self.user.username} - {self.dataset.title} (${self.usd_amount} + {self.tokens_used} tokens)"  # pyrefly: ignore[missing-attribute]
 
 class Download(models.Model):
-    # Declared for Pyrefly — Django injects this via metaclass at runtime
+    # Declared for Pyrefly — Django injects these via metaclass at runtime
     objects: Any
+    DoesNotExist: type[Exception]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='downloads')
     dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE, related_name='download_records')
@@ -239,8 +243,9 @@ class Download(models.Model):
         return f"{self.user.username} downloaded {self.dataset.title}"  # pyrefly: ignore[missing-attribute]
 
 class Referral(models.Model):
-    # Declared for Pyrefly — Django injects this via metaclass at runtime
+    # Declared for Pyrefly — Django injects these via metaclass at runtime
     objects: Any
+    DoesNotExist: type[Exception]
 
     referrer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='referrals_made')
     referred_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='referrals_received')

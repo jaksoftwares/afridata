@@ -9,6 +9,8 @@ python_interpreter = "c:\\Users\\josep\\afridata\\venv\\Scripts\\python.exe"
 project_excludes = [
     "dataset/views.py",
     "dataset\\views.py",
+    "**/metadata/tests/test_api.py",
+    "**/test_api.py",
     "**/migrations/**",
     "**/__pycache__/**",
 ]
