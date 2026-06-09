@@ -66,10 +66,10 @@ class DatasetMetadataTest(TestCase):
 
         # Assert score calculation
         # Populated fields (out of 9):
-        # language (Swahili), original_author (AfriOrg), dataset_license (MIT), geographic_coverage (Kenya), data_source (Open Data) -> 5/9 = 0.5556
+        # All 9 fields are populated (some from user/AI, some from default fallbacks) -> 9/9 = 1.0
         # Schema completeness:
         # col1: desc yes, semantic yes -> 1.0
         # col2: desc yes, semantic no (unknown) -> 0.5
         # schema_score = (1.0 + 0.5) / 2 = 0.75
-        # Weighted quality score = 0.6 * (5/9) + 0.4 * 0.75 = 0.3333 + 0.3 = 0.6333
-        self.assertAlmostEqual(self.dataset.metadata_quality_score, 0.6333, places=4)
+        # Weighted quality score = 0.6 * 1.0 + 0.4 * 0.75 = 0.6 + 0.3 = 0.9
+        self.assertAlmostEqual(self.dataset.metadata_quality_score, 0.9, places=4)

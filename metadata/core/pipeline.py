@@ -356,7 +356,13 @@ class MetadataPipeline:
                     f"MetadataPipeline: 'path' is required for source='{self.source}'."
                 )
             if self.source == "csv":
-                df = pd.read_csv(self.path, **self.read_kwargs)
+                if 'encoding' in self.read_kwargs:
+                    df = pd.read_csv(self.path, **self.read_kwargs)
+                else:
+                    try:
+                        df = pd.read_csv(self.path, encoding='utf-8', **self.read_kwargs)
+                    except UnicodeDecodeError:
+                        df = pd.read_csv(self.path, encoding='latin-1', **self.read_kwargs)
                 self.logger.debug("Adapter: read CSV from '%s'.", self.path)
             else:
                 df = pd.read_excel(self.path, **self.read_kwargs)

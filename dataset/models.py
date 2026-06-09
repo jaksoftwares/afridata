@@ -102,9 +102,9 @@ class Dataset(models.Model):
         quality_bonus = 0
         if self.has_documentation:
             quality_bonus += 10
-        if self.metadata_quality_score >= 80:
+        if self.metadata_quality_score >= 0.8:
             quality_bonus += 20
-        elif self.metadata_quality_score >= 60:
+        elif self.metadata_quality_score >= 0.6:
             quality_bonus += 10
             
         return upload_bonus + quality_bonus

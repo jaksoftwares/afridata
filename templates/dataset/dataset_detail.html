@@ -211,7 +211,7 @@
                 </div>
             </div>
 
-            {% if metadata_result or dataset.geographic_coverage or dataset.temporal_coverage or dataset.data_source or dataset.original_author or dataset.update_frequency or dataset.collection_date or dataset.usage_notes or columns %}
+            {% if metadata_result or dataset.geographic_coverage or dataset.temporal_coverage or dataset.data_source or dataset.original_author or dataset.update_frequency or dataset.collection_date or dataset.usage_notes or columns or dataset.dataset_type == 'csv' or dataset.dataset_type == 'excel' or pipeline_run %}
             <!-- AI Metadata & JSON Schema -->
             <div class="card-fancy !p-8 mb-8">
                 <div class="flex items-center justify-between cursor-pointer select-none" id="metadata-toggle-btn">
@@ -225,11 +225,11 @@
                         </div>
                     </div>
                     <div class="w-8 h-8 rounded-full bg-brand-offwhite flex items-center justify-center text-gray-500 border border-gray-100 hover:bg-brand-teal/5 hover:text-brand-teal transition-all" id="metadata-toggle-icon-container">
-                        <i class="fas fa-chevron-down transform transition-transform duration-300" id="metadata-toggle-icon"></i>
+                        <i class="fas fa-chevron-down transform transition-transform duration-300" style="{% if pipeline_run and pipeline_run.status == 'PENDING' or pipeline_run and pipeline_run.status == 'RUNNING' %}transform: rotate(180deg);{% endif %}" id="metadata-toggle-icon"></i>
                     </div>
                 </div>
 
-                <div id="metadata-content" class="hidden mt-8 pt-8 border-t border-gray-100 space-y-8">
+                <div id="metadata-content" class="{% if pipeline_run and pipeline_run.status == 'PENDING' or pipeline_run and pipeline_run.status == 'RUNNING' %}{% else %}hidden{% endif %} mt-8 pt-8 border-t border-gray-100 space-y-8">
                     {% if pipeline_run and pipeline_run.status == 'PENDING' or pipeline_run and pipeline_run.status == 'RUNNING' %}
                     <!-- Loading state -->
                     <div class="flex flex-col items-center justify-center py-12 text-center">
@@ -239,7 +239,50 @@
                             We are analyzing your dataset's columns and content structure. This profile will be fully populated in a few seconds. Feel free to refresh the page.
                         </p>
                     </div>
+                    {% elif not metadata_result and not dataset.geographic_coverage and not dataset.temporal_coverage %}
+                    <!-- No metadata generated yet -->
+                    <div class="flex flex-col items-center justify-center py-12 text-center font-sans">
+                        <div class="w-16 h-16 rounded-full bg-brand-teal/5 flex items-center justify-center text-brand-teal mb-4">
+                            <i class="fas fa-brain text-2xl"></i>
+                        </div>
+                        <h4 class="text-sm font-bold text-gray-700">No AI Metadata Generated Yet</h4>
+                        <p class="text-xs text-gray-400 mt-1 mb-6 max-w-sm">
+                            This dataset does not have AI-enriched metadata profiles yet. Generate it now using our advanced LLM profiling pipeline.
+                        </p>
+                        {% if request.user.is_authenticated %}
+                        <button class="trigger-metadata-btn inline-flex items-center px-5 py-2.5 bg-brand-teal hover:bg-brand-teal-dark text-white text-xs font-bold rounded-xl shadow-sm hover:shadow transition-all space-x-2">
+                            <i class="fas fa-magic"></i>
+                            <span>Generate AI Metadata</span>
+                        </button>
+                        {% else %}
+                        <a href="{% url 'login' %}?next={{ request.path }}" class="inline-flex items-center px-5 py-2.5 bg-brand-teal hover:bg-brand-teal-dark text-white text-xs font-bold rounded-xl shadow-sm hover:shadow transition-all space-x-2">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <span>Sign in to Generate Metadata</span>
+                        </a>
+                        {% endif %}
+                        <div class="trigger-error hidden mt-4 text-xs text-red-500 max-w-sm bg-red-50 border border-red-100 rounded-xl p-3"></div>
+                    </div>
                     {% else %}
+                    
+                    {% if pipeline_run and pipeline_run.status == 'FAILED' %}
+                    <!-- Retry metadata option -->
+                    <div class="bg-red-50 border border-red-100 rounded-2xl p-5 flex items-start space-x-4 font-sans mb-6">
+                        <div class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center text-red-600 shrink-0">
+                            <i class="fas fa-exclamation-circle text-lg"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h5 class="text-sm font-bold text-red-800">Last Generation Attempt Failed</h5>
+                            <p class="text-xs text-red-600 mt-1 font-semibold">Reason: <span class="font-normal">{{ pipeline_run.error_message|default:"An unknown error occurred during metadata generation." }}</span></p>
+                            {% if request.user.is_authenticated %}
+                            <button class="trigger-metadata-btn mt-3 inline-flex items-center px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition-all space-x-1.5">
+                                <i class="fas fa-sync-alt"></i>
+                                <span>Retry Metadata Generation</span>
+                            </button>
+                            {% endif %}
+                            <div class="trigger-error hidden mt-3 text-xs text-red-500 bg-white border border-red-100 rounded-xl p-3"></div>
+                        </div>
+                    </div>
+                    {% endif %}
                     <!-- Grid showing inferred metadata fields -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 font-sans">
                         <div class="bg-brand-offwhite p-5 rounded-2xl border border-gray-50">
@@ -629,5 +672,122 @@
             schemaContent.classList.toggle('hidden');
         });
     }
+
+    // Auto-polling function for pending or running pipeline runs
+    function initiatePolling(runId) {
+        const pollUrl = "/api/metadata/runs/" + runId + "/";
+        const checkInterval = 2000; // Poll every 2 seconds
+
+        function pollStatus() {
+            fetch(pollUrl, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error('Network response was not ok.');
+            })
+            .then(data => {
+                console.log("Pipeline status check:", data.status);
+                if (data.status === 'SUCCESS' || data.status === 'FAILED') {
+                    // Pipeline finished! Refresh to show metadata
+                    window.location.reload();
+                } else {
+                    // Still running, wait and check again
+                    setTimeout(pollStatus, checkInterval);
+                }
+            })
+            .catch(error => {
+                console.error("Polling error:", error);
+                // Retry anyway after a short delay
+                setTimeout(pollStatus, checkInterval);
+            });
+        }
+
+        // Start polling
+        setTimeout(pollStatus, checkInterval);
+    }
+
+    // Call initiatePolling immediately if page loads in a pending/running state
+    {% if pipeline_run and pipeline_run.status == 'PENDING' or pipeline_run and pipeline_run.status == 'RUNNING' %}
+    initiatePolling("{{ pipeline_run.id }}");
+    {% endif %}
+
+    // Trigger metadata manual generation event listener
+    const triggerBtns = document.querySelectorAll('.trigger-metadata-btn');
+    triggerBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Disable all trigger buttons and display a spinner in the clicked button
+            triggerBtns.forEach(b => b.disabled = true);
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i><span>Generating...</span>';
+            
+            // Find the closest error container
+            const errorDiv = btn.closest('div').querySelector('.trigger-error') || document.querySelector('.trigger-error');
+            if (errorDiv) {
+                errorDiv.classList.add('hidden');
+                errorDiv.textContent = '';
+            }
+
+            fetch("{% url 'generate_metadata' dataset.slug %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                return response.json().then(errData => {
+                    throw new Error(errData.error || 'Server error occurred.');
+                });
+            })
+            .then(data => {
+                if (data.success) {
+                    // Update metadata content container to the spinning loader state
+                    if (metadataContent) {
+                        metadataContent.classList.remove('hidden');
+                        if (metadataIcon) {
+                            metadataIcon.style.transform = 'rotate(180deg)';
+                        }
+                        metadataContent.innerHTML = `
+                            <!-- Loading state -->
+                            <div class="flex flex-col items-center justify-center py-12 text-center">
+                                <div class="w-12 h-12 border-4 border-brand-teal/20 border-t-brand-teal rounded-full animate-spin mb-4"></div>
+                                <h4 class="text-sm font-bold text-gray-700">AI Metadata Generation in Progress</h4>
+                                <p class="text-xs text-gray-400 mt-1 max-w-sm">
+                                    We are analyzing your dataset's columns and content structure. This profile will be fully populated in a few seconds. Feel free to refresh the page.
+                                </p>
+                            </div>
+                        `;
+                    }
+                    // Start polling the status of the run
+                    initiatePolling(data.run_id);
+                } else {
+                    throw new Error(data.error || 'Failed to start metadata generation.');
+                }
+            })
+            .catch(error => {
+                console.error('Error triggering metadata generation:', error);
+                // Restore all buttons
+                triggerBtns.forEach(b => {
+                    b.disabled = false;
+                });
+                btn.innerHTML = originalContent;
+                if (errorDiv) {
+                    errorDiv.textContent = error.message || 'Failed to connect to the server.';
+                    errorDiv.classList.remove('hidden');
+                }
+            });
+        });
+    });
   </script>
 {% endblock %}

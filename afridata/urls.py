@@ -18,3 +18,6 @@ urlpatterns = [
     #url to schema diagram
     path("schema/", Schema.as_view()),
 ]
+
+# Reload trigger comment to refresh runserver URL cache
+

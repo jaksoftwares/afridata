@@ -8,6 +8,7 @@ urlpatterns = [
     
     # Dataset detail and related pages
     path('dataset/<slug:slug>/', views.dataset_detail, name='dataset_detail'),
+    path('dataset/<slug:slug>/generate-metadata/', views.generate_metadata, name='generate_metadata'),
     path('dataset/<slug:slug>/preview/', views.dataset_preview, name='dataset_preview'),
     path('dataset/<slug:slug>/download/', views.download_dataset, name='download_dataset'),
     path('dataset/<slug:slug>/comments/', views.dataset_comments, name='dataset_comments'),

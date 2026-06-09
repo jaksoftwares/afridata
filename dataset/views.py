@@ -90,12 +90,24 @@ def dataset_detail(request, slug):
             
             # Determine file type and read accordingly
             if dataset.dataset_type == 'csv':
-                df = pd.read_csv(io.BytesIO(file_content))
+                try:
+                    df = pd.read_csv(io.BytesIO(file_content), encoding='utf-8')
+                except Exception:
+                    try:
+                        df = pd.read_csv(io.BytesIO(file_content), encoding='latin-1')
+                    except Exception:
+                        df = pd.read_csv(io.BytesIO(file_content))
             elif dataset.dataset_type == 'excel':
                 df = pd.read_excel(io.BytesIO(file_content))
             else:
                 # Try CSV as fallback
-                df = pd.read_csv(io.BytesIO(file_content))
+                try:
+                    df = pd.read_csv(io.BytesIO(file_content), encoding='utf-8')
+                except Exception:
+                    try:
+                        df = pd.read_csv(io.BytesIO(file_content), encoding='latin-1')
+                    except Exception:
+                        df = pd.read_csv(io.BytesIO(file_content))
             
             if not df.empty:
                 # Get columns
@@ -773,3 +785,73 @@ def token_history(request):
     }
     
     return render(request, 'accounts/token_history.html', context)
+
+
+@login_required
+def generate_metadata(request, slug):
+    """AJAX endpoint to trigger async metadata extraction and inference for a dataset."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'POST request required.'}, status=405)
+        
+    dataset = get_object_or_404(Dataset, slug=slug)
+    
+    # Verify dataset type and presence of file
+    if dataset.dataset_type not in ['csv', 'excel']:
+        return JsonResponse({
+            'success': False, 
+            'error': 'Metadata generation is only supported for CSV and Excel datasets.'
+        }, status=400)
+        
+    if not dataset.file or not dataset.file.name:
+        return JsonResponse({
+            'success': False, 
+            'error': 'Dataset file is missing.'
+        }, status=400)
+        
+    # Check if there is already a running/pending run
+    active_run = PipelineRun.objects.filter(
+        dataset=dataset,
+        status__in=[RunStatus.PENDING, RunStatus.RUNNING]
+    ).first()
+    
+    if active_run:
+        return JsonResponse({
+            'success': False, 
+            'error': 'Metadata generation is already in progress.',
+            'run_id': str(active_run.id)
+        })
+        
+    # Start the async metadata run
+    try:
+        source = SourceType.EXCEL if dataset.dataset_type == 'excel' else SourceType.CSV
+        run = PipelineRun.objects.create(
+            dataset=dataset,
+            source=source,
+            source_path=dataset.file.path,
+            dataset_title=dataset.title,
+            dataset_description=dataset.bio,
+            status=RunStatus.PENDING,
+        )
+        threading.Thread(
+            target=_run_pipeline_task_with_db_cleanup,
+            kwargs={
+                "run_id": str(run.id),
+                "source": source,
+                "source_path": dataset.file.path,
+                "dataset_title": dataset.title,
+                "dataset_description": dataset.bio,
+            },
+            daemon=True
+        ).start()
+        return JsonResponse({
+            'success': True, 
+            'run_id': str(run.id),
+            'message': 'Metadata generation started.'
+        })
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).exception("Failed to trigger manual metadata pipeline: %s", e)
+        return JsonResponse({
+            'success': False, 
+            'error': f'Failed to trigger metadata pipeline: {str(e)}'
+        }, status=500)

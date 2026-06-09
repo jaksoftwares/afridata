@@ -131,7 +131,13 @@ def _infer_and_merge_dataset_metadata(run, result, column_count) -> None:
             dataset.file.seek(0)
             file_content = dataset.file.read()
             if dataset.dataset_type == 'csv':
-                df = pd.read_csv(io.BytesIO(file_content), nrows=10)
+                try:
+                    df = pd.read_csv(io.BytesIO(file_content), nrows=10, encoding='utf-8')
+                except Exception:
+                    try:
+                        df = pd.read_csv(io.BytesIO(file_content), nrows=10, encoding='latin-1')
+                    except Exception:
+                        df = pd.read_csv(io.BytesIO(file_content), nrows=10)
             elif dataset.dataset_type == 'excel':
                 df = pd.read_excel(io.BytesIO(file_content), nrows=10)
             else:
