@@ -1,4 +1,4 @@
-# 🌍 Afridata – African Dataset Hub
+ # 🌍 Afridata – African Dataset Hub
 
 **Afridata** is a Django-based web application designed to serve as a centralized repository for datasets across Africa. It aims to promote open data access, enable collaboration, and empower individuals and institutions to share, explore, and utilize datasets across multiple domains such as education, health, governance, agriculture, environment, and development.
 
