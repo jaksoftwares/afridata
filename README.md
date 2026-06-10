@@ -78,7 +78,7 @@ Afridata is under **active development**. Core features are complete, and the pl
 - Notification system for dataset updates
 - Webhooks and API integrations
 
----
+---       
 
 ## 📄 License
 
