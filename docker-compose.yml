@@ -16,7 +16,6 @@ services:
 
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/app
     ports:
@@ -24,10 +23,10 @@ services:
     depends_on:
       - db
     environment:
-      - DB_NAME=afridata
-      - DB_USER=user
-      - DB_PASSWORD=password
+      # Use DATABASE_URL for dj-database-url parsing in settings.py
+      - DATABASE_URL=mysql://user:password@db:3306/afridata
       - DB_HOST=db
+      - DB_PORT=3306
 
 volumes:
   mysql_data:

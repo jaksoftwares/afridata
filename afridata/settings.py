@@ -108,35 +108,16 @@ WSGI_APPLICATION = 'afridata.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-if os.environ.get('RENDER'):
-    # Production database (Render)
-    DATABASES = {
-        'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
-    }
-else:
-    # Local development database (SQLite) - MySQL commented out for local dev
-    # DATABASES = {
-    #     'default': {
-    #         'ENGINE': 'django.db.backends.mysql',
-    #         'NAME':env('DB_NAME', default='afridata'),  # your local db name
-    #         'USER':env('DB_USER'),
-    #         'PASSWORD':env('DB_PASSWORD'),
-    #         'HOST':env('DB_HOST', default='localhost'),  # your local db host
-    #         'PORT':env('DB_PORT', default=3306),
-    #         'OPTIONS':{
-    #             'charset':'utf8mb4',
-    #         },
-    #     }
-    # }
-    
-    # SQLite for local development
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+import dj_database_url
 
+# Parse database configuration from $DATABASE_URL
+# Fallback to local SQLite if no DATABASE_URL is found
+DATABASES = {
+    'default': dj_database_url.config(
+        default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
+        conn_max_age=600,
+    )
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
