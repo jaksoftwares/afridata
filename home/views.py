@@ -11,7 +11,10 @@ from django.contrib.auth.decorators import login_required
 from collections import Counter
 from django.contrib.auth import get_user_model
 from django.contrib import messages
+from django.contrib import messages
 from .forms import ContactForm
+from django.core.mail import send_mail
+from django.conf import settings
 import logging
 
 User = get_user_model()
@@ -42,9 +45,9 @@ def get_recommended_datasets(request):
             # Try cache first
             recommendations = get_cached_recommendations(user_id=request.user.pk)
             
-            if recommendations and len(recommendations.get('ranked_dataset_ids', [])) > 0:
+            if recommendations and len(recommendations.items) > 0:
                 # User has recommendations
-                dataset_ids = recommendations['ranked_dataset_ids'][:10]
+                dataset_ids = [item.item_id for item in recommendations.items][:10]
                 from django.db.models import Case, When
                 preserved_order = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(dataset_ids)])
                 recommended = Dataset.objects.filter(id__in=dataset_ids).select_related('author').order_by(preserved_order)
@@ -92,12 +95,12 @@ def default_home(request):
     # Calculate total countries (assuming you store country info in topics or bio)
     # This is a simplified approach - you might want to add a country field to your model
     datasets_with_countries = Dataset.objects.filter(
-        Q(topics__icontains='Nigeria') | Q(topics__icontains='Kenya') | 
-        Q(topics__icontains='South Africa') | Q(topics__icontains='Ghana') |
-        Q(topics__icontains='Egypt') | Q(topics__icontains='Ethiopia') |
-        Q(topics__icontains='Uganda') | Q(topics__icontains='Tanzania') |
-        Q(bio__icontains='Nigeria') | Q(bio__icontains='Kenya') | 
-        Q(bio__icontains='South Africa') | Q(bio__icontains='Ghana')
+        Q(topics__icontains='Nigeria') | Q(topics__icontains='Kenya') |  # type: ignore
+        Q(topics__icontains='South Africa') | Q(topics__icontains='Ghana') |  # type: ignore
+        Q(topics__icontains='Egypt') | Q(topics__icontains='Ethiopia') |  # type: ignore
+        Q(topics__icontains='Uganda') | Q(topics__icontains='Tanzania') |  # type: ignore
+        Q(bio__icontains='Nigeria') | Q(bio__icontains='Kenya') |  # type: ignore
+        Q(bio__icontains='South Africa') | Q(bio__icontains='Ghana')  # type: ignore
     ).distinct()
     
     total_countries = 54  # Default African countries count
@@ -196,33 +199,33 @@ def default_home(request):
         # Category counts (you might want to add categories to your model)
         'category_counts': {
             'healthcare': Dataset.objects.filter(
-                Q(topics__icontains='health') | Q(bio__icontains='health') |
-                Q(topics__icontains='medical') | Q(bio__icontains='medical')
+                Q(topics__icontains='health') | Q(bio__icontains='health') |  # type: ignore
+                Q(topics__icontains='medical') | Q(bio__icontains='medical')  # type: ignore
             ).count(),
             'climate': Dataset.objects.filter(
-                Q(topics__icontains='climate') | Q(bio__icontains='climate') |
-                Q(topics__icontains='environment') | Q(bio__icontains='environment')
+                Q(topics__icontains='climate') | Q(bio__icontains='climate') |  # type: ignore
+                Q(topics__icontains='environment') | Q(bio__icontains='environment')  # type: ignore
             ).count(),
             'economics': Dataset.objects.filter(
-                Q(topics__icontains='economic') | Q(bio__icontains='economic') |
-                Q(topics__icontains='finance') | Q(bio__icontains='finance') |
-                Q(topics__icontains='gdp') | Q(bio__icontains='gdp')
+                Q(topics__icontains='economic') | Q(bio__icontains='economic') |  # type: ignore
+                Q(topics__icontains='finance') | Q(bio__icontains='finance') |  # type: ignore
+                Q(topics__icontains='gdp') | Q(bio__icontains='gdp')  # type: ignore
             ).count(),
             'social': Dataset.objects.filter(
-                Q(topics__icontains='social') | Q(bio__icontains='social') |
-                Q(topics__icontains='demographic') | Q(bio__icontains='demographic')
+                Q(topics__icontains='social') | Q(bio__icontains='social') |  # type: ignore
+                Q(topics__icontains='demographic') | Q(bio__icontains='demographic')  # type: ignore
             ).count(),
             'agriculture': Dataset.objects.filter(
-                Q(topics__icontains='agriculture') | Q(bio__icontains='agriculture') |
-                Q(topics__icontains='farming') | Q(bio__icontains='farming')
+                Q(topics__icontains='agriculture') | Q(bio__icontains='agriculture') |  # type: ignore
+                Q(topics__icontains='farming') | Q(bio__icontains='farming')  # type: ignore
             ).count(),
             'education': Dataset.objects.filter(
-                Q(topics__icontains='education') | Q(bio__icontains='education') |
-                Q(topics__icontains='school') | Q(bio__icontains='school')
+                Q(topics__icontains='education') | Q(bio__icontains='education') |  # type: ignore
+                Q(topics__icontains='school') | Q(bio__icontains='school')  # type: ignore
             ).count(),
             'technology': Dataset.objects.filter(
-                Q(topics__icontains='technology') | Q(bio__icontains='technology') |
-                Q(topics__icontains='tech') | Q(bio__icontains='tech')
+                Q(topics__icontains='technology') | Q(bio__icontains='technology') |  # type: ignore
+                Q(topics__icontains='tech') | Q(bio__icontains='tech')  # type: ignore
             ).count(),
         },
         
@@ -253,9 +256,9 @@ def search_datasets(request):
     
     # Search across multiple fields
     datasets = Dataset.objects.filter(
-        Q(title__icontains=query) |
-        Q(bio__icontains=query) |
-        Q(topics__icontains=query) |
+        Q(title__icontains=query) |  # type: ignore
+        Q(bio__icontains=query) |  # type: ignore
+        Q(topics__icontains=query) |  # type: ignore
         Q(author__username__icontains=query)
     ).select_related('author').order_by('-created_at')
     
@@ -493,10 +496,60 @@ def contact_us(request):
     if request.method == 'POST':
         form = ContactForm(request.POST)
         if form.is_valid():
-            # In a real app, you'd send an email here.
+            # Save the message to the database
+            contact_msg = form.save()
+            
+            # Send email notification if configured
+            recipient_email = getattr(settings, 'CONTACT_EMAIL_RECIPIENT', '')
+            if recipient_email:
+                subject = f"New Contact Message: {contact_msg.subject}"
+                message = f"You have received a new contact message from {contact_msg.name} ({contact_msg.email}):\n\n{contact_msg.message}"
+                from_email = settings.DEFAULT_FROM_EMAIL
+                
+                try:
+                    send_mail(
+                        subject,
+                        message,
+                        from_email,
+                        [recipient_email],
+                        fail_silently=True
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to send contact notification email: {e}")
+            
             messages.success(request, "Your message has been sent successfully! We'll get back to you soon.")
             return render(request, 'home/contact.html', {'form': ContactForm(), 'success': True})
     else:
         form = ContactForm()
     
     return render(request, 'home/contact.html', {'form': form})
+
+from django.shortcuts import redirect
+from .models import NewsletterSubscriber
+
+def subscribe_newsletter(request):
+    """
+    Handle newsletter subscription requests.
+    """
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip()
+        if email:
+            # Check if already subscribed
+            subscriber, created = NewsletterSubscriber.objects.get_or_create(email=email)
+            if created:
+                messages.success(request, "Thank you for subscribing to our newsletter!")
+            else:
+                if not subscriber.is_active:
+                    subscriber.is_active = True
+                    subscriber.save()
+                    messages.success(request, "Welcome back! Your subscription has been reactivated.")
+                else:
+                    messages.info(request, "You are already subscribed to our newsletter.")
+        else:
+            messages.error(request, "Please provide a valid email address.")
+            
+        # Redirect back to where they came from
+        next_url = request.META.get('HTTP_REFERER', '/')
+        return redirect(next_url)
+    
+    return redirect('home')

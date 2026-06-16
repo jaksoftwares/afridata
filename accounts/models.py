@@ -5,6 +5,7 @@ from django.core.validators import RegexValidator
 from django.utils import timezone
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.conf import settings
 
 class CustomUser(AbstractUser):
     """Extended User model with additional fields"""
@@ -36,11 +37,11 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return self.email
     
-    def get_short_name(self):
-        return self.full_name.split()[0] if self.full_name else self.username
+    def get_short_name(self):  # type: ignore
+        return self.full_name.split()[0] if self.full_name else self.username  # type: ignore
     
-    def get_full_name(self):
-        return self.full_name if self.full_name else self.username
+    def get_full_name(self):  # type: ignore
+        return self.full_name if self.full_name else self.username  # type: ignore
     
     def generate_referral_code(self):
         """Generate a unique referral code"""
@@ -51,13 +52,15 @@ class CustomUser(AbstractUser):
             while True:
                 code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
                 if not CustomUser.objects.filter(referral_code=code).exists():
-                    self.referral_code = code
+                    self.referral_code = code  # type: ignore
                     self.save(update_fields=['referral_code'])
                     break
         return self.referral_code
 
 class UserProfile(models.Model):
     """Additional profile information for users with token management"""
+    objects = models.Manager()
+    
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='profile')
     website = models.URLField(blank=True)
     location = models.CharField(max_length=100, blank=True)
@@ -126,9 +129,9 @@ class UserProfile(models.Model):
         from datetime import date
         current_date = date.today()
         
-        if self.last_month_reset.month != current_date.month or self.last_month_reset.year != current_date.year:
-            self.downloads_this_month = 0
-            self.last_month_reset = current_date
+        if self.last_month_reset.month != current_date.month or self.last_month_reset.year != current_date.year:  # type: ignore
+            self.downloads_this_month = 0  # type: ignore
+            self.last_month_reset = current_date  # type: ignore
             self.save(update_fields=['downloads_this_month', 'last_month_reset'])
     
     def can_download_this_month(self):
@@ -138,14 +141,22 @@ class UserProfile(models.Model):
     
     def increment_monthly_downloads(self):
         """Increment monthly download counter"""
-        self.downloads_this_month += 1
+        self.downloads_this_month += 1  # type: ignore
         self.save(update_fields=['downloads_this_month'])
 
 class LoginAttempt(models.Model):
-    """Track login attempts for security"""
+    """Track login attempts for security purposes"""
+    objects = models.Manager()
     email = models.EmailField()
     ip_address = models.GenericIPAddressField()
     success = models.BooleanField()
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='login_attempts',
+        null=True,
+        blank=True
+    )
     timestamp = models.DateTimeField(auto_now_add=True)
     user_agent = models.TextField(blank=True)
     
@@ -229,3 +240,17 @@ def create_user_profile(sender, instance, created, **kwargs):
 def save_user_profile(sender, instance, **kwargs):
     if hasattr(instance, 'profile'):
         instance.profile.save()
+
+class EmailVerificationToken(models.Model):
+    """Store email verification codes"""
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='verification_token')
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def is_valid(self):
+        # Valid for 24 hours
+        from datetime import timedelta
+        return self.created_at >= timezone.now() - timedelta(hours=24)
+        
+    def __str__(self):
+        return f"Verification code for {self.user.email}"

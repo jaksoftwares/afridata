@@ -6,6 +6,7 @@ from django.utils import timezone
 
 class Topic(models.Model):
     """Forum topics/categories"""
+    objects = models.Manager()
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(max_length=500)
     icon = models.CharField(max_length=50, blank=True, help_text="FontAwesome icon class")
@@ -16,14 +17,14 @@ class Topic(models.Model):
     class Meta:
         ordering = ['name']
     
-    def __str__(self):
-        return self.name
+    def __str__(self) -> str:
+        return self.name  # type: ignore
     
     def get_absolute_url(self):
         return reverse('community:topic_detail', kwargs={'pk': self.pk})
     
     def get_thread_count(self):
-        return self.threads.filter(is_active=True).count()
+        return self.threads.filter(is_active=True).count()  # type: ignore
     
     def get_post_count(self):
         return Post.objects.filter(thread__topic=self, is_active=True).count()
@@ -33,6 +34,7 @@ class Topic(models.Model):
 
 class Thread(models.Model):
     """Forum threads/discussions"""
+    objects = models.Manager()
     title = models.CharField(max_length=255)
     topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name='threads')
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='threads')
@@ -47,24 +49,25 @@ class Thread(models.Model):
     class Meta:
         ordering = ['-is_pinned', '-updated_at']
     
-    def __str__(self):
-        return self.title
+    def __str__(self) -> str:
+        return self.title  # type: ignore
     
     def get_absolute_url(self):
         return reverse('community:thread_detail', kwargs={'pk': self.pk})
     
     def get_post_count(self):
-        return self.posts.filter(is_active=True).count()
+        return self.posts.filter(is_active=True).count()  # type: ignore
     
     def get_latest_post(self):
-        return self.posts.filter(is_active=True).order_by('-created_at').first()
+        return self.posts.filter(is_active=True).order_by('-created_at').first()  # type: ignore
     
     def increment_views(self):
-        self.views += 1
+        self.views += 1  # type: ignore
         self.save(update_fields=['views'])
 
 class Post(models.Model):
-    """Forum posts/replies"""
+    """Forum posts within a thread"""
+    objects = models.Manager()
     thread = models.ForeignKey(Thread, on_delete=models.CASCADE, related_name='posts')
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='posts')
     content = models.TextField()
@@ -76,13 +79,14 @@ class Post(models.Model):
         ordering = ['created_at']
     
     def __str__(self):
-        return f"Post by {self.author.username} in {self.thread.title}"
+        return f"Post by {self.author.username} in {self.thread.title}"  # type: ignore
     
     def get_absolute_url(self):
         return f"{self.thread.get_absolute_url()}#post-{self.pk}"
 
 class PostVote(models.Model):
-    """Voting system for posts"""
+    """Upvotes/downvotes on posts"""
+    objects = models.Manager()
     VOTE_CHOICES = [
         (1, 'Upvote'),
         (-1, 'Downvote'),
@@ -97,18 +101,19 @@ class PostVote(models.Model):
         unique_together = ['post', 'user']
     
     def __str__(self):
-        return f"{self.user.username} {'upvoted' if self.vote == 1 else 'downvoted'} post in {self.post.thread.title}"
+        return f"{self.user.username} {'upvoted' if self.vote == 1 else 'downvoted'} post in {self.post.thread.title}"  # type: ignore
 
 class UserActivity(models.Model):
-    """Track user activity in forums"""
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='forum_activities')
+    """Track user engagement in the community"""
+    objects = models.Manager()
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='community_activity')
     last_seen = models.DateTimeField(auto_now=True)
     post_count = models.PositiveIntegerField(default=0)
     thread_count = models.PositiveIntegerField(default=0)
     reputation = models.IntegerField(default=0)
     
     def __str__(self):
-        return f"{self.user.username}'s Forum Activity"
+        return f"{self.user.username}'s Forum Activity"  # type: ignore
     
     def update_post_count(self):
         self.post_count = Post.objects.filter(author=self.user, is_active=True).count()

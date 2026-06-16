@@ -315,6 +315,8 @@ def dataset_preview(request, slug):
             preview_data = df.iloc[start_idx:end_idx].to_dict('records')
             
             # Calculate pagination info
+            import math
+            total_pages = math.ceil(total_rows / rows_per_page) if rows_per_page else 1
             has_previous = start_idx > 0
             has_next = end_idx < total_rows
             
@@ -323,6 +325,7 @@ def dataset_preview(request, slug):
                 'columns': columns,
                 'preview_data': preview_data,
                 'current_page': int(page_number),
+                'total_pages': total_pages,
                 'has_previous': has_previous,
                 'has_next': has_next,
                 'total_rows': total_rows,

@@ -327,6 +327,39 @@
 
                     <!-- Column Profiles Table -->
                     {% if metadata_result and metadata_result.run.column_profiles.exists %}
+                    
+                    <!-- JSON Schema Root Metadata Visualized -->
+                    {% if metadata_result.schema_dict %}
+                    <div class="mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 font-sans">
+                        <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Schema Title</span>
+                            <span class="text-xs font-mono text-gray-800 font-bold truncate block w-full" title="{{ metadata_result.schema_dict.title }}">
+                                {{ metadata_result.schema_dict.title|default:dataset.title }}
+                            </span>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Schema Standard</span>
+                            <span class="text-xs font-mono text-gray-600 truncate block w-full" title="{{ metadata_result.schema_dict|get_item:'$schema' }}">
+                                {{ metadata_result.schema_dict|get_item:'$schema'|default:"http://json-schema.org/draft-07/schema#" }}
+                            </span>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Root Type</span>
+                            <span class="text-xs font-mono text-brand-teal font-bold">{{ metadata_result.schema_dict.type|default:"object" }}</span>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Required Constraints</span>
+                            <div class="flex flex-wrap gap-1.5">
+                                {% for req in metadata_result.schema_dict.required %}
+                                    <span class="px-2 py-0.5 bg-brand-amber/10 text-brand-amber rounded text-[9px] font-bold border border-brand-amber/20">{{ req }}</span>
+                                {% empty %}
+                                    <span class="text-xs text-gray-400 italic font-medium">No required fields</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <div class="space-y-4 font-sans">
                         <h4 class="text-sm font-bold text-gray-800">Column Schema Details</h4>
                         <div class="overflow-x-auto border border-gray-100 rounded-2xl">

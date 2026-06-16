@@ -99,16 +99,7 @@
         </a>
     </div>
 
-    <!-- Messages Container -->
-    <div id="messages-container" class="fixed top-4 right-4 z-50 space-y-2">
-        {% if messages %}
-            {% for message in messages %}
-            <div class="p-4 rounded-lg shadow-lg max-w-sm mb-2 {% if message.tags == 'error' %}bg-red-50 text-red-700 border-l-4 border-red-500{% else %}bg-green-50 text-green-700 border-l-4 border-green-500{% endif %}">
-                {{ message }}
-            </div>
-            {% endfor %}
-        {% endif %}
-    </div>
+
 
     <!-- Signup Container -->
     <div class="glass-card w-full max-w-3xl overflow-hidden relative z-10 my-8">
@@ -233,15 +224,6 @@
             btn.style.opacity = '0.8';
             btn.style.pointerEvents = 'none';
         });
-
-        setTimeout(() => {
-            const container = document.getElementById('messages-container');
-            if(container) {
-                container.style.opacity = '0';
-                container.style.transition = 'opacity 0.5s ease';
-                setTimeout(() => container.remove(), 500);
-            }
-        }, 5000);
     </script>
 </body>
 </html>

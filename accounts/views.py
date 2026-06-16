@@ -23,11 +23,52 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.views.decorators.http import require_http_methods, require_POST
 
-from accounts.models import CustomUser, LoginAttempt, TokenPurchase, UserProfile
+from accounts.models import CustomUser, LoginAttempt, TokenPurchase, UserProfile, EmailVerificationToken
 from dataset.forms import DatasetUploadForm
 from dataset.models import Comment, Dataset, Download, PremiumPurchase, Referral, TokenTransaction
+from django.core.mail import send_mail
+from django.utils.crypto import get_random_string
+from django.conf import settings as django_settings
 
 User = get_user_model()
+
+from django.template.loader import render_to_string
+
+def send_verification_email(user):
+    """Generate and send a 6-digit verification code to the user."""
+    code = get_random_string(length=6, allowed_chars='0123456789')
+    
+    # Update or create token
+    EmailVerificationToken.objects.update_or_create(
+        user=user,
+        defaults={'code': code, 'created_at': timezone.now()}
+    )
+    
+    subject = 'Verify Your Email Address - AfriData'
+    text_content = f'Welcome to AfriData!\n\nYour email verification code is: {code}\nThis code will expire in 24 hours.\n\nIf you did not attempt to sign up for an AfriData account, please safely ignore this email.'
+    
+    # Render HTML content
+    html_content = render_to_string('accounts/email/verification_email.html', {
+        'user': user, 
+        'code': code
+    })
+    
+    # Ensure from_email is formatted with the sender name "AfriData"
+    from_email_address = django_settings.DEFAULT_FROM_EMAIL
+    if '<' not in from_email_address:
+        from_email = f"AfriData <{from_email_address}>"
+    else:
+        from_email = from_email_address
+    
+    send_mail(
+        subject, 
+        text_content, 
+        from_email, 
+        [user.email], 
+        fail_silently=False,
+        html_message=html_content
+    )
+
 
 
 
@@ -135,6 +176,11 @@ def authenticate_login(request):
     
     if user is not None:
         if user.is_active:
+            if not user.is_verified:
+                request.session['verification_email'] = user.email
+                messages.warning(request, 'Please verify your email address to access your account.')
+                return redirect('verify_email')
+                
             login(request, user)
             
             # Set session expiry based on remember me
@@ -322,12 +368,12 @@ def process_signup(request):
                 user_agent=request.META.get('HTTP_USER_AGENT', '')
             )
             
-            # Auto-login after signup
-            login(request, user)
-            logger.debug("User logged in successfully")
+            send_verification_email(user)
+            request.session['verification_email'] = user.email
+            logger.debug("Verification email sent, redirecting to verify_email")
             
-            messages.success(request, f'Welcome to our platform, {user.get_short_name()}! Your account has been created successfully and you received 50 welcome tokens.')
-            return redirect(next_url)
+            messages.success(request, f'Account created successfully! Please check your email for the verification code.')
+            return redirect('verify_email')
             
     except Exception as e:
         logger.error(f"Signup error: {str(e)}")
@@ -731,3 +777,74 @@ def referrals_view(request):
     }
     
     return render(request, 'accounts/referrals.html', context)
+
+def verify_email(request):
+    """View to handle email verification via 6-digit code."""
+    email = request.session.get('verification_email')
+    
+    if not email:
+        messages.error(request, 'No verification in progress. Please log in or sign up.')
+        return redirect('login_signup')
+        
+    try:
+        user = CustomUser.objects.get(email=email)
+    except CustomUser.DoesNotExist:
+        messages.error(request, 'User not found.')
+        return redirect('login_signup')
+        
+    if user.is_verified:
+        messages.info(request, 'Your email is already verified. You can log in.')
+        return redirect('login_signup')
+        
+    if request.method == 'POST':
+        code = request.POST.get('code', '').strip()
+        
+        try:
+            token = EmailVerificationToken.objects.get(user=user)
+            
+            if not token.is_valid():
+                messages.error(request, 'Verification code has expired. Please request a new one.')
+            elif token.code == code:
+                # Success
+                user.is_verified = True
+                user.save(update_fields=['is_verified'])
+                token.delete()
+                
+                # Log the user in
+                login(request, user)
+                
+                # Clean up session
+                if 'verification_email' in request.session:
+                    del request.session['verification_email']
+                    
+                messages.success(request, 'Your email has been successfully verified!')
+                return redirect('home')
+            else:
+                messages.error(request, 'Invalid verification code.')
+                
+        except EmailVerificationToken.DoesNotExist:
+            messages.error(request, 'No verification code found. Please request a new one.')
+            
+    return render(request, 'accounts/verify_email.html', {'email': email, 'page_title': 'Verify Email'})
+
+@require_POST
+def resend_verification_email(request):
+    """Resend the verification email to the user."""
+    email = request.session.get('verification_email')
+    
+    if not email:
+        return JsonResponse({'error': 'No verification in progress.'}, status=400)
+        
+    try:
+        user = CustomUser.objects.get(email=email)
+        if user.is_verified:
+            return JsonResponse({'error': 'User is already verified.'}, status=400)
+            
+        send_verification_email(user)
+        messages.success(request, 'A new verification code has been sent to your email.')
+        # If it's an AJAX request we can return JSON, otherwise redirect
+        return redirect('verify_email')
+    except CustomUser.DoesNotExist:
+        return JsonResponse({'error': 'User not found.'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

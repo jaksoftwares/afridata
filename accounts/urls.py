@@ -12,6 +12,10 @@ urlpatterns = [
     path('signup/', views.process_signup, name='process_signup'),
     path('home/', views.home, name='home'),
     path('logout/', views.logout_user, name='logout'),
+    
+    # Email verification URLs
+    path('verify-email/', views.verify_email, name='verify_email'),
+    path('resend-verification/', views.resend_verification_email, name='resend_verification'),
 
     #default home
     path('default_home/', default_home, name='default_home'),

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your Email</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #F7FAFC;
+            margin: 0;
+            padding: 0;
+            color: #4A5568;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e2e8f0;
+        }
+        .header {
+            background-color: #0B4F6C;
+            padding: 30px 40px;
+            text-align: center;
+        }
+        .header h1 {
+            color: #ffffff;
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .content {
+            padding: 40px;
+        }
+        .greeting {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        .message {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #4a5568;
+            margin-bottom: 30px;
+        }
+        .code-container {
+            background-color: #f0fdfa;
+            border: 2px dashed #1B998B;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .code {
+            font-family: monospace;
+            font-size: 36px;
+            font-weight: bold;
+            color: #0B4F6C;
+            letter-spacing: 8px;
+            margin: 0;
+        }
+        .expiration {
+            font-size: 14px;
+            color: #718096;
+            text-align: center;
+            margin-top: 10px;
+        }
+        .footer {
+            background-color: #f8fafc;
+            padding: 24px 40px;
+            border-top: 1px solid #e2e8f0;
+            text-align: center;
+        }
+        .footer p {
+            font-size: 13px;
+            color: #a0aec0;
+            margin: 0;
+            line-height: 1.5;
+        }
+        .brand-text {
+            color: #1B998B;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <!-- Ensure logo works in emails by using absolute URL if possible. For now we use styled text that fits the brand -->
+            <h1>AfriData</h1>
+        </div>
+        <div class="content">
+            <h2 class="greeting">Welcome to <span class="brand-text">AfriData</span>!</h2>
+            <p class="message">
+                Hi {% if user.first_name %}{{ user.first_name }}{% else %}there{% endif %},<br><br>
+                Thank you for joining AfriData. To complete your registration and secure your account, please use the verification code below:
+            </p>
+            
+            <div class="code-container">
+                <p class="code">{{ code }}</p>
+            </div>
+            
+            <p class="expiration">This code will expire in 24 hours.</p>
+            
+            <p class="message" style="margin-top: 30px;">
+                If you did not attempt to sign up for an AfriData account, please safely ignore this email. No further action is required.
+            </p>
+        </div>
+        <div class="footer">
+            <p>&copy; {% now "Y" %} AfriData. All rights reserved.</p>
+            <p>This is an automated message, please do not reply.</p>
+        </div>
+    </div>
+</body>
+</html>

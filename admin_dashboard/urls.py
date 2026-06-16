@@ -60,4 +60,7 @@ urlpatterns = [
     # Analytics APIs
     path('api/analytics/', views.analytics_api, name='analytics_api'),
     path('api/dashboard-stats/', views.dashboard_stats_api, name='dashboard_stats_api'),
+    
+    # Newsletters
+    path('newsletters/', views.newsletter_campaigns, name='newsletter_campaigns'),
 ]

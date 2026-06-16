@@ -89,15 +89,6 @@
                     <h2 class="text-3xl font-bold text-brand-blue mb-2">Send us a Message</h2>
                     <p class="text-brand-grey/70 mb-10">We'll get back to you within 24 hours.</p>
 
-                    {% if messages %}
-                        {% for message in messages %}
-                            <div class="mb-8 p-4 rounded-xl {% if message.tags == 'success' %}bg-green-50 text-green-700 border border-green-100{% else %}bg-red-50 text-red-700 border border-red-100{% endif %} flex items-center gap-3 animate-fade-in">
-                                <i class="fa-solid {% if message.tags == 'success' %}fa-circle-check{% else %}fa-circle-exclamation{% endif %} text-xl"></i>
-                                <p class="font-medium">{{ message }}</p>
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-
                     <form method="post" class="space-y-6">
                         {% csrf_token %}
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

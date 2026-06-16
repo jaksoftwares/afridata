@@ -10,7 +10,7 @@
 
 {% block header_content %}
 <div class="text-center py-8">
-  <h1 class="text-4xl font-bold mb-2">User Profile</h1>
+  <h1 class="text-4xl font-bold font-title mb-2">User Profile</h1>
   <p class="text-xl opacity-90">Manage your AfriData presence</p>
 </div>
 {% endblock %}
@@ -18,7 +18,7 @@
 {% block content %}
 <div class="max-w-7xl mx-auto p-6">
   <!-- Profile Header -->
-  <div class="bg-white p-8 rounded-xl shadow-lg mb-6">
+  <div class="card-fancy p-8 mb-6">
     <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-4 lg:space-y-0">
       <div class="flex items-center space-x-6">
         <div class="relative">
@@ -32,7 +32,7 @@
           <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white"></div>
         </div>
         <div>
-          <h2 class="text-3xl font-bold text-gray-800">{{ user.get_full_name|default:user.username }}</h2>
+          <h2 class="text-3xl font-bold font-title text-brand-blue">{{ user.get_full_name|default:user.username }}</h2>
           <p class="text-gray-600 text-lg">
             {% if profile.job_title %}{{ profile.job_title }}{% endif %}
             {% if profile.job_title and profile.location %} | {% endif %}
@@ -49,13 +49,13 @@
               <span class="text-gray-600 font-medium">{{ user_stats.average_rating|floatformat:1 }} ({{ user_stats.total_reviews }} reviews)</span>
             </div>
             <span class="text-gray-400">•</span>
-            <span class="text-blue-600 font-medium">{{ user_stats.total_downloads }} total downloads</span>
+            <span class="text-brand-blue font-medium">{{ user_stats.total_downloads }} total downloads</span>
           </div>
         </div>
       </div>
       <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
-        <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors" onclick="toggleEditMode()">Edit Profile</button>
-        <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg transition-colors" onclick="shareProfile()">Share Profile</button>
+        <button class="btn-primary px-6 py-3" onclick="toggleEditMode()">Edit Profile</button>
+        <button class="btn-secondary px-6 py-3" onclick="shareProfile()">Share Profile</button>
       </div>
     </div>
   </div>
@@ -63,8 +63,8 @@
   <!-- Stats and Contact Row -->
   <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
     <!-- Profile Stats -->
-    <div class="bg-gradient-to-br from-blue-500 to-purple-600 text-white p-6 rounded-xl shadow-lg">
-      <h3 class="text-lg font-semibold mb-4 flex items-center">
+    <div class="card-fancy !bg-brand-blue text-white p-6 relative overflow-hidden">
+      <h3 class="text-lg font-semibold font-title mb-4 flex items-center">
         <span class="text-2xl mr-2"></span>
         Profile Statistics
       </h3>
@@ -89,8 +89,8 @@
     </div>
 
     <!-- Token Balance -->
-    <div class="bg-gradient-to-br from-yellow-500 to-orange-600 text-white p-6 rounded-xl shadow-lg">
-      <h3 class="text-lg font-semibold mb-4 flex items-center">
+    <div class="card-fancy !bg-brand-teal text-white p-6 relative overflow-hidden">
+      <h3 class="text-lg font-semibold font-title mb-4 flex items-center">
         <span class="text-2xl mr-2"></span>
         Token Balance
       </h3>
@@ -108,14 +108,15 @@
           <span class="font-medium">{{ profile.monthly_download_limit }}</span>
         </div>
         <div class="w-full bg-yellow-600 rounded-full h-2 mt-2">
-          <div class="bg-white h-2 rounded-full" style="width: {% widthratio profile.monthly_downloads profile.monthly_download_limit 100 %}%"></div>
+          {% widthratio profile.monthly_downloads profile.monthly_download_limit 100 as percentage %}
+          <div class="bg-white h-2 rounded-full" style="width: {{ percentage }}%;"></div>
         </div>
       </div>
     </div>
 
     <!-- Contact Information -->
-    <div class="bg-gradient-to-br from-green-500 to-teal-600 text-white p-6 rounded-xl shadow-lg">
-      <h3 class="text-lg font-semibold mb-4 flex items-center">
+    <div class="card-fancy !bg-white border-t-4 border-brand-green p-6">
+      <h3 class="text-lg font-semibold font-title mb-4 flex items-center">
         <span class="text-2xl mr-2"></span>
         Contact Information
       </h3>
@@ -157,8 +158,8 @@
     </div>
 
     <!-- Achievements -->
-    <div class="bg-white p-6 rounded-xl shadow-lg">
-      <h3 class="text-lg font-semibold text-gray-700 mb-4 flex items-center">
+    <div class="card-fancy p-6">
+      <h3 class="text-lg font-semibold font-title text-brand-blue mb-4 flex items-center">
         <span class="text-2xl mr-2"></span>
         Achievements
       </h3>
@@ -211,8 +212,8 @@
 
   <!-- Referral Program Section -->
   {% if referrals_count > 0 or user.referred_by %}
-  <div class="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-6 rounded-xl shadow-lg mb-6">
-    <h3 class="text-lg font-semibold mb-4 flex items-center">
+  <div class="card-fancy !bg-brand-amber text-brand-blue p-6 mb-6">
+    <h3 class="text-lg font-semibold font-title mb-4 flex items-center">
       <span class="text-2xl mr-2"></span>
       Referral Program
     </h3>
@@ -238,8 +239,8 @@
 
   <!-- Profile Bio Section -->
   {% if user.bio %}
-  <div class="bg-white p-6 rounded-xl shadow-lg mb-6">
-    <h3 class="text-lg font-semibold text-gray-700 mb-3 flex items-center">
+  <div class="card-fancy p-6 mb-6">
+    <h3 class="text-lg font-semibold font-title text-brand-blue mb-3 flex items-center">
       <span class="text-2xl mr-2"></span>
       About
     </h3>
@@ -253,24 +254,24 @@
   {% endif %}
 
   <!-- Tabs -->
-  <div class="mb-6 border-b border-gray-200 bg-white rounded-t-xl">
-    <nav class="flex space-x-8 px-6 text-gray-600 overflow-x-auto">
-      <button id="datasets-tab" class="py-4 font-medium border-b-2 border-blue-600 text-blue-600 whitespace-nowrap">My Datasets ({{ user_stats.datasets_uploaded }})</button>
-      <button id="upload-tab" class="py-4 hover:text-blue-600 transition-colors whitespace-nowrap">Upload Dataset</button>
-      <button id="activity-tab" class="py-4 hover:text-blue-600 transition-colors whitespace-nowrap">Activity</button>
-      <button id="tokens-tab" class="py-4 hover:text-blue-600 transition-colors whitespace-nowrap">Tokens & Transactions</button>
-      <button id="purchases-tab" class="py-4 hover:text-blue-600 transition-colors whitespace-nowrap">Token Purchases</button>
-      <button id="reviews-tab" class="py-4 hover:text-blue-600 transition-colors whitespace-nowrap">Reviews ({{ user_stats.total_reviews }})</button>
+  <div class="mb-0 border-b border-gray-100 bg-white rounded-t-2xl shadow-sm px-2 pt-2">
+    <nav class="flex space-x-8 px-6 text-gray-600 overflow-x-auto hide-scrollbar">
+      <button id="datasets-tab" class="tab-btn py-4 font-medium border-b-2 border-brand-blue text-brand-blue font-bold whitespace-nowrap transition-all">My Datasets ({{ user_stats.datasets_uploaded }})</button>
+      <button id="upload-tab" class="tab-btn py-4 font-medium border-b-2 border-transparent hover:text-brand-blue hover:border-brand-blue/30 transition-all whitespace-nowrap">Upload Dataset</button>
+      <button id="activity-tab" class="tab-btn py-4 font-medium border-b-2 border-transparent hover:text-brand-blue hover:border-brand-blue/30 transition-all whitespace-nowrap">Activity</button>
+      <button id="tokens-tab" class="tab-btn py-4 font-medium border-b-2 border-transparent hover:text-brand-blue hover:border-brand-blue/30 transition-all whitespace-nowrap">Tokens & Transactions</button>
+      <button id="purchases-tab" class="tab-btn py-4 font-medium border-b-2 border-transparent hover:text-brand-blue hover:border-brand-blue/30 transition-all whitespace-nowrap">Token Purchases</button>
+      <button id="reviews-tab" class="tab-btn py-4 font-medium border-b-2 border-transparent hover:text-brand-blue hover:border-brand-blue/30 transition-all whitespace-nowrap">Reviews ({{ user_stats.total_reviews }})</button>
     </nav>
   </div>
 
   <!-- Tab Content -->
-  <div id="tab-content" class="bg-white rounded-b-xl shadow-lg">
+  <div id="tab-content" class="bg-white rounded-b-2xl shadow-lg mb-12">
     
     <!-- Datasets Section -->
     <section id="datasets-content" class="p-6">
       <div class="flex justify-between items-center mb-6">
-        <h3 class="text-xl font-semibold text-gray-700">Uploaded Datasets</h3>
+        <h3 class="text-xl font-semibold font-title text-brand-blue">Uploaded Datasets</h3>
         <div class="flex space-x-3">
           <select class="px-4 py-2 border rounded-lg">
             <option>Sort by: Most Recent</option>
@@ -284,9 +285,9 @@
       {% if user_datasets %}
       <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {% for dataset in user_datasets %}
-        <div class="dataset-card bg-gray-50 p-6 shadow-md rounded-xl border-l-4 border-blue-500 hover:shadow-lg transition-shadow">
+        <div class="dataset-card card-fancy !p-6 border-l-4 border-brand-teal hover:border-brand-teal/50">
           <div class="flex justify-between items-start mb-3">
-            <h4 class="font-semibold text-gray-800 text-lg">{{ dataset.title }}</h4>
+            <h4 class="font-semibold text-brand-blue text-lg">{{ dataset.title }}</h4>
             <div class="flex items-center space-x-1">
               <span class="star-filled text-yellow-500"></span>
               <span class="text-sm text-gray-600">{{ dataset.rating|floatformat:1|default:"0.0" }}</span>
@@ -308,10 +309,10 @@
             {% endif %}
           </div>
           <div class="flex space-x-2">
-            <a href="{% url 'dataset_detail' dataset.slug %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-colors flex-1 text-center">
+            <a href="{% url 'dataset_detail' dataset.slug %}" class="btn-primary !px-4 !py-2 !text-sm flex-1 text-center">
               View Dataset
             </a>
-            <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm transition-colors" onclick="shareDataset('{{ dataset.slug }}')">
+            <button class="btn-secondary !px-3 !py-2 !text-sm" onclick="shareDataset('{{ dataset.slug }}')">
 
               
             </button>
@@ -322,9 +323,9 @@
       {% else %}
       <div class="text-center py-12">
         <div class="text-6xl mb-4"></div>
-        <h3 class="text-xl font-semibold text-gray-700 mb-2">No datasets uploaded yet</h3>
+        <h3 class="text-xl font-semibold text-brand-blue mb-2">No datasets uploaded yet</h3>
         <p class="text-gray-600 mb-4">Start sharing your data with the community!</p>
-        <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors" onclick="document.getElementById('upload-tab').click()">
+        <button class="btn-primary px-6 py-3" onclick="document.getElementById('upload-tab').click()">
           Upload Your First Dataset
         </button>
       </div>
@@ -336,7 +337,7 @@
       <div class="flex justify-center space-x-4">
         <a 
           href="{% url 'upload_dataset' %}"
-          class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg transition-colors no-underline flex items-center justify-center">
+          class="btn-primary !px-8 !py-3 no-underline flex items-center justify-center">
           Upload Dataset
         </a>
       </div>
@@ -344,12 +345,12 @@
 
     <!-- Activity Section -->
     <section id="activity-content" class="p-6 hidden">
-      <h3 class="text-xl font-semibold text-gray-700 mb-6">Recent Activity</h3>
+      <h3 class="text-xl font-semibold font-title text-brand-blue mb-6">Recent Activity</h3>
       <div class="space-y-4">
         <div class="flex items-start space-x-4 p-4 bg-blue-50 rounded-lg">
           <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold"></div>
           <div class="flex-1">
-            <p class="text-gray-700"><strong>Joined</strong> AfriData Platform</p>
+            <p class="text-brand-blue"><strong>Joined</strong> AfriData Platform</p>
             <p class="text-sm text-gray-500">{{ user.date_joined|date:"F d, Y" }}</p>
           </div>
         </div>
@@ -358,7 +359,7 @@
         <div class="flex items-start space-x-4 p-4 bg-green-50 rounded-lg">
           <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-bold"></div>
           <div class="flex-1">
-            <p class="text-gray-700"><strong>Last Login</strong></p>
+            <p class="text-brand-blue"><strong>Last Login</strong></p>
             <p class="text-sm text-gray-500">{{ user.last_login|date:"F d, Y g:i A" }}</p>
           </div>
         </div>
@@ -367,7 +368,7 @@
         <div class="flex items-start space-x-4 p-4 bg-purple-50 rounded-lg">
           <div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold"></div>
           <div class="flex-1">
-            <p class="text-gray-700"><strong>Profile Statistics</strong></p>
+            <p class="text-brand-blue"><strong>Profile Statistics</strong></p>
             <p class="text-sm text-gray-500">{{ user_stats.datasets_uploaded }} datasets uploaded, {{ user_stats.total_downloads }} total downloads</p>
           </div>
         </div>
@@ -376,7 +377,7 @@
         <div class="flex items-start space-x-4 p-4 bg-pink-50 rounded-lg">
           <div class="w-10 h-10 bg-pink-500 rounded-full flex items-center justify-center text-white font-bold"></div>
           <div class="flex-1">
-            <p class="text-gray-700"><strong>Referral Program</strong></p>
+            <p class="text-brand-blue"><strong>Referral Program</strong></p>
             <p class="text-sm text-gray-500">{{ referrals_count }} users referred, earning bonus tokens</p>
           </div>
         </div>
@@ -386,7 +387,7 @@
 
     <!-- Tokens & Transactions Section -->
     <section id="tokens-content" class="p-6 hidden">
-      <h3 class="text-xl font-semibold text-gray-700 mb-6">Token Transactions</h3>
+      <h3 class="text-xl font-semibold text-brand-blue mb-6">Token Transactions</h3>
       
       <!-- Token Summary -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -407,7 +408,7 @@
       <!-- Recent Transactions -->
       {% if recent_transactions %}
       <div class="space-y-3">
-        <h4 class="text-lg font-semibold text-gray-700">Recent Transactions</h4>
+        <h4 class="text-lg font-semibold text-brand-blue">Recent Transactions</h4>
         {% for transaction in recent_transactions %}
         <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
           <div class="flex items-center space-x-3">
@@ -422,7 +423,7 @@
               {% else %}?{% endif %}
             </div>
             <div>
-              <p class="font-medium text-gray-800">
+              <p class="font-medium text-brand-blue">
                 {% if transaction.transaction_type == 'earned' %}Earned Tokens
                 {% elif transaction.transaction_type == 'spent' %}Dataset Download
                 {% elif transaction.transaction_type == 'purchased' %}Token Purchase
@@ -435,7 +436,7 @@
             <p class="font-bold 
               {% if transaction.transaction_type == 'earned' %}text-green-600
               {% elif transaction.transaction_type == 'spent' %}text-red-600
-              {% else %}text-blue-600{% endif %}">
+              {% else %}text-brand-blue{% endif %}">
               {% if transaction.transaction_type == 'spent' %}-{% elif transaction.transaction_type == 'earned' %}+{% endif %}{{ transaction.amount }} 
             </p>
             <p class="text-sm text-gray-500">{{ transaction.created_at|date:"M d, Y" }}</p>
@@ -446,7 +447,7 @@
       {% else %}
       <div class="text-center py-12">
         <div class="text-6xl mb-4"></div>
-        <h3 class="text-xl font-semibold text-gray-700 mb-2">No transactions yet</h3>
+        <h3 class="text-xl font-semibold text-brand-blue mb-2">No transactions yet</h3>
         <p class="text-gray-600">Your token transactions will appear here</p>
       </div>
       {% endif %}
@@ -454,7 +455,7 @@
 
     <!-- Token Purchases Section -->
     <section id="purchases-content" class="p-6 hidden">
-      <h3 class="text-xl font-semibold text-gray-700 mb-6">Token Purchase History</h3>
+      <h3 class="text-xl font-semibold text-brand-blue mb-6">Token Purchase History</h3>
       
       {% if recent_purchases %}
       <div class="space-y-3">
@@ -463,7 +464,7 @@
           <div class="flex items-center space-x-3">
             <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-bold"></div>
             <div>
-              <p class="font-medium text-gray-800">Token Purchase</p>
+              <p class="font-medium text-brand-blue">Token Purchase</p>
               <p class="text-sm text-gray-500">{{ purchase.tokens_purchased }} tokens purchased</p>
               <p class="text-xs text-gray-400">Transaction ID: {{ purchase.payment_reference|slice:":8" }}...</p>
             </div>
@@ -479,7 +480,7 @@
       {% else %}
       <div class="text-center py-12">
         <div class="text-6xl mb-4"></div>
-        <h3 class="text-xl font-semibold text-gray-700 mb-2">No purchases yet</h3>
+        <h3 class="text-xl font-semibold text-brand-blue mb-2">No purchases yet</h3>
         <p class="text-gray-600 mb-4">Purchase tokens to download premium datasets</p>
         <button class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition-colors" onclick="buyTokens()">
           Buy Tokens
@@ -490,7 +491,7 @@
 
     <!-- Reviews Section -->
     <section id="reviews-content" class="p-6 hidden">
-      <h3 class="text-xl font-semibold text-gray-700 mb-6">User Reviews</h3>
+      <h3 class="text-xl font-semibold text-brand-blue mb-6">User Reviews</h3>
       {% if user_stats.total_reviews > 0 %}
       <div class="space-y-4">
         <!-- You can add real reviews here if you have a reviews model -->
@@ -501,7 +502,7 @@
       {% else %}
       <div class="text-center py-12">
         <div class="text-6xl mb-4"></div>
-        <h3 class="text-xl font-semibold text-gray-700 mb-2">No reviews yet</h3>
+        <h3 class="text-xl font-semibold text-brand-blue mb-2">No reviews yet</h3>
         <p class="text-gray-600">Upload datasets to start receiving reviews from the community!</p>
       </div>
       {% endif %}
@@ -516,19 +517,27 @@
   const tabs = ['datasets', 'upload', 'activity', 'tokens', 'purchases', 'reviews'];
   
   tabs.forEach(tab => {
-    document.getElementById(`${tab}-tab`).addEventListener('click', () => {
-      // Hide all content sections
-      tabs.forEach(t => {
-        document.getElementById(`${t}-content`).classList.add('hidden');
-        document.getElementById(`${t}-tab`).classList.remove('border-blue-600', 'text-blue-600');
-        document.getElementById(`${t}-tab`).classList.add('text-gray-600', 'hover:text-blue-600');
+    const tabEl = document.getElementById(`${tab}-tab`);
+    if(tabEl) {
+      tabEl.addEventListener('click', () => {
+        // Hide all content sections
+        tabs.forEach(t => {
+          const contentEl = document.getElementById(`${t}-content`);
+          const tEl = document.getElementById(`${t}-tab`);
+          if(contentEl) contentEl.classList.add('hidden');
+          if(tEl) {
+            tEl.classList.remove('border-brand-blue', 'text-brand-blue', 'font-bold');
+            tEl.classList.add('border-transparent', 'text-gray-600');
+          }
+        });
+        
+        // Show selected content and highlight tab
+        const activeContent = document.getElementById(`${tab}-content`);
+        if(activeContent) activeContent.classList.remove('hidden');
+        tabEl.classList.remove('border-transparent', 'text-gray-600');
+        tabEl.classList.add('border-brand-blue', 'text-brand-blue', 'font-bold');
       });
-      
-      // Show selected content and highlight tab
-      document.getElementById(`${tab}-content`).classList.remove('hidden');
-      document.getElementById(`${tab}-tab`).classList.add('border-blue-600', 'text-blue-600');
-      document.getElementById(`${tab}-tab`).classList.remove('text-gray-600', 'hover:text-blue-600');
-    });
+    }
   });
 
   // File upload preview (optional if file input exists)

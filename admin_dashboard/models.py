@@ -8,6 +8,8 @@ from decimal import Decimal
 
 class AdminLog(models.Model):
     """Track admin activities"""
+    objects = models.Manager()
+    
     ACTION_CHOICES = [
         ('create', 'Create'),
         ('update', 'Update'),
@@ -59,11 +61,12 @@ class AdminLog(models.Model):
         ]
     
     def __str__(self):
-        return f"{self.admin_user.username} - {self.action} {self.model_name} at {self.timestamp}"
+        return f"{self.admin_user.username} - {self.action} - {self.timestamp}"  # type: ignore
 
 
 class DashboardSettings(models.Model):
     """Global dashboard settings"""
+    objects = models.Manager()
     SETTING_TYPES = [
         ('string', 'String'),
         ('integer', 'Integer'),
@@ -91,12 +94,13 @@ class DashboardSettings(models.Model):
         verbose_name = 'Dashboard Setting'
         verbose_name_plural = 'Dashboard Settings'
     
-    def __str__(self):
-        return self.key
+    def __str__(self) -> str:
+        return self.key  # type: ignore
 
 
 class SystemMetrics(models.Model):
     """Store system metrics for dashboard"""
+    objects = models.Manager()
     METRIC_CATEGORIES = [
         ('users', 'Users'),
         ('datasets', 'Datasets'),
@@ -124,11 +128,12 @@ class SystemMetrics(models.Model):
         ]
     
     def __str__(self):
-        return f"{self.metric_name}: {self.metric_value} at {self.timestamp}"
+        return f"{self.metric_name}: {self.metric_value} at {self.timestamp}"  # type: ignore
 
 
 class AdminNotification(models.Model):
     """Notifications for admin users"""
+    objects = models.Manager()
     PRIORITY_CHOICES = [
         ('low', 'Low'),
         ('medium', 'Medium'),
@@ -172,7 +177,7 @@ class AdminNotification(models.Model):
         ]
     
     def __str__(self):
-        return self.title
+        return f"{self.get_priority_display()} - {self.title}"  # type: ignore
     
     def is_expired(self):
         if self.expires_at:
@@ -182,6 +187,7 @@ class AdminNotification(models.Model):
 
 class BulkAction(models.Model):
     """Track bulk actions performed in admin"""
+    objects = models.Manager()
     STATUS_CHOICES = [
         ('pending', 'Pending'),
         ('processing', 'Processing'),
@@ -228,16 +234,17 @@ class BulkAction(models.Model):
         ]
     
     def __str__(self):
-        return f"{self.action_name} on {self.model_name} by {self.admin_user.username}"
+        return f"{self.action_type} - {self.get_status_display()} ({self.total_items} items)"  # type: ignore
     
     def progress_percentage(self):
         if self.total_items == 0:
             return 0
-        return (self.processed_items / self.total_items) * 100
+        return (self.processed_items / self.total_items) * 100  # type: ignore
 
 
 class TokenAdjustment(models.Model):
     """Track manual token adjustments by admins"""
+    objects = models.Manager()
     ADJUSTMENT_TYPES = [
         ('bonus', 'Bonus Award'),
         ('penalty', 'Penalty Deduction'),
@@ -276,11 +283,12 @@ class TokenAdjustment(models.Model):
         ]
     
     def __str__(self):
-        return f"{self.admin_user.username} adjusted {self.target_user.username} by {self.amount} tokens"
+        return f"{self.admin_user.username} adjusted {self.target_user.username} by {self.amount} tokens"  # type: ignore
 
 
 class UserModerationAction(models.Model):
     """Track user moderation actions"""
+    objects = models.Manager()
     ACTION_TYPES = [
         ('warning', 'Warning'),
         ('suspension', 'Temporary Suspension'),
@@ -323,7 +331,7 @@ class UserModerationAction(models.Model):
         ]
     
     def __str__(self):
-        return f"{self.action_type} for {self.target_user.username} by {self.admin_user.username}"
+        return f"{self.action_type} for {self.target_user.username} by {self.admin_user.username}"  # type: ignore
     
     def is_expired(self):
         if self.expires_at:
@@ -333,6 +341,8 @@ class UserModerationAction(models.Model):
 
 class DatasetModerationQueue(models.Model):
     """Queue for datasets requiring moderation"""
+    objects = models.Manager()
+    
     STATUS_CHOICES = [
         ('pending', 'Pending Review'),
         ('approved', 'Approved'),
@@ -366,11 +376,12 @@ class DatasetModerationQueue(models.Model):
         ]
     
     def __str__(self):
-        return f"Moderation for {self.dataset.title} - {self.status}"
+        return f"{self.dataset.title} - {self.get_status_display()}"  # type: ignore
 
 
 class AdminReport(models.Model):
     """Store generated admin reports"""
+    objects = models.Manager()
     REPORT_TYPES = [
         ('user_analytics', 'User Analytics'),
         ('dataset_analytics', 'Dataset Analytics'),
@@ -413,4 +424,32 @@ class AdminReport(models.Model):
         ]
     
     def __str__(self):
-        return f"{self.name} - {self.report_type} ({self.generated_at.date()})"
+        return f"{self.name} - {self.report_type} ({self.generated_at.date()})"  # type: ignore
+
+class NewsletterCampaign(models.Model):
+    """Store sent newsletter campaigns"""
+    objects = models.Manager()
+    STATUS_CHOICES = [
+        ('draft', 'Draft'),
+        ('sent', 'Sent'),
+    ]
+    
+    subject = models.CharField(max_length=255)
+    body_text = models.TextField()
+    body_html = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='created_campaigns'
+    )
+    sent_at = models.DateTimeField(null=True, blank=True)
+    recipient_count = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        
+    def __str__(self):
+        return f"{self.subject} ({self.status})"

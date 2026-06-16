@@ -7,6 +7,7 @@ import string
 
 class APIKey(models.Model):
     """Model to store API keys for users"""
+    objects = models.Manager()
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='api_keys')
     name = models.CharField(max_length=100, help_text="Human-readable name for this API key")
     key = models.CharField(max_length=64, unique=True, editable=False)
@@ -19,7 +20,7 @@ class APIKey(models.Model):
     
     def save(self, *args, **kwargs):
         if not self.key:
-            self.key = self.generate_key()
+            self.key = self.generate_key()  # type: ignore
         super().save(*args, **kwargs)
     
     def generate_key(self):
@@ -27,10 +28,11 @@ class APIKey(models.Model):
         return 'ak_' + ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(40))
     
     def __str__(self):
-        return f"{self.user.email} - {self.name}"
+        return f"{self.user.email} - {self.name}"  # type: ignore
 
 class APIUsage(models.Model):
     """Track API usage statistics"""
+    objects = models.Manager()
     api_key = models.ForeignKey(APIKey, on_delete=models.CASCADE, related_name='usage_records')
     endpoint = models.CharField(max_length=200)
     method = models.CharField(max_length=10)
@@ -48,4 +50,4 @@ class APIUsage(models.Model):
         ]
     
     def __str__(self):
-        return f"{self.api_key.user.email} - {self.endpoint} - {self.timestamp}"
+        return f"{self.api_key.user.email} - {self.endpoint} - {self.timestamp}"  # type: ignore

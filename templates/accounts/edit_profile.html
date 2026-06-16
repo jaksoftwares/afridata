@@ -247,16 +247,7 @@
             <p>Update your information and preferences</p>
         </div>
         
-        <!-- Display messages -->
-        {% if messages %}
-            <div class="messages" style="padding: 1rem 2rem 0;">
-                {% for message in messages %}
-                    <div class="message {{ message.tags }}">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
+
         
         <form method="post" enctype="multipart/form-data" class="profile-form">
             {% csrf_token %}
@@ -528,15 +519,6 @@ document.getElementById('full_name').addEventListener('input', function() {
     }
 });
 
-// Auto-hide messages after 5 seconds
-document.addEventListener('DOMContentLoaded', function() {
-    const messages = document.querySelectorAll('.message');
-    messages.forEach(message => {
-        setTimeout(() => {
-            message.style.opacity = '0';
-            setTimeout(() => message.remove(), 300);
-        }, 5000);
-    });
-});
+
 </script>
 {% endblock %}

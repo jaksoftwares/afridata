@@ -90,22 +90,23 @@
                     <!-- Newsletter Signup -->
                     <div class="mb-6">
                         <p class="text-gray-300 text-sm mb-4">Get weekly updates on new datasets and features</p>
-                                <input 
-                                    type="email" 
-                                    id="newsletterEmail"
-                                    placeholder="Enter your email address" 
-                                    class="newsletter-input w-full px-4 py-3 rounded-brand-btn text-gray-900 border-0 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-teal shadow-inner"
-                                />
-                                <button 
-                                    onclick="subscribeNewsletter()"
-                                    class="subscribe-btn bg-brand-teal hover:bg-opacity-90 w-full px-4 py-3 rounded-brand-btn font-bold text-white focus:outline-none transition-all shadow-md border-0"
-                                >
-                                    Subscribe to Updates
-                                </button>
-                            <div id="successMessage" class="success-message hidden mt-2 text-green-400 text-sm font-medium">
-                                Successfully subscribed! Welcome to AfriData community.
-                            </div>
-                        </div>
+                        <form method="post" action="{% url 'home:subscribe_newsletter' %}" class="space-y-3">
+                            {% csrf_token %}
+                            <input 
+                                type="email" 
+                                name="email"
+                                id="newsletterEmail"
+                                placeholder="Enter your email address" 
+                                required
+                                class="newsletter-input w-full px-4 py-3 rounded-brand-btn text-gray-900 border-0 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-teal shadow-inner"
+                            />
+                            <button 
+                                type="submit"
+                                class="subscribe-btn bg-brand-teal hover:bg-opacity-90 w-full px-4 py-3 rounded-brand-btn font-bold text-white focus:outline-none transition-all shadow-md border-0"
+                            >
+                                Subscribe to Updates
+                            </button>
+                        </form>
                     </div>
 
                     <!-- Social Media -->
@@ -157,35 +158,6 @@
     </div>
 </footer>
 <script>
-    function subscribeNewsletter() {
-        const email = document.getElementById('newsletterEmail').value;
-        const successMessage = document.getElementById('successMessage');
-  
-        if (email && email.includes('@')) {
-            successMessage.classList.remove('hidden');
-            successMessage.classList.add('block');
-            document.getElementById('newsletterEmail').value = '';
-    
-            // Hide success message after 3 seconds
-            setTimeout(() => {
-                successMessage.classList.remove('block');
-                successMessage.classList.add('hidden');
-            }, 3000);
-        } else {
-            alert('Please enter a valid email address');
-        }
-    }
-
-    // Add enter key support for newsletter signup
-    const emailInput = document.getElementById('newsletterEmail');
-    if (emailInput) {
-        emailInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                subscribeNewsletter();
-            }
-        });
-    }
-
     // Intersection Observer for animation trigger
     document.addEventListener("DOMContentLoaded", function() {
         const observerOptions = {

@@ -3,6 +3,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
+from django.conf import settings
 from django.db.models import Count, Q, Avg, Sum, F, Max
 from django.http import JsonResponse, HttpResponse, Http404
 from django.utils import timezone
@@ -161,8 +162,8 @@ def user_management(request):
     
     if search_query:
         users = users.filter(
-            Q(email__icontains=search_query) |
-            Q(full_name__icontains=search_query) |
+            Q(email__icontains=search_query) |  # type: ignore
+            Q(full_name__icontains=search_query) |  # type: ignore
             Q(username__icontains=search_query)
         )
     
@@ -268,8 +269,8 @@ def dataset_management(request):
     
     if search_query:
         datasets = datasets.filter(
-            Q(title__icontains=search_query) |
-            Q(bio__icontains=search_query) |
+            Q(title__icontains=search_query) |  # type: ignore
+            Q(bio__icontains=search_query) |  # type: ignore
             Q(topics__icontains=search_query)
         )
     
@@ -350,7 +351,7 @@ def moderate_dataset(request, queue_id):
         messages.error(request, "Invalid moderation status.")
         return redirect('admin_dashboard:moderation_queue')
     
-    with transaction.atomic():
+    with transaction.atomic():  # type: ignore
         queue_item.status = new_status
         queue_item.reviewer_notes = reviewer_notes
         queue_item.reviewed_by = request.user
@@ -435,7 +436,7 @@ def adjust_user_tokens(request, user_id):
             messages.error(request, "Reason is required for token adjustments.")
             return redirect('admin_dashboard:user_detail', user_id=user_id)
         
-        with transaction.atomic():
+        with transaction.atomic():  # type: ignore
             # Create token adjustment record
             adjustment = TokenAdjustment.objects.create(
                 admin_user=request.user,
@@ -513,7 +514,7 @@ def moderate_user(request, user_id):
         return redirect('admin_dashboard:user_detail', user_id=user_id)
     
     try:
-        with transaction.atomic():
+        with transaction.atomic():  # type: ignore
             moderation_action = UserModerationAction.objects.create(
                 admin_user=request.user,
                 target_user=user,
@@ -817,8 +818,8 @@ def system_logs(request):
     search_query = request.GET.get('search', '')
     if search_query:
         logs = logs.filter(
-            Q(ip_address__icontains=search_query) |
-            Q(description__icontains=search_query) |
+            Q(ip_address__icontains=search_query) |  # type: ignore
+            Q(description__icontains=search_query) |  # type: ignore
             Q(object_repr__icontains=search_query)
         )
     
@@ -1265,3 +1266,82 @@ def create_notification(request):
         messages.error(request, f"Error creating notification: {str(e)}")
     
     return redirect('admin_dashboard:notifications')
+
+from django.core.mail import send_mass_mail
+from home.models import NewsletterSubscriber
+from .models import NewsletterCampaign
+
+@user_passes_test(is_superuser)
+def newsletter_campaigns(request):
+    """Manage and send newsletter campaigns"""
+    if request.method == 'POST':
+        subject = request.POST.get('subject')
+        body_text = request.POST.get('body_text')
+        body_html = request.POST.get('body_html', '')
+        action = request.POST.get('action')
+        
+        if not subject or not body_text:
+            messages.error(request, "Subject and Body text are required.")
+            return redirect('admin_dashboard:newsletter_campaigns')
+            
+        campaign = NewsletterCampaign.objects.create(
+            subject=subject,
+            body_text=body_text,
+            body_html=body_html,
+            created_by=request.user,
+            status='draft' if action == 'draft' else 'sent'
+        )
+        
+        if action == 'send':
+            subscribers = NewsletterSubscriber.objects.filter(is_active=True)
+            recipient_count = subscribers.count()
+            
+            if recipient_count > 0:
+                messages_to_send = []
+                from_email = settings.DEFAULT_FROM_EMAIL
+                
+                for subscriber in subscribers:
+                    # Depending on email backend, this sends plain text but could be expanded to multipart
+                    messages_to_send.append((subject, body_text, from_email, [subscriber.email]))
+                
+                try:
+                    send_mass_mail(messages_to_send, fail_silently=False)
+                    campaign.status = 'sent'
+                    campaign.sent_at = timezone.now()
+                    campaign.recipient_count = recipient_count
+                    campaign.save()
+                    
+                    log_admin_action(
+                        request.user, 'create', 'NewsletterCampaign',
+                        campaign, f"Sent newsletter '{subject}' to {recipient_count} subscribers",
+                        request=request
+                    )
+                    
+                    messages.success(request, f"Successfully sent newsletter to {recipient_count} subscribers.")
+                except Exception as e:
+                    campaign.status = 'draft'
+                    campaign.save()
+                    messages.error(request, f"Failed to send emails: {str(e)}")
+            else:
+                messages.warning(request, "No active subscribers found. Campaign saved as draft.")
+                campaign.status = 'draft'
+                campaign.save()
+                
+        else:
+            messages.success(request, "Newsletter campaign saved as draft.")
+            
+        return redirect('admin_dashboard:newsletter_campaigns')
+        
+    campaigns = NewsletterCampaign.objects.order_by('-created_at')
+    
+    paginator = Paginator(campaigns, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    active_subscribers_count = NewsletterSubscriber.objects.filter(is_active=True).count()
+    
+    context = {
+        'page_obj': page_obj,
+        'active_subscribers_count': active_subscribers_count
+    }
+    return render(request, 'admin_dashboard/newsletter_campaigns.html', context)

@@ -19,4 +19,7 @@ urlpatterns = [
     
     # Contact Us
     path('contact/', views.contact_us, name='contact_us'),
+    
+    # Newsletter
+    path('subscribe/', views.subscribe_newsletter, name='subscribe_newsletter'),
 ]

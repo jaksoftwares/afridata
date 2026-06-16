@@ -299,5 +299,146 @@
       }
     },
     "created_at": "2026-06-08T14:13:28.379218"
+  },
+  "environment_and_climate_change_global_climate_&_energy_transition_2000-2026": {
+    "domain": "environment_and_climate_change",
+    "dataset_name": "global climate & energy transition 2000-2026",
+    "raw_columns": [
+      "year_month",
+      "year",
+      "month",
+      "region",
+      "temp_anomaly_c",
+      "temp_anomaly_baseline",
+      "co2_ppm"
+    ],
+    "schema": {
+      "domain": "environment_and_climate_change",
+      "alignment_confidence": 0.85,
+      "official_standard": {
+        "reporting_period": "Utf8",
+        "reporting_year": "Int33",
+        "reporting_month": "Int32",
+        "geographic_region": "Utf8",
+        "temperature_anomaly_celsius": "Float64",
+        "anomaly_baseline_period": "Utf8",
+        "co2_concentration_ppm": "Float64"
+      },
+      "mapping_instructions": {
+        "year_month": "reporting_period",
+        "year": "reporting_year",
+        "month": "reporting_month",
+        "region": "geographic_region",
+        "temp_anomaly_c": "temperature_anomaly_celsius",
+        "temp_anomaly_baseline": "anomaly_baseline_period",
+        "co2_ppm": "co2_concentration_ppm"
+      },
+      "transformation_needed": {
+        "reporting_period": null,
+        "reporting_year": "cast(Int32)",
+        "reporting_month": "cast(Int32)",
+        "geographic_region": null,
+        "temperature_anomaly_celsius": "cast(Float64)",
+        "anomaly_baseline_period": null,
+        "co2_concentration_ppm": "cast(Float64)"
+      }
+    },
+    "created_at": "2026-06-10T03:15:38.861307"
+  },
+  "afcfta_digital_trade_and_e-commerce_ecommerce_2026": {
+    "domain": "afcfta digital trade and e-commerce",
+    "dataset_name": "ecommerce 2026",
+    "raw_columns": [
+      "purchase_id",
+      "order_id",
+      "user_id",
+      "product_id",
+      "session_id",
+      "interaction_id",
+      "quantity",
+      "unit_price",
+      "total_amount",
+      "order_date"
+    ],
+    "schema": {
+      "domain": "AfCFTA Digital Trade and e-Commerce",
+      "alignment_confidence": 0.95,
+      "official_standard": {
+        "purchase_id": "Utf8",
+        "order_id": "Utf8",
+        "user_id": "Utf8",
+        "product_id": "Utf8",
+        "session_id": "Utf8",
+        "interaction_id": "Utf8",
+        "quantity": "Int64",
+        "unit_price": "Float64",
+        "total_amount": "Float64",
+        "order_date": "Datetime"
+      },
+      "mapping_instructions": {
+        "purchase_id": "purchase_id",
+        "order_id": "order_id",
+        "user_id": "user_id",
+        "product_id": "product_id",
+        "session_id": "session_id",
+        "interaction_id": "interaction_id",
+        "quantity": "quantity",
+        "unit_price": "unit_price",
+        "total_amount": "total_amount",
+        "order_date": "order_date"
+      },
+      "transformation_needed": {
+        "purchase_id": null,
+        "order_id": null,
+        "user_id": null,
+        "product_id": null,
+        "session_id": null,
+        "interaction_id": null,
+        "quantity": "cast(Int64)",
+        "unit_price": "cast(Float64)",
+        "total_amount": "cast(Float64)",
+        "order_date": "cast(Datetime)"
+      }
+    },
+    "created_at": "2026-06-10T08:42:10.694568"
+  },
+  "demographics_and_regional_metadata_pupil_data": {
+    "domain": "demographics_and_regional_metadata",
+    "dataset_name": "pupil data",
+    "raw_columns": [
+      "Country Code",
+      "Region",
+      "IncomeGroup",
+      "SpecialNotes",
+      "TableName",
+      ""
+    ],
+    "schema": {
+      "domain": "demographics_and_regional_metadata",
+      "alignment_confidence": 0.95,
+      "official_standard": {
+        "country_code": "Utf8",
+        "region": "Utf8",
+        "income_group": "Utf8",
+        "special_notes": "Utf8",
+        "country_name": "Utf8"
+      },
+      "mapping_instructions": {
+        "Country Code": "country_code",
+        "Region": "region",
+        "IncomeGroup": "income_group",
+        "SpecialNotes": "special_notes",
+        "TableName": "country_name",
+        "": "__DROP__"
+      },
+      "transformation_needed": {
+        "country_code": null,
+        "region": null,
+        "income_group": null,
+        "special_notes": null,
+        "country_name": null
+      }
+    },
+    "created_at": "2026-06-10T09:54:58.032702"
   }
 }
