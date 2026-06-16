@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Upload New Dataset - AfriData{% endblock %}
+{% block title %}Edit Dataset - AfriData{% endblock %}
 
 {% block header_class %}gradient-header{% endblock %}
 
@@ -9,7 +9,7 @@
 <div class="relative py-16 px-4">
     <div class="max-w-4xl mx-auto text-center">
         <h1 class="text-3xl md:text-5xl font-bold mb-4 tracking-tight !text-white">
-            Share Your <span class="text-brand-teal">Data</span>
+            Edit Your <span class="text-brand-teal">Data</span>
         </h1>
         <p class="text-lg text-white/80 font-light max-w-2xl mx-auto leading-relaxed">
             Contribute to the African research ecosystem and earn tokens for high-quality contributions.
@@ -83,7 +83,7 @@
                             <label for="id_title" class="block text-sm font-bold text-brand-blue mb-2.5 uppercase tracking-wide">
                                 Dataset Title *
                             </label>
-                            <input type="text" name="title" id="id_title" required
+                            <input type="text" name="title" id="id_title" required value="{{ dataset.title }}"
                                    class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal transition-all outline-none"
                                    placeholder="e.g. Kenya Market Trends 2024">
                             <div id="title-error" class="text-red-500 text-xs mt-2 font-medium hidden"></div>
@@ -96,16 +96,16 @@
                             <div class="relative">
                                 <select name="dataset_type" id="id_dataset_type" required
                                         class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal transition-all outline-none appearance-none">
-                                    <option value="" disabled selected>Select format...</option>
-                                    <option value="csv">CSV (Comma Separated)</option>
-                                    <option value="excel">Excel/XLSX</option>
-                                    <option value="json">JSON Structure</option>
-                                    <option value="pdf">PDF Document</option>
-                                    <option value="txt">Plain Text</option>
-                                    <option value="xml">XML Data</option>
-                                    <option value="zip">ZIP Archive</option>
-                                    <option value="yaml">YAML/YML</option>
-                                    <option value="parquet">Apache Parquet</option>
+                                    <option value="" disabled>Select format...</option>
+                                    <option value="csv" {% if dataset.dataset_type == 'csv' %}selected{% endif %}>CSV (Comma Separated)</option>
+                                    <option value="excel" {% if dataset.dataset_type == 'excel' %}selected{% endif %}>Excel/XLSX</option>
+                                    <option value="json" {% if dataset.dataset_type == 'json' %}selected{% endif %}>JSON Structure</option>
+                                    <option value="pdf" {% if dataset.dataset_type == 'pdf' %}selected{% endif %}>PDF Document</option>
+                                    <option value="txt" {% if dataset.dataset_type == 'txt' %}selected{% endif %}>Plain Text</option>
+                                    <option value="xml" {% if dataset.dataset_type == 'xml' %}selected{% endif %}>XML Data</option>
+                                    <option value="zip" {% if dataset.dataset_type == 'zip' %}selected{% endif %}>ZIP Archive</option>
+                                    <option value="yaml" {% if dataset.dataset_type == 'yaml' %}selected{% endif %}>YAML/YML</option>
+                                    <option value="parquet" {% if dataset.dataset_type == 'parquet' %}selected{% endif %}>Apache Parquet</option>
                                 </select>
                                 <div class="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
                                     <i class="fas fa-chevron-down text-xs"></i>
@@ -120,7 +120,7 @@
                             </label>
                             <textarea name="topics" id="id_topics" required rows="2"
                                       class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal transition-all outline-none resize-none"
-                                      placeholder="e.g. agriculture, demographics, economics"></textarea>
+                                      placeholder="e.g. agriculture, demographics, economics">{{ dataset.topics }}</textarea>
                             <p class="text-[11px] text-gray-400 mt-2 font-medium">Comma-separated tags for better visibility</p>
                             <div id="topics-error" class="text-red-500 text-xs mt-2 font-medium hidden"></div>
                         </div>
@@ -148,14 +148,14 @@
                                 </div>
                             </div>
 
-                            <div id="file-selected" class="hidden">
+                            <div id="file-selected">
                                 <div class="w-20 h-20 bg-brand-green/10 rounded-full flex items-center justify-center mx-auto mb-6">
                                     <i class="fas fa-file-csv text-3xl text-brand-green"></i>
                                 </div>
-                                <p class="text-brand-green font-bold text-lg mb-1 truncate max-w-[250px]" id="selected-file-name"></p>
-                                <p class="text-xs text-gray-400 font-medium mb-6" id="selected-file-size"></p>
-                                <button type="button" id="remove-file" class="bg-red-50 text-red-500 px-4 py-2 rounded-lg text-xs font-bold hover:bg-red-100 transition-colors">
-                                    <i class="fas fa-trash-alt mr-2"></i>Change File
+                                <p class="text-brand-green font-bold text-lg mb-1 truncate max-w-[250px]" id="selected-file-name">Existing file: {{ dataset.file.name|default:"None" }}</p>
+                                <p class="text-xs text-gray-400 font-medium mb-6" id="selected-file-size">Upload a new file to replace it, or leave as is.</p>
+                                <button type="button" id="remove-file" class="bg-brand-blue text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-brand-blue/90 transition-colors">
+                                    <i class="fas fa-upload mr-2"></i>Upload New File
                                 </button>
                             </div>
                         </div>
@@ -171,7 +171,7 @@
                     </label>
                     <textarea name="bio" id="id_bio" required rows="4"
                               class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal transition-all outline-none"
-                              placeholder="Describe the context, methodology, and key characteristics of your data..."></textarea>
+                              placeholder="Describe the context, methodology, and key characteristics of your data...">{{ dataset.bio }}</textarea>
                     <div id="bio-error" class="text-red-500 text-xs mt-2 font-medium hidden"></div>
                 </div>
 
@@ -198,39 +198,39 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                             <div class="md:col-span-2">
                                 <label for="id_original_author" class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Original Author / Organization</label>
-                                <input type="text" name="original_author" id="id_original_author" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal outline-none transition-all text-sm">
+                                <input type="text" name="original_author" id="id_original_author" value="{{ dataset.original_author|default:'' }}" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal outline-none transition-all text-sm">
                             </div>
                             <div>
                                 <label for="id_data_source" class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Data Source URL</label>
-                                <input type="text" name="data_source" id="id_data_source" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal outline-none transition-all text-sm">
+                                <input type="text" name="data_source" id="id_data_source" value="{{ dataset.data_source|default:'' }}" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal outline-none transition-all text-sm">
                             </div>
                             <div>
                                 <label for="id_collection_date" class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Collection Date</label>
-                                <input type="date" name="collection_date" id="id_collection_date" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal outline-none transition-all text-sm">
+                                <input type="date" name="collection_date" id="id_collection_date" value="{{ dataset.collection_date|date:'Y-m-d'|default:'' }}" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal outline-none transition-all text-sm">
                             </div>
                             <div>
                                 <label for="id_language" class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Language</label>
-                                <input type="text" name="language" id="id_language" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal outline-none transition-all text-sm" placeholder="e.g. English, French, Swahili">
+                                <input type="text" name="language" id="id_language" value="{{ dataset.language|default:'' }}" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal outline-none transition-all text-sm" placeholder="e.g. English, French, Swahili">
                             </div>
                             <div>
                                 <label for="id_dataset_license" class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">License Type</label>
-                                <input type="text" name="dataset_license" id="id_dataset_license" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal outline-none transition-all text-sm" placeholder="e.g. CC BY 4.0">
+                                <input type="text" name="dataset_license" id="id_dataset_license" value="{{ dataset.dataset_license|default:'' }}" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal outline-none transition-all text-sm" placeholder="e.g. CC BY 4.0">
                             </div>
                             <div>
                                 <label for="id_update_frequency" class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Update Frequency</label>
-                                <input type="text" name="update_frequency" id="id_update_frequency" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal outline-none transition-all text-sm" placeholder="e.g. Monthly, Quarterly">
+                                <input type="text" name="update_frequency" id="id_update_frequency" value="{{ dataset.update_frequency|default:'' }}" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal outline-none transition-all text-sm" placeholder="e.g. Monthly, Quarterly">
                             </div>
                             <div class="md:col-span-2">
                                 <label for="id_geographic_coverage" class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Geographic Coverage</label>
-                                <input type="text" name="geographic_coverage" id="id_geographic_coverage" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal outline-none transition-all text-sm" placeholder="e.g. Sub-Saharan Africa, East Africa, Nigeria">
+                                <input type="text" name="geographic_coverage" id="id_geographic_coverage" value="{{ dataset.geographic_coverage|default:'' }}" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal outline-none transition-all text-sm" placeholder="e.g. Sub-Saharan Africa, East Africa, Nigeria">
                             </div>
                             <div class="md:col-span-2">
                                 <label for="id_temporal_coverage" class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Temporal Coverage</label>
-                                <input type="text" name="temporal_coverage" id="id_temporal_coverage" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal outline-none transition-all text-sm" placeholder="e.g. 2010 - 2023, Q1 2024">
+                                <input type="text" name="temporal_coverage" id="id_temporal_coverage" value="{{ dataset.temporal_coverage|default:'' }}" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal outline-none transition-all text-sm" placeholder="e.g. 2010 - 2023, Q1 2024">
                             </div>
                             <div class="md:col-span-2">
                                 <label for="id_usage_notes" class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Usage Notes / Prerequisites</label>
-                                <textarea name="usage_notes" id="id_usage_notes" rows="3" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal outline-none transition-all text-sm resize-none"></textarea>
+                                <textarea name="usage_notes" id="id_usage_notes" rows="3" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal outline-none transition-all text-sm resize-none">{{ dataset.usage_notes|default:'' }}</textarea>
                             </div>
                         </div>
                     </div>
@@ -246,7 +246,7 @@
                     <button type="submit" 
                             id="submit-btn"
                             class="px-8 py-4 bg-brand-blue text-white rounded-xl hover:bg-brand-blue/90 shadow-xl shadow-brand-blue/20 transition-all uppercase tracking-widest text-xs font-bold min-w-[200px]">
-                        <span id="submit-text">Finalize Upload</span>
+                        <span id="submit-text">Save Changes</span>
                     </button>
                 </div>
             </form>
@@ -478,57 +478,13 @@
     }
 
     form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        clearFieldErrors();
-        hideMessage();
-        
+        // Standard form submission for edit
         submitBtn.disabled = true;
-        submitText.textContent = 'Processing...';
-        progressContainer.classList.remove('hidden');
-        
-        let progress = 0;
-        const progressInterval = setInterval(() => {
-            progress += Math.random() * 15;
-            if (progress > 95) progress = 95;
-            progressFill.style.width = progress + '%';
-            progressPercent.textContent = Math.round(progress) + '%';
-        }, 300);
-        
-        const formData = new FormData(form);
-        
-        fetch(window.location.href, {
-            method: 'POST',
-            body: formData,
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(response => response.json())
-        .then(data => {
-            clearInterval(progressInterval);
-            progressFill.style.width = '100%';
-            progressPercent.textContent = '100%';
-            
-            if (data.success) {
-                showMessage('success', data.message, data.tokens_earned);
-                setTimeout(() => {
-                    window.location.href = data.redirect_url;
-                }, 2000);
-            } else {
-                if (data.errors) showFieldErrors(data.errors);
-                showMessage('error', data.message || 'Upload failed. Please check the fields below.');
-                submitBtn.disabled = false;
-                submitText.textContent = 'Finalize Upload';
-            }
-        })
-        .catch(error => {
-            clearInterval(progressInterval);
-            showMessage('error', 'A connection error occurred. Reverting to standard submission...');
-            setTimeout(() => form.submit(), 1500);
-        });
+        submitText.textContent = 'Saving...';
     });
 
     cancelBtn.addEventListener('click', () => {
-        window.history.length > 1 ? window.history.back() : window.location.href = '{% url "home" %}';
+        window.location.href = '{% url "dataset_detail" slug=dataset.slug %}';
     });
 </script>
 {% endblock %}

@@ -168,6 +168,7 @@ class LoginAttempt(models.Model):
         return f"{status} login attempt for {self.email} at {self.timestamp}"
 
 class TokenPurchase(models.Model):
+    objects = models.Manager()
     """Track token purchases"""
     PACKAGE_CHOICES = [
         ('basic', '100 Tokens - $10'),
@@ -242,6 +243,7 @@ def save_user_profile(sender, instance, **kwargs):
         instance.profile.save()
 
 class EmailVerificationToken(models.Model):
+    objects = models.Manager()
     """Store email verification codes"""
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='verification_token')
     code = models.CharField(max_length=6)

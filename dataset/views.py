@@ -15,7 +15,7 @@ import pandas as pd
 import numpy as np
 import io
 from django.views.decorators.csrf import csrf_exempt
-from .forms import DatasetUploadForm
+from .forms import DatasetUploadForm, DatasetEditForm
 import json
 from django.http import JsonResponse
 from django.urls import reverse
@@ -743,6 +743,7 @@ def dataset_list(request):
             'quality_tier': dataset.get_quality_tier_display(),
             'file_size_mb': round(dataset.file_size_mb, 2),
             'has_documentation': dataset.has_documentation,
+            'cover_photo': dataset.cover_photo.url if dataset.cover_photo else None,
         })
     
     context = {
@@ -876,4 +877,44 @@ def generate_metadata(request, slug):
         return JsonResponse({
             'success': False, 
             'error': f'Failed to trigger metadata pipeline: {str(e)}'
-        }, status=500)
+        }, status=500)
+
+@login_required
+def edit_dataset(request, slug):
+    """View to allow authors to edit their dataset"""
+    dataset = get_object_or_404(Dataset, slug=slug)
+    
+    # Ensure only author can edit
+    if request.user != dataset.author:
+        messages.error(request, 'You do not have permission to edit this dataset.')
+        return redirect('dataset_detail', slug=slug)
+        
+    if request.method == 'POST':
+        form = DatasetEditForm(request.POST, request.FILES, instance=dataset)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Dataset updated successfully!')
+            return redirect('dataset_detail', slug=dataset.slug)
+    else:
+        form = DatasetEditForm(instance=dataset)
+        
+    context = {
+        'form': form,
+        'dataset': dataset,
+    }
+    return render(request, 'dataset/edit.html', context)
+
+@login_required
+@require_POST
+def delete_dataset(request, slug):
+    """View to allow authors to delete their dataset"""
+    dataset = get_object_or_404(Dataset, slug=slug)
+    
+    # Ensure only author can delete
+    if request.user != dataset.author:
+        messages.error(request, 'You do not have permission to delete this dataset.')
+        return redirect('dataset_detail', slug=slug)
+        
+    dataset.delete()
+    messages.success(request, 'Dataset deleted successfully!')
+    return redirect('user_dashboard')

@@ -38,6 +38,7 @@ class Dataset(models.Model):
     file = models.FileField(upload_to='datasets/', db_column='file_path')
     dataset_type = models.CharField(max_length=20, choices=DATASET_TYPES, db_column='file_type')
     bio = models.TextField()
+    cover_photo = models.ImageField(upload_to='dataset_covers/', null=True, blank=True, help_text="Relevant cover photo for the dataset")
     topics = models.CharField(max_length=500, help_text="Comma-separated topics")
     rating = models.FloatField(default=0.0, validators=[MinValueValidator(0.0), MaxValueValidator(5.0)])
     downloads = models.PositiveIntegerField(default=0)

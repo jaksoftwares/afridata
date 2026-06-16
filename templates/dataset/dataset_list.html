@@ -176,7 +176,7 @@
 
             <!-- Dataset Cover Image Placeholder -->
             <div class="h-44 w-full relative overflow-hidden bg-gray-100">
-                <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=800&h=400" 
+                <img src="{% if dataset.cover_photo %}{{ dataset.cover_photo }}{% else %}https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=800&h=400{% endif %}" 
                      alt="Dataset Cover" 
                      class="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700">
                 
@@ -284,8 +284,8 @@
             </a>
             {% endif %}
 
-            <div class="flex items-center px-6 text-sm font-bold text-gray-500 uppercase tracking-widest border-x border-gray-50">
-                Page {{ page_obj.number }} <span class="mx-2 text-gray-200">/</span> {{ page_obj.paginator.num_pages }}
+            <div class="flex items-center px-6 text-sm font-bold text-gray-500 uppercase tracking-widest border-x border-gray-50 whitespace-nowrap">
+                <span>Page {{ page_obj.number }} <span class="mx-2 text-gray-200">/</span> {{ page_obj.paginator.num_pages }}</span>
             </div>
 
             {% if page_obj.has_next %}

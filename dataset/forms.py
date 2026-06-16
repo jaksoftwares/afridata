@@ -19,7 +19,7 @@ DATASET_TYPE_CHOICES = [
 class DatasetUploadForm(forms.ModelForm):
     class Meta:
         model = Dataset
-        fields = ['title', 'file', 'dataset_type', 'bio', 'topics', 'original_author', 'data_source', 'collection_date', 'language', 'dataset_license', 'update_frequency', 'geographic_coverage', 'temporal_coverage', 'usage_notes']
+        fields = ['title', 'file', 'cover_photo', 'dataset_type', 'bio', 'topics', 'original_author', 'data_source', 'collection_date', 'language', 'dataset_license', 'update_frequency', 'geographic_coverage', 'temporal_coverage', 'usage_notes']
         widgets = {
             'title': forms.TextInput(attrs={
                 'class': 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
@@ -29,6 +29,10 @@ class DatasetUploadForm(forms.ModelForm):
             'file': forms.FileInput(attrs={
                 'accept': '.csv,.xlsx,.xls,.pdf,.txt,.json,.xml,.zip,.yaml,.yml,.parquet',
                 'style': 'display: none;'  # Hidden as we use custom upload area
+            }),
+            'cover_photo': forms.FileInput(attrs={
+                'accept': 'image/*',
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
             }),
             'dataset_type': forms.Select(
                 choices=DATASET_TYPE_CHOICES,
@@ -180,3 +184,13 @@ class DatasetUploadForm(forms.ModelForm):
                 )
         
         return cleaned_data
+
+class DatasetEditForm(DatasetUploadForm):
+    class Meta(DatasetUploadForm.Meta):
+        fields = ['title', 'cover_photo', 'dataset_type', 'bio', 'topics', 'original_author', 'data_source', 'collection_date', 'language', 'dataset_license', 'update_frequency', 'geographic_coverage', 'temporal_coverage', 'usage_notes']
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # file is not required when editing
+        if 'file' in self.fields:
+            self.fields['file'].required = False

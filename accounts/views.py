@@ -55,7 +55,7 @@ def send_verification_email(user):
     
     # Ensure from_email is formatted with the sender name "AfriData"
     from_email_address = django_settings.DEFAULT_FROM_EMAIL
-    if '<' not in from_email_address:
+    if '<' not in from_email_address:  # type: ignore
         from_email = f"AfriData <{from_email_address}>"
     else:
         from_email = from_email_address
@@ -258,7 +258,7 @@ def process_signup(request):
         password = request.POST.get('password', '')
         confirm_password = request.POST.get('confirm_password', '')
         full_name = request.POST.get('full_name', '').strip()
-        username = request.POST.get('username', '').strip().lower()
+        username = request.POST.get('username', '').strip()
         phone_number = request.POST.get('phone_number', '').strip()
         bio = request.POST.get('bio', '').strip()
         date_of_birth = request.POST.get('date_of_birth', '')
@@ -292,19 +292,19 @@ def process_signup(request):
         # Generate username from full_name or email if not provided
         if not username:
             if full_name:
-                username = full_name.lower().replace(' ', '_')
+                username = full_name.replace(' ', '_')
             else:
                 username = email.split('@')[0]
             # Ensure uniqueness
             base_username = username
             counter = 1
-            while CustomUser.objects.filter(username=username).exists():
+            while CustomUser.objects.filter(username__iexact=username).exists():
                 username = f"{base_username}_{counter}"
                 counter += 1
             logger.debug(f"Generated username: {username}")
         elif len(username) < 3:
             errors.append('Username must be at least 3 characters long.')
-        elif CustomUser.objects.filter(username=username).exists():
+        elif CustomUser.objects.filter(username__iexact=username).exists():
             errors.append('Username already exists.')
         elif not re.match(r'^[a-zA-Z0-9_]+$', username):
             errors.append('Username can only contain letters, numbers, and underscores.')
@@ -314,7 +314,7 @@ def process_signup(request):
         if referral_code:
             try:
                 referrer = CustomUser.objects.get(referral_code=referral_code)
-            except CustomUser.DoesNotExist:
+            except CustomUser.DoesNotExist:  # type: ignore  # type: ignore
                 errors.append('Invalid referral code.')
         
         # Validate password strength
@@ -331,7 +331,7 @@ def process_signup(request):
             return redirect(f"{reverse('login_signup')}?next={next_url}")
         
         # Create user with transaction
-        with transaction.atomic():
+        with transaction.atomic():  # type: ignore
             logger.debug("Starting user creation...")
             
             # Create user
@@ -384,7 +384,7 @@ def process_signup(request):
         messages.error(request, f'An error occurred during signup: {str(e)}')
         # Log failed signup attempt
         LoginAttempt.objects.create(
-            email=email if 'email' in locals() else '',
+            email=locals().get('email', ''),  # type: ignore
             ip_address=get_client_ip(request),
             success=False,
             user_agent=request.META.get('HTTP_USER_AGENT', '')
@@ -404,7 +404,7 @@ def home(request):
     # Get or create user profile
     try:
         profile = user.profile
-    except UserProfile.DoesNotExist:
+    except UserProfile.DoesNotExist:  # type: ignore
         profile = UserProfile.objects.create(user=user)
     
     # Reset monthly downloads if needed
@@ -534,8 +534,8 @@ def check_email_exists(request):
 def check_username_exists(request):
     """Check if username already exists"""
     if request.method == 'GET':
-        username = request.GET.get('username', '').strip().lower()
-        exists = CustomUser.objects.filter(username=username).exists()
+        username = request.GET.get('username', '').strip()
+        exists = CustomUser.objects.filter(username__iexact=username).exists()
         return JsonResponse({'exists': exists})
     return JsonResponse({'error': 'Invalid request'})
 
@@ -563,7 +563,7 @@ def profile_view(request):
     # Get or create user profile
     try:
         profile = user.profile
-    except UserProfile.DoesNotExist:
+    except UserProfile.DoesNotExist:  # type: ignore
         profile = UserProfile.objects.create(user=user)
     
     # Reset monthly downloads if needed
@@ -624,13 +624,13 @@ def edit_profile_view(request):
     
     try:
         profile = user.profile
-    except UserProfile.DoesNotExist:
+    except UserProfile.DoesNotExist:  # type: ignore
         profile = UserProfile.objects.create(user=user)
     
     if request.method == 'POST':
         # Handle form submission
         try:
-            with transaction.atomic():
+            with transaction.atomic():  # type: ignore
                 # Update user fields
                 user.full_name = request.POST.get('full_name', user.full_name)
                 user.bio = request.POST.get('bio', user.bio)
@@ -683,8 +683,8 @@ def public_profile_view(request, user_id):
     try:
         profile_user = get_object_or_404(CustomUser, id=user_id)
         profile = profile_user.profile
-    except UserProfile.DoesNotExist:
-        profile = UserProfile.objects.create(user=profile_user)
+    except UserProfile.DoesNotExist:  # type: ignore
+        profile = UserProfile.objects.create(user=profile_user)  # type: ignore
     
     # Get user's datasets
     user_datasets = Dataset.objects.filter(author=profile_user).order_by('-created_at')
@@ -788,7 +788,7 @@ def verify_email(request):
         
     try:
         user = CustomUser.objects.get(email=email)
-    except CustomUser.DoesNotExist:
+    except CustomUser.DoesNotExist:  # type: ignore
         messages.error(request, 'User not found.')
         return redirect('login_signup')
         
@@ -822,7 +822,7 @@ def verify_email(request):
             else:
                 messages.error(request, 'Invalid verification code.')
                 
-        except EmailVerificationToken.DoesNotExist:
+        except EmailVerificationToken.DoesNotExist:  # type: ignore
             messages.error(request, 'No verification code found. Please request a new one.')
             
     return render(request, 'accounts/verify_email.html', {'email': email, 'page_title': 'Verify Email'})
@@ -844,7 +844,7 @@ def resend_verification_email(request):
         messages.success(request, 'A new verification code has been sent to your email.')
         # If it's an AJAX request we can return JSON, otherwise redirect
         return redirect('verify_email')
-    except CustomUser.DoesNotExist:
+    except CustomUser.DoesNotExist:  # type: ignore
         return JsonResponse({'error': 'User not found.'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)

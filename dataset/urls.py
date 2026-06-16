@@ -11,6 +11,8 @@ urlpatterns = [
     path('dataset/<slug:slug>/generate-metadata/', views.generate_metadata, name='generate_metadata'),
     path('dataset/<slug:slug>/preview/', views.dataset_preview, name='dataset_preview'),
     path('dataset/<slug:slug>/download/', views.download_dataset, name='download_dataset'),
+    path('dataset/<slug:slug>/edit/', views.edit_dataset, name='edit_dataset'),
+    path('dataset/<slug:slug>/delete/', views.delete_dataset, name='delete_dataset'),
     path('dataset/<slug:slug>/comments/', views.dataset_comments, name='dataset_comments'),
 
     

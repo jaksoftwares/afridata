@@ -165,13 +165,13 @@
             
             <div class="space-y-3">
                 {% for dataset in user_datasets %}
-                <div class="py-2 border-b border-gray-100 last:border-b-0">
-                    <div class="font-medium text-sm">{{ dataset.title|truncatechars:30 }}</div>
+                <a href="{% url 'dataset_detail' dataset.slug %}" class="block py-2 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors no-underline">
+                    <div class="font-medium text-sm text-brand-blue">{{ dataset.title|truncatechars:30 }}</div>
                     <div class="flex justify-between text-xs text-gray-500 mt-1">
                         <span>{{ dataset.downloads }} downloads</span>
                         <span>{{ dataset.created_at|timesince }} ago</span>
                     </div>
-                </div>
+                </a>
                 {% empty %}
                 <div class="text-center py-4 text-gray-500">
                     <p>You haven't uploaded any datasets yet</p>
@@ -239,8 +239,7 @@
             
             <div class="p-4 space-y-4 flex-1">
                 {% for dataset in trending_datasets %}
-                <div class="group relative p-5 rounded-brand-card hover:bg-brand-offwhite transition-all duration-300 border border-transparent hover:border-gray-200 cursor-pointer"
-                     onclick="viewDataset('{{ dataset.slug }}')">
+                <a href="{% url 'dataset_detail' dataset.slug %}" class="group relative p-5 rounded-brand-card hover:bg-brand-offwhite transition-all duration-300 border border-transparent hover:border-gray-200 cursor-pointer block no-underline text-inherit">
 
                     <div class="flex justify-between items-start mb-3">
                         <h5 class="font-bold text-lg group-hover:text-brand-blue transition-colors line-clamp-1 pr-6">{{ dataset.title }}</h5>
@@ -258,7 +257,7 @@
                             <i class="fas fa-chart-line mr-1"></i> Highly active
                         </span>
                     </div>
-                </div>
+                </a>
                 {% empty %}
                 <div class="text-center py-20 text-gray-400">
                     <p>Building trending metrics...</p>
@@ -267,9 +266,9 @@
             </div>
             
             <div class="p-6 bg-gray-50/50 border-t border-gray-100">
-                <button onclick="window.location.href='{% url 'dataset_list' %}?sort=downloads'" class="btn-secondary w-full group !bg-white">
+                <a href="{% url 'dataset_list' %}?sort=downloads" class="btn-secondary w-full group !bg-white text-center block no-underline">
                     View Catalog <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
-                </button>
+                </a>
             </div>
         </div>
         
@@ -283,9 +282,8 @@
             <div class="p-8 flex-1">
                 <div class="grid grid-cols-2 gap-4 mb-10">
                     {% for category, count in top_categories|slice:":4" %}
-                    <div class="topic-tag group relative overflow-hidden p-6 rounded-brand-card text-white text-center cursor-pointer transition-all duration-500 hover:-translate-y-1 shadow-md hover:shadow-xl"
-                         onclick="filterByCategory('{{ category }}')"
-                         style="background: linear-gradient(135deg, {% cycle '#0B4F6C, #1B998B' '#1B998B, #7BC67B' '#4A5568, #0B4F6C' '#F2C14E, #d97706' %});">
+                    <div class="topic-tag group relative overflow-hidden p-6 rounded-brand-card text-white text-center cursor-pointer transition-all duration-500 hover:-translate-y-1 shadow-md hover:shadow-xl topic-card-{{ forloop.counter0|default:'0' }}"
+                         onclick="filterByCategory('{{ category }}')">
                         <div class="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-150 transition-transform duration-1000">
                             <i class="fas fa-network-wired text-7xl"></i>
                         </div>
@@ -374,9 +372,9 @@
                 </div>
                 
                 <div class="mt-12">
-                    <button onclick="window.location.href='{% url 'community:community' %}'" class="btn-primary !px-10 py-4 shadow-xl shadow-brand-blue/20">
+                    <a href="{% url 'community:community' %}" class="btn-primary !px-10 py-4 shadow-xl shadow-brand-blue/20 inline-block text-center no-underline">
                         Join the Community
-                    </button>
+                    </a>
                 </div>
             </div>
             
@@ -492,7 +490,7 @@
             
             <div id="datasetContainer" class="grid grid-cols-1 gap-8">
                 {% for dataset in featured_datasets %}
-                <div class="group card-fancy !p-0 overflow-hidden border-2 border-transparent hover:border-brand-teal/20 transition-all duration-300">
+                <a href="{% url 'dataset_detail' dataset.slug %}" class="group card-fancy !p-0 overflow-hidden border-2 border-transparent hover:border-brand-teal/20 transition-all duration-300 block no-underline text-inherit">
                     <div class="flex flex-col md:flex-row">
                         <div class="p-8 flex-1">
                             <div class="flex items-center space-x-3 mb-4">
@@ -534,13 +532,13 @@
                             </div>
                         </div>
                         <div class="bg-gray-50/50 p-8 flex flex-col justify-center items-center md:w-56 border-t md:border-t-0 md:border-l border-gray-100">
-                            <button onclick="viewDataset('{{ dataset.slug }}')" class="btn-primary w-full !rounded-full mb-3 shadow-md group-hover:shadow-brand-teal/20">
+                            <span class="btn-primary w-full !rounded-full mb-3 shadow-md group-hover:shadow-brand-teal/20 text-center">
                                 View Full <i class="fas fa-chevron-right ml-1 text-[10px]"></i>
-                            </button>
+                            </span>
                             <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Released: {{ dataset.created_at|date:"M Y" }}</span>
                         </div>
                     </div>
-                </div>
+                </a>
                 {% empty %}
                 <div class="card-fancy !p-20 text-center">
                     <div class="w-20 h-20 bg-brand-offwhite rounded-full flex items-center justify-center mx-auto mb-6">
@@ -555,9 +553,9 @@
             
             {% if featured_datasets %}
             <div class="mt-12 text-center">
-                <button onclick="window.location.href='{% url 'dataset_list' %}'" class="btn-secondary !px-12 py-4">
+                <a href="{% url 'dataset_list' %}" class="btn-secondary !px-12 py-4 inline-block no-underline">
                     Explore Full Data Library <i class="fas fa-th ml-2"></i>
-                </button>
+                </a>
             </div>
             {% endif %}
         </div>
@@ -613,11 +611,16 @@
     .animate-bounce-slow {
         animation: bounce-slow 4s ease-in-out infinite;
     }
+    .topic-card-0 { background: linear-gradient(135deg, #0B4F6C, #1B998B); }
+    .topic-card-1 { background: linear-gradient(135deg, #1B998B, #7BC67B); }
+    .topic-card-2 { background: linear-gradient(135deg, #4A5568, #0B4F6C); }
+    .topic-card-3 { background: linear-gradient(135deg, #F2C14E, #d97706); }
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+    const IS_AUTHENTICATED = "{{ user.is_authenticated|yesno:'true,false' }}" === "true";
     // Home page specific JavaScript functions
     function performSearch() {
         const searchInput = document.getElementById('searchInput');
@@ -661,7 +664,7 @@
 
     function viewDataset(slug) {
         if (slug) {
-            window.location.href = "{% url 'dataset_detail' slug='placeholder' %}".replace('placeholder', slug);
+            window.location.href = "/dataset/" + slug + "/";
         }
     }
 
@@ -740,22 +743,22 @@
     // Copy referral code functionality for authenticated users
     // Copy referral code functionality for authenticated users
     function copyReferralCode() {
-        {% if user.is_authenticated %}
-        const referralCode = '{{ referral_code }}';
-        const referralUrl = `${window.location.origin}/register/?ref=${referralCode}`;
-    
-        if (navigator.clipboard) {
-            navigator.clipboard.writeText(referralUrl).then(function() {
-                showNotification('Referral link copied to clipboard!', 'success');
-            }).catch(function() {
+        if (IS_AUTHENTICATED) {
+            const referralCode = '{{ referral_code|default:"" }}';
+            const referralUrl = `${window.location.origin}/register/?ref=${referralCode}`;
+        
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(referralUrl).then(function() {
+                    showNotification('Referral link copied to clipboard!', 'success');
+                }).catch(function() {
+                    fallbackCopyTextToClipboard(referralUrl);
+                });
+            } else {
                 fallbackCopyTextToClipboard(referralUrl);
-            });
+            }
         } else {
-            fallbackCopyTextToClipboard(referralUrl);
-        }
-        {% else %}
             showNotification('Please log in to access referral program', 'error');
-        {% endif %}
+        }
     }
 
     function fallbackCopyTextToClipboard(text) {
@@ -855,7 +858,9 @@
                 this.style.transform = 'scale(1)';
             });
         });
-       // Animate counter numbers (Professional version with Intersection Observer)
+    }
+
+    // Animate counter numbers (Professional version with Intersection Observer)
     function animateCounters() {
         const counters = document.querySelectorAll('.animate-number');
         
@@ -918,17 +923,17 @@
 
     // Refresh token balance
     function refreshTokenBalance() {
-        {% if user.is_authenticated %}
-        fetch('/api/user/token-balance/')
-            .then(response => response.json())
-            .then(data => {
-                const balanceElements = document.querySelectorAll('.token-balance-display');
-                balanceElements.forEach(el => {
-                    el.textContent = data.balance.toLocaleString();
-                });
-            })
-            .catch(error => console.log('Token balance update failed:', error));
-        {% endif %}
+        if (IS_AUTHENTICATED) {
+            fetch('/api/user/token-balance/')
+                .then(response => response.json())
+                .then(data => {
+                    const balanceElements = document.querySelectorAll('.token-balance-display');
+                    balanceElements.forEach(el => {
+                        el.textContent = data.balance.toLocaleString();
+                    });
+                })
+                .catch(error => console.log('Token balance update failed:', error));
+        }
     }
 
     // Initialize all interactive elements
@@ -940,9 +945,9 @@
         animateCounters();
         
         // Refresh balance every 5 minutes
-        {% if user.is_authenticated %}
-        setInterval(refreshTokenBalance, 300000);
-        {% endif %}
+        if (IS_AUTHENTICATED) {
+            setInterval(refreshTokenBalance, 300000);
+        }
 
         // Add escape key listener for modals
         document.addEventListener('keydown', function(e) {
