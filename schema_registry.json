@@ -440,5 +440,34 @@
       }
     },
     "created_at": "2026-06-10T09:54:58.032702"
+  },
+  "pan_african_nlp_sentiment_sentiment-analysis-dataset_[swahili]": {
+    "domain": "pan_african_nlp_sentiment",
+    "dataset_name": "sentiment-analysis-dataset [swahili]",
+    "raw_columns": [
+      "",
+      "text",
+      "labels"
+    ],
+    "schema": {
+      "domain": "pan_african_nlp_sentiment",
+      "alignment_confidence": 0.95,
+      "official_standard": {
+        "record_id": "Int64",
+        "text_content": "Utf8",
+        "sentiment_label": "Utf8"
+      },
+      "mapping_instructions": {
+        "": "record_id",
+        "text": "text_content",
+        "labels": "sentiment_label"
+      },
+      "transformation_needed": {
+        "record_id": "cast(Int64)",
+        "text_content": null,
+        "sentiment_label": null
+      }
+    },
+    "created_at": "2026-06-17T12:24:01.272050"
   }
 }

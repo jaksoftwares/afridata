@@ -120,7 +120,7 @@
 
                             <!-- Mini Cover -->
                             <div class="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 mr-4">
-                                <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=200&h=200" 
+                                <img src="{{ dataset.get_cover_photo_url }}" 
                                      alt="Cover" 
                                      class="w-full h-full object-cover opacity-70 group-hover/item:scale-110 transition-transform duration-500">
                             </div>
@@ -245,7 +245,7 @@
                     <div class="flex flex-col md:flex-row h-full">
                         <!-- Dataset Cover Image -->
                         <div class="md:w-72 h-64 md:h-auto relative overflow-hidden bg-gray-100 flex-shrink-0">
-                            <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=800&h=400" 
+                            <img src="{{ dataset.get_cover_photo_url }}" 
                                  alt="Dataset Cover" 
                                  class="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700">
                             <div class="absolute inset-0 bg-gradient-to-r from-gray-900/40 via-transparent to-transparent md:bg-gradient-to-t"></div>

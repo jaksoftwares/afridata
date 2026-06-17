@@ -72,6 +72,12 @@ class Dataset(models.Model):
     
     def get_topics_list(self) -> list[str]:
         return [topic.strip() for topic in str(self.topics).split(',') if topic.strip()]
+        
+    @property
+    def get_cover_photo_url(self) -> str:
+        if self.cover_photo and hasattr(self.cover_photo, 'url'):
+            return str(self.cover_photo.url)
+        return "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=800&h=400"
     
     def calculate_token_cost(self):
         """Calculate token cost based on file size"""
