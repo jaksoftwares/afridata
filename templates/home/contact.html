@@ -130,22 +130,32 @@
         </div>
         <div class="max-w-3xl mx-auto space-y-4">
             <div class="card-fancy !p-0 overflow-hidden">
-                <button class="w-full px-8 py-6 text-left flex items-center justify-between hover:bg-brand-offwhite transition-colors group">
+                <button onclick="this.nextElementSibling.classList.toggle('hidden')" class="w-full px-8 py-6 text-left flex items-center justify-between hover:bg-brand-offwhite transition-colors group">
                     <span class="font-semibold text-brand-blue">How can I contribute datasets to AfriData?</span>
                     <i class="fa-solid fa-chevron-down text-brand-teal group-hover:translate-y-1 transition-transform"></i>
                 </button>
+                <div class="px-8 pb-6 hidden text-brand-grey text-sm">
+                    <p>Simply create an account, verify your email, and navigate to the <strong>Upload Dataset</strong> page. Fill in the dataset metadata, upload your file, and hit submit. Your dataset will be published immediately for the community to access!</p>
+                </div>
             </div>
             <div class="card-fancy !p-0 overflow-hidden">
-                <button class="w-full px-8 py-6 text-left flex items-center justify-between hover:bg-brand-offwhite transition-colors group">
+                <button onclick="this.nextElementSibling.classList.toggle('hidden')" class="w-full px-8 py-6 text-left flex items-center justify-between hover:bg-brand-offwhite transition-colors group">
                     <span class="font-semibold text-brand-blue">What data formats are supported?</span>
                     <i class="fa-solid fa-chevron-down text-brand-teal group-hover:translate-y-1 transition-transform"></i>
                 </button>
+                <div class="px-8 pb-6 hidden text-brand-grey text-sm">
+                    <p class="mb-2"><strong class="text-brand-blue">Allowed Formats:</strong> We accept structured data and document files. Supported extensions include: CSV, Excel (.xlsx, .xls), PDF, Plain Text (.txt), JSON, XML, ZIP archives, YAML (.yml, .yaml), and Apache Parquet.</p>
+                    <p><strong class="text-red-400">Not Allowed:</strong> Please do not upload media files (Images, Audio, Videos) or executable programs (.exe, .sh).</p>
+                </div>
             </div>
             <div class="card-fancy !p-0 overflow-hidden">
-                <button class="w-full px-8 py-6 text-left flex items-center justify-between hover:bg-brand-offwhite transition-colors group">
+                <button onclick="this.nextElementSibling.classList.toggle('hidden')" class="w-full px-8 py-6 text-left flex items-center justify-between hover:bg-brand-offwhite transition-colors group">
                     <span class="font-semibold text-brand-blue">Is there an API for developers?</span>
                     <i class="fa-solid fa-chevron-down text-brand-teal group-hover:translate-y-1 transition-transform"></i>
                 </button>
+                <div class="px-8 pb-6 hidden text-brand-grey text-sm">
+                    <p>Yes! We offer a comprehensive API for developers to programmatically search, filter, and download datasets. You can find the full documentation in the <strong>API Interface</strong> section from the main navigation menu once logged in.</p>
+                </div>
             </div>
         </div>
     </div>
