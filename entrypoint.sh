@@ -22,4 +22,4 @@ then
 fi
 
 echo "🚀 Starting Gunicorn server..."
-exec gunicorn afridata.wsgi:application --bind 0.0.0.0:8000
+exec gunicorn afridata.wsgi:application --bind 0.0.0.0:8000 --limit-request-field_size 32768
