@@ -6,6 +6,9 @@ while ! nc -z $DB_HOST $DB_PORT; do
 done
 echo "✅ Database is ready!"
 
+echo "🛠 Checking for missing migrations..."
+python manage.py makemigrations
+
 echo "🛠 Running migrations..."
 python manage.py migrate
 

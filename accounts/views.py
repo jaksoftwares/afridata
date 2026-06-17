@@ -372,7 +372,7 @@ def process_signup(request):
             request.session['verification_email'] = user.email
             logger.debug("Verification email sent, redirecting to verify_email")
             
-            messages.success(request, f'Account created successfully! Please check your email for the verification code.')
+            messages.success(request, f'Account created successfully! Please check your email inbox or spam folder for the verification code.')
             return redirect('verify_email')
             
     except Exception as e:

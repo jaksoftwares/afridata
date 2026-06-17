@@ -1,0 +1,4 @@
+* text=auto
+
+# Enforce LF for all shell scripts so they don't break in Docker
+*.sh text eol=lf
