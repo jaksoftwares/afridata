@@ -261,7 +261,6 @@ def process_signup(request):
         username = request.POST.get('username', '').strip()
         phone_number = request.POST.get('phone_number', '').strip()
         bio = request.POST.get('bio', '').strip()
-        date_of_birth = request.POST.get('date_of_birth', '')
         referral_code = request.POST.get('referral_code', '').strip()
         
         logger.debug(f"Extracted data - Email: {email}, Full name: {full_name}, Username: {username}")
@@ -345,15 +344,6 @@ def process_signup(request):
                 last_login_ip=get_client_ip(request),
                 referred_by=referrer
             )
-            
-            # Add date_of_birth if provided
-            if date_of_birth:
-                try:
-                    from datetime import datetime
-                    user.date_of_birth = datetime.strptime(date_of_birth, '%Y-%m-%d').date()
-                    user.save()
-                except ValueError:
-                    pass  # Invalid date format, skip
             
             logger.debug(f"User created with ID: {user.id}")
             
