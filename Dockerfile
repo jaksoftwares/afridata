@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     g++ \
     default-libmysqlclient-dev \
     build-essential \
+    netcat-openbsd \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
