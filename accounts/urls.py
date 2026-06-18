@@ -41,8 +41,6 @@ urlpatterns = [
     path('api/check-referral/', views.check_referral_code, name='check_referral_code'),  # MISSING
 
     # Static Pages
-    path('terms/', views.terms, name='terms'),
-    path('privacy/', views.privacy_policy, name='privacy_policy'),
     path('settings/', views.settings, name='settings'),
     path('data-standards/', views.data_standards, name='data_standards'),
     path('data-license/', views.data_license, name='data_license'),
