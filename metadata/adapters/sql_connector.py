@@ -19,12 +19,12 @@ Important distinction:
     There are two separate engines at play in this connector:
 
     1. REGISTRY engine  (inherited — get_engine())
-       Connects to the pipeline's own database where dataset_files lives.
+       Connects to the pipeline's own database where dataset_dataset lives.
        Built from DB_CONNECTION_STRING. Used by fetch_eligible_files().
 
     2. SOURCE engine    (created here — _get_source_engine())
        Connects to the external database that the SQL dataset lives on.
-       Its connection string is stored in the dataset_files.file_path
+       Its connection string is stored in the dataset_dataset.file_path
        column for SQL-type records, in the format:
            dialect+driver://user:pass@host/dbname
        The password must come from an environment variable; see
@@ -60,7 +60,7 @@ class SQLConnector(BaseConnector):
                         concatenates everything into one DataFrame.
     """
 
-    # dataset_files.file_type value expected for SQL sources.
+    # dataset_dataset.file_type value expected for SQL sources.
     SUPPORTED_EXTENSIONS = [".sql"]
 
     def __init__(self, chunksize: int = DEFAULT_CHUNKSIZE):
@@ -207,7 +207,7 @@ class SQLConnector(BaseConnector):
             in the registry.
 
         Args:
-            connection_string: Raw connection string from dataset_files.file_path.
+            connection_string: Raw connection string from dataset_dataset.file_path.
 
         Returns:
             SQLAlchemy Engine.

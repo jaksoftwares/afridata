@@ -147,9 +147,7 @@ class Dataset(models.Model):
                 
         super().save(*args, **kwargs)
 
-    class Meta:
-        db_table = 'dataset_files' 
-        
+
 
 
 class Comment(models.Model):

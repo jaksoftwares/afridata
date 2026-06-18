@@ -104,7 +104,7 @@ class BaseConnector(ABC):
         metadata_score is below METADATA_SCORE_THRESHOLD (< 0.7) and whose
         file type is handled by the concrete subclass.
 
-        Expected DB table — `dataset_files`:
+        Expected DB table — `dataset_dataset`:
             id              INTEGER  PRIMARY KEY
             file_path       TEXT     path / identifier stored in the DB
             file_type       TEXT     'csv', 'xls', 'xlsx', 'sql', …
@@ -135,7 +135,7 @@ class BaseConnector(ABC):
         query = text(
             f"""
             SELECT id, file_path, file_type, metadata_score
-            FROM   dataset_files
+            FROM   dataset_dataset
             WHERE  metadata_score < :threshold
               AND  file_type IN ({placeholders})
             ORDER  BY metadata_score ASC

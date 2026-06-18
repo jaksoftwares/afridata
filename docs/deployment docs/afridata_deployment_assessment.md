@@ -174,7 +174,7 @@ DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': BASE_DI
 - `TokenPurchase` — payment records
 
 **dataset app:**
-- `Dataset` (`dataset_files` table) — core dataset record, file references, token cost, quality tier, metadata
+- `Dataset` (`dataset_dataset` table) — core dataset record, file references, token cost, quality tier, metadata
 - `Comment` — dataset comments, upvote counts
 - `TokenTransaction` — full token ledger
 - `PremiumPurchase` — premium dataset payment records (Stripe integration referenced)
