@@ -6,90 +6,104 @@
 <div id="mobileMenu" class="mobile-menu fixed inset-y-0 left-0 w-80 bg-white/95 backdrop-blur-xl shadow-[20px_0_60px_-15px_rgba(0,0,0,0.1)] z-50 md:hidden flex flex-col transform -translate-x-full transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1)">
     <!-- Header in Drawer -->
     <div class="p-6 border-b border-gray-100/50 flex justify-between items-center bg-brand-offwhite/30">
-        <a href="{% url 'home' %}" class="flex items-center">
-            <img src="{% static 'images/afridata-logo.svg' %}" alt="AfriData Logo" class="h-14 w-auto object-contain scale-125 transform-origin-left">
+        <a href="{% url 'home' %}" class="flex items-center no-underline">
+            <img src="{% static 'images/afridata_logo_icon.png' %}" alt="AfriData Logo" class="h-10 w-auto object-contain">
+            <span class="text-[#0B4564] font-extrabold text-xl ml-2 tracking-tight">AfriData</span>
         </a>
         <button onclick="toggleMobileMenu()" class="w-10 h-10 rounded-full bg-gray-100/50 flex items-center justify-center text-gray-400 hover:text-brand-blue transition-all border-0 outline-none">
             <i class="fas fa-times text-lg"></i>
         </button>
     </div>
     
-    <div class="p-6 flex-1 overflow-y-auto">
-        <nav class="space-y-1">
-            {% if user.is_authenticated %}
-            <a href="{% url 'home' %}" class="group flex items-center px-4 py-4 rounded-2xl transition-all duration-200 no-underline {% if request.resolver_match.url_name == 'home' %}bg-brand-blue text-white shadow-lg shadow-brand-blue/20{% else %}text-gray-600 hover:bg-brand-offwhite hover:text-brand-blue{% endif %}">
-                <span class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 {% if request.resolver_match.url_name == 'home' %}bg-white/20{% else %}bg-gray-100 group-hover:bg-brand-blue/10{% endif %}"><i class="fas fa-home text-sm"></i></span>
-                <span class="font-bold text-sm tracking-wide">Home</span>
+    <div class="p-4 flex-1 overflow-y-auto">
+        <nav class="flex flex-col space-y-1">
+            <a href="{% url 'home:default_home' %}" class="flex items-center py-3 text-gray-700 hover:text-brand-blue border-b border-gray-100 transition-colors font-medium no-underline">
+                <i class="fas fa-home w-6 text-center text-gray-400 mr-2"></i> Home
             </a>
-            {% else %}
-            <a href="{% url 'home:default_home' %}" class="group flex items-center px-4 py-4 rounded-2xl transition-all duration-200 no-underline {% if request.resolver_match.url_name == 'default_home' %}bg-brand-blue text-white shadow-lg shadow-brand-blue/20{% else %}text-gray-600 hover:bg-brand-offwhite hover:text-brand-blue{% endif %}">
-                <span class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 {% if request.resolver_match.url_name == 'default_home' %}bg-white/20{% else %}bg-gray-100 group-hover:bg-brand-blue/10{% endif %}"><i class="fas fa-home text-sm"></i></span>
-                <span class="font-bold text-sm tracking-wide">Home</span>
+            <a href="{% url 'dataset_list' %}" class="flex items-center py-3 text-gray-700 hover:text-brand-blue border-b border-gray-100 transition-colors font-medium no-underline">
+                <i class="fas fa-database w-6 text-center text-gray-400 mr-2"></i> Datasets
             </a>
-            {% endif %}
-
-            <a href="{% url 'dataset_list' %}" class="group flex items-center px-4 py-4 rounded-2xl transition-all duration-200 no-underline {% if 'dataset' in request.resolver_match.url_name %}bg-brand-blue text-white shadow-lg shadow-brand-blue/20{% else %}text-gray-600 hover:bg-brand-offwhite hover:text-brand-blue{% endif %}">
-                <span class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 {% if 'dataset' in request.resolver_match.url_name %}bg-white/20{% else %}bg-gray-100 group-hover:bg-brand-blue/10{% endif %}"><i class="fas fa-database text-sm"></i></span>
-                <span class="font-bold text-sm tracking-wide">Datasets</span>
-            </a>
-            
-            <a href="{% url 'community:community' %}" class="group flex items-center px-4 py-4 rounded-2xl transition-all duration-200 no-underline {% if 'community' in request.resolver_match.url_name %}bg-brand-blue text-white shadow-lg shadow-brand-blue/20{% else %}text-gray-600 hover:bg-brand-offwhite hover:text-brand-blue{% endif %}">
-                <span class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 {% if 'community' in request.resolver_match.url_name %}bg-white/20{% else %}bg-gray-100 group-hover:bg-brand-blue/10{% endif %}"><i class="fas fa-users text-sm"></i></span>
-                <span class="font-bold text-sm tracking-wide">Community</span>
+            <a href="{% url 'community:community' %}" class="flex items-center py-3 text-gray-700 hover:text-brand-blue border-b border-gray-100 transition-colors font-medium no-underline">
+                <i class="fas fa-users w-6 text-center text-gray-400 mr-2"></i> Community
             </a>
             
             {% if user.is_authenticated %}
-            <a href="{% url 'home:api_docs' %}" class="group flex items-center px-4 py-4 rounded-2xl transition-all duration-200 no-underline {% if 'api' in request.resolver_match.url_name %}bg-brand-blue text-white shadow-lg shadow-brand-blue/20{% else %}text-gray-600 hover:bg-brand-offwhite hover:text-brand-blue{% endif %}">
-                <span class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 {% if 'api' in request.resolver_match.url_name %}bg-white/20{% else %}bg-gray-100 group-hover:bg-brand-blue/10{% endif %}"><i class="fas fa-code text-sm"></i></span>
-                <span class="font-bold text-sm tracking-wide">API Interface</span>
+            <a href="{% url 'workspace' %}" class="flex items-center py-3 text-brand-blue hover:text-brand-blue/80 border-b border-gray-100 transition-colors font-bold no-underline">
+                <i class="fas fa-layer-group w-6 text-center mr-2"></i> My Workspace
+            </a>
+            <a href="{% url 'home:api_docs' %}" class="flex items-center py-3 text-gray-700 hover:text-brand-blue border-b border-gray-100 transition-colors font-medium no-underline">
+                <i class="fas fa-code w-6 text-center text-gray-400 mr-2"></i> API Interface
             </a>
             {% endif %}
-            <a href="{% url 'home:contact_us' %}" class="group flex items-center px-4 py-4 rounded-2xl transition-all duration-200 no-underline {% if request.resolver_match.url_name == 'contact_us' %}bg-brand-blue text-white shadow-lg shadow-brand-blue/20{% else %}text-gray-600 hover:bg-brand-offwhite hover:text-brand-blue{% endif %}">
-                <span class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 {% if request.resolver_match.url_name == 'contact_us' %}bg-white/20{% else %}bg-gray-100 group-hover:bg-brand-blue/10{% endif %}"><i class="fas fa-envelope text-sm"></i></span>
-                <span class="font-bold text-sm tracking-wide">Contact</span>
+            
+            <a href="{% url 'home:contact_us' %}" class="flex items-center py-3 text-gray-700 hover:text-brand-blue border-b border-gray-100 transition-colors font-medium no-underline">
+                <i class="fas fa-envelope w-6 text-center text-gray-400 mr-2"></i> Contact
             </a>
         </nav>
         
-        <div class="mt-10 pt-10 border-t border-gray-100">
+        <div class="mt-8 pt-4">
             {% if user.is_authenticated %}
-            <div class="bg-brand-offwhite rounded-3xl p-6 border border-gray-100 shadow-inner">
-                <div class="flex items-center space-x-4 mb-6">
-                    <div class="w-12 h-12 bg-brand-blue rounded-2xl flex items-center justify-center text-white text-lg font-bold shadow-lg shadow-brand-blue/20">
-                        {{ user.username.0|upper }}
-                    </div>
-                    <div class="flex flex-col min-w-0">
-                        <span class="text-gray-900 font-bold text-base truncate">{{ user.username }}</span>
-                        <span class="text-gray-400 text-xs truncate">{{ user.email }}</span>
-                    </div>
+            <div class="flex items-center mb-4 px-2">
+                <div class="w-10 h-10 bg-brand-blue/10 rounded-full flex items-center justify-center text-brand-blue text-sm font-bold border border-brand-blue/20">
+                    {{ user.username.0|upper }}
                 </div>
-                <div class="grid grid-cols-1 gap-2">
-                    <a href="{% url 'profile' %}" class="flex items-center px-4 py-3 text-gray-600 hover:bg-white hover:text-brand-blue rounded-xl transition-all font-bold text-xs no-underline">
-                        <i class="fas fa-user-circle mr-3 opacity-50"></i> Profile Settings
-                    </a>
-                    <a href="{% url 'logout' %}" class="flex items-center px-4 py-3 text-red-500 hover:bg-white rounded-xl transition-all font-bold text-xs no-underline mt-2">
-                        <i class="fas fa-sign-out-alt mr-3 opacity-50"></i> Sign Out
-                    </a>
+                <div class="flex flex-col min-w-0 ml-3">
+                    <span class="text-gray-900 font-bold text-sm truncate">{{ user.username }}</span>
+                    <span class="text-gray-400 text-xs truncate">{{ user.email }}</span>
                 </div>
             </div>
+            <div class="flex flex-col space-y-2 px-2">
+                <a href="{% url 'edit_profile' %}" class="flex items-center py-2 text-gray-600 hover:text-brand-blue transition-colors font-medium text-sm no-underline">
+                    <i class="fas fa-user-circle w-5 text-gray-400"></i> Profile Settings
+                </a>
+                <a href="{% url 'logout' %}" class="flex items-center py-2 text-red-500 hover:text-red-700 transition-colors font-medium text-sm no-underline">
+                    <i class="fas fa-sign-out-alt w-5 opacity-70"></i> Sign Out
+                </a>
+            </div>
             {% else %}
-            <div class="space-y-3">
-                <a href="{% url 'login_signup' %}?mode=login" class="block w-full text-center text-white bg-brand-blue py-4 rounded-2xl transition-all font-bold shadow-xl shadow-brand-blue/20 no-underline">Log in</a>
-                <a href="{% url 'login_signup' %}?mode=signup" class="block w-full text-center bg-white border-2 border-brand-teal text-brand-teal py-4 rounded-2xl hover:bg-brand-teal hover:text-white transition-all font-bold no-underline">Create Account</a>
+            <div class="flex flex-col space-y-3 px-2">
+                <a href="{% url 'login_signup' %}?mode=login" class="flex items-center justify-center w-full py-3 bg-gray-50 text-gray-700 rounded-xl font-bold transition-colors hover:bg-gray-100 no-underline">Log in</a>
+                <a href="{% url 'login_signup' %}?mode=signup" class="flex items-center justify-center w-full py-3 bg-brand-teal text-white rounded-xl font-bold transition-colors hover:bg-brand-teal/90 no-underline">Create Account</a>
             </div>
             {% endif %}
         </div>
     </div>
 </div>
 <!-- Main Navbar Container -->
-<header class="bg-white/80 backdrop-blur-xl border-b border-gray-200/50 sticky top-0 z-50 w-full py-3 md:py-4 shadow-[0_4px_20px_rgba(0,0,0,0.03)] transition-all duration-300">
+<header class="bg-white/80 backdrop-blur-xl border-b border-gray-200/50 sticky top-0 z-50 w-full py-2 md:py-3 shadow-[0_4px_20px_rgba(0,0,0,0.03)] transition-all duration-300">
     <div class="max-w-7xl mx-auto flex justify-between items-center w-full px-4 md:px-6">
             <!-- Logo -->
             <div class="flex items-center">
-                <a href="{% url 'home' %}" class="hover:opacity-90 transition-opacity no-underline hover:no-underline">
-                    <img src="{% static 'images/afridata-logo.svg' %}" alt="AfriData Logo" class="h-16 md:h-24 w-auto -ml-4 object-contain" style="transform: scale(1.2); transform-origin: left center;">
+                <a href="{% url 'home' %}" class="hover:opacity-90 transition-opacity no-underline hover:no-underline flex items-center">
+                    <img src="{% static 'images/afridata_logo_icon.png' %}" alt="AfriData Logo" class="h-10 md:h-12 w-auto -ml-2 object-contain">
+                    <span class="text-[#0B4564] font-extrabold text-xl md:text-2xl ml-2 tracking-tight">AfriData</span>
                 </a>
             </div>
             
+            <!-- Global Search (Desktop) -->
+            <div class="hidden md:block relative flex-1 max-w-md mx-8">
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400 group-focus-within:text-brand-teal transition-colors"></i>
+                    </div>
+                    <input type="text" id="globalSearchInput" placeholder="Search datasets, organizations..." 
+                           class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-[15px] rounded-[1rem] focus:bg-white focus:ring-4 focus:ring-brand-teal/10 focus:border-brand-teal block pl-10 p-2.5 transition-all outline-none" autocomplete="off">
+                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none hidden" id="globalSearchLoading">
+                        <i class="fas fa-spinner fa-spin text-brand-teal"></i>
+                    </div>
+                </div>
+                
+                <!-- Global Search Dropdown -->
+                <div id="globalSearchDropdown" class="absolute left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 z-[100] hidden overflow-hidden flex flex-col max-h-[70vh]">
+                    <div id="globalSearchResults" class="overflow-y-auto p-2">
+                        <!-- Results injected here -->
+                    </div>
+                    <div class="bg-gray-50 p-3 border-t border-gray-100 text-center text-xs text-gray-500 font-medium">
+                        Press <kbd class="bg-white border border-gray-200 rounded px-1 text-gray-700">Enter</kbd> to see all results
+                    </div>
+                </div>
+            </div>
+
             <nav class="hidden md:flex items-center space-x-8 text-[15px] font-medium tracking-wide m-0 p-0">
                 {% if user.is_authenticated %}
                 <a href="{% url 'home' %}" class="pb-1 border-b-2 {% if request.resolver_match.url_name == 'home' %}border-brand-blue text-brand-blue{% else %}border-transparent text-gray-600 hover:text-brand-blue hover:border-brand-teal{% endif %} transition-all duration-200 no-underline hover:no-underline">Home</a>
@@ -127,24 +141,20 @@
                             <p class="text-xs text-gray-500 uppercase tracking-wider font-bold mb-1 m-0">Signed in as</p>
                             <p class="text-sm font-semibold text-gray-900 truncate m-0">{{ user.email }}</p>
                         </div>
-                        <a href="{% url 'profile' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors font-medium no-underline hover:no-underline">
-                            Profile Settings
+                        <a href="{% url 'workspace' %}" class="block px-4 py-2.5 text-sm text-brand-blue hover:bg-blue-50 transition-colors font-bold no-underline hover:no-underline">
+                            <i class="fas fa-layer-group w-5 text-center mr-1"></i> My Workspace
                         </a>
-                        <a href="{% url 'settings' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors font-medium no-underline hover:no-underline">
-                            Account Preferences
+                        <a href="{% url 'edit_profile' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors font-medium no-underline hover:no-underline">
+                            <i class="fas fa-user-circle w-5 text-center text-gray-400 mr-1"></i> Profile Settings
                         </a>
                         {% if user.is_superuser %}
                         <a href="{% url 'admin_dashboard:dashboard_home' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors font-medium no-underline hover:no-underline">
-                            Admin Dashboard
-                        </a>
-                        {% else %}
-                        <a href="{% url 'public_profile' user.id %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors font-medium no-underline hover:no-underline">
-                            Public Profile
+                            <i class="fas fa-shield-alt w-5 text-center text-gray-400 mr-1"></i> Admin Dashboard
                         </a>
                         {% endif %}
                         <div class="border-t border-gray-100 my-1 mt-1"></div>
                         <a href="{% url 'logout' %}" class="block px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 font-bold transition-colors no-underline hover:no-underline">
-                            Sign out
+                            <i class="fas fa-sign-out-alt w-5 text-center opacity-70 mr-1"></i> Sign out
                         </a>
                     </div>
                 </div>
@@ -226,5 +236,121 @@
         links.forEach(l => {
             l.style.setProperty('text-decoration', 'none', 'important');
         });
+
+        // Global Search Logic
+        const searchInput = document.getElementById('globalSearchInput');
+        const searchDropdown = document.getElementById('globalSearchDropdown');
+        const searchResults = document.getElementById('globalSearchResults');
+        const searchLoading = document.getElementById('globalSearchLoading');
+        
+        let debounceTimer;
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                const query = this.value.trim();
+                
+                clearTimeout(debounceTimer);
+                
+                if (query.length < 2) {
+                    searchDropdown.classList.add('hidden');
+                    return;
+                }
+                
+                searchDropdown.classList.remove('hidden');
+                searchLoading.classList.remove('hidden');
+                searchResults.innerHTML = '<div class="p-4 text-center text-sm text-gray-500">Searching...</div>';
+                
+                debounceTimer = setTimeout(() => {
+                    fetch(`/api/search/global/?q=${encodeURIComponent(query)}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            searchLoading.classList.add('hidden');
+                            if (data.success && data.results) {
+                                renderSearchResults(data.results, query);
+                            }
+                        })
+                        .catch(err => {
+                            searchLoading.classList.add('hidden');
+                            searchResults.innerHTML = '<div class="p-4 text-center text-sm text-red-500">Error fetching results.</div>';
+                        });
+                }, 300);
+            });
+
+            // Close when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
+                    searchDropdown.classList.add('hidden');
+                }
+            });
+
+            // Focus opens if there's text
+            searchInput.addEventListener('focus', function() {
+                if (this.value.trim().length >= 2) {
+                    searchDropdown.classList.remove('hidden');
+                }
+            });
+            
+            // Handle enter key
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    window.location.href = `/dataset/?search=${encodeURIComponent(this.value.trim())}`;
+                }
+            });
+        }
+
+        function renderSearchResults(results, query) {
+            let html = '';
+            let hasResults = false;
+
+            // Highlight helper
+            const highlight = (text) => {
+                if (!text) return '';
+                const regex = new RegExp(`(${query})`, 'gi');
+                return text.replace(regex, '<span class="bg-brand-amber/30 text-brand-blue font-bold rounded px-0.5">$1</span>');
+            };
+
+            const renderGroup = (title, items, icon) => {
+                if (!items || items.length === 0) return '';
+                hasResults = true;
+                let groupHtml = `<div class="mb-2">
+                    <div class="px-3 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50/50 flex items-center">
+                        <i class="fas ${icon} mr-2"></i> ${title}
+                    </div>`;
+                
+                items.forEach(item => {
+                    groupHtml += `
+                        <a href="${item.url}" class="block p-3 hover:bg-brand-offwhite rounded-xl transition-colors no-underline">
+                            <div class="font-semibold text-sm text-gray-900">${highlight(item.title)}</div>
+                            <div class="text-xs text-gray-500 mt-0.5 flex items-center justify-between">
+                                <span>${highlight(item.subtitle)}</span>
+                                ${item.type ? `<span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">${item.type}</span>` : ''}
+                            </div>
+                        </a>
+                    `;
+                });
+                groupHtml += '</div>';
+                return groupHtml;
+            };
+
+            html += renderGroup('Datasets', results.datasets, 'fa-database');
+            html += renderGroup('Organizations & Users', results.organizations, 'fa-users');
+            html += renderGroup('Resources', results.resources, 'fa-file-alt');
+            html += renderGroup('Data Standards', results.standards, 'fa-book');
+
+            if (!hasResults) {
+                html = `
+                    <div class="p-6 text-center">
+                        <div class="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3 text-gray-300">
+                            <i class="fas fa-search text-xl"></i>
+                        </div>
+                        <p class="text-gray-900 font-bold text-sm mb-1">No results found for "${query}"</p>
+                        <p class="text-xs text-gray-500">Try adjusting your keywords or search terms.</p>
+                    </div>
+                `;
+            }
+
+            searchResults.innerHTML = html;
+        }
     });
 </script>

@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Neural Processing | AfriData{% endblock %}
+{% block title %}Processing | AfriData{% endblock %}
 
 {% block content %}
 <div class="min-h-[80vh] flex flex-col items-center justify-center py-24 px-6 text-center">
@@ -19,10 +19,10 @@
     <!-- Status Text -->
     <div class="max-w-xl mx-auto space-y-6">
         <h2 class="text-3xl md:text-5xl font-serif font-bold text-brand-blue leading-tight">
-            Synthesizing Dataset Architecture
+            Processing Dataset
         </h2>
         <p class="text-brand-grey/60 text-lg font-light leading-relaxed">
-            Our AI-driven pipeline is analyzing your research structure, mapping variables against international standards, and computing quality metrics.
+            We are analyzing your dataset, mapping variables, and computing quality metrics.
         </p>
     </div>
 
@@ -38,7 +38,7 @@
             <div class="w-10 h-10 rounded-full bg-brand-offwhite text-brand-blue flex items-center justify-center border border-gray-100 animate-pulse">
                 <i class="fas fa-brain text-sm"></i>
             </div>
-            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Neural Mapping</span>
+            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Mapping</span>
         </div>
         <div class="flex flex-col items-center gap-3">
             <div class="w-10 h-10 rounded-full bg-brand-offwhite text-brand-blue flex items-center justify-center border border-gray-100 opacity-30">
@@ -103,7 +103,7 @@
                 <div class="min-h-screen flex items-center justify-center p-6 text-center">
                     <div class="max-w-md">
                         <i class="fas fa-triangle-exclamation text-6xl text-red-500 mb-8"></i>
-                        <h2 class="text-3xl font-serif font-bold text-brand-blue mb-4">Pipeline Interrupted</h2>
+                        <h2 class="text-3xl font-serif font-bold text-brand-blue mb-4">Processing Interrupted</h2>
                         <p class="text-brand-grey/60 mb-12">${msg}</p>
                         <a href="{% url 'standardiser:upload_dataset' %}" class="btn-primary !w-full">Initialize New Session</a>
                     </div>

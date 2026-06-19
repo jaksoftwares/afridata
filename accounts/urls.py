@@ -25,7 +25,7 @@ urlpatterns = [
     path('login_signup/', views.login_signup_page),  # no need for a new name
 
     # Profile URLs
-    path('profile/', views.profile_view, name='profile'),
+    path('workspace/', views.workspace_view, name='workspace'),
     path('profile/edit/', views.edit_profile_view, name='edit_profile'),
     path('profile/<int:user_id>/', views.public_profile_view, name='public_profile'),
 

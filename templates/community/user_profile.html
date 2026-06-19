@@ -112,7 +112,7 @@
         <div class="lg:col-span-1 space-y-8">
             <!-- Bio Card -->
             <div class="card-fancy glass-card !p-8">
-                <h3 class="text-lg font-bold mb-4 font-serif text-brand-blue uppercase tracking-widest text-xs">Researcher Persona</h3>
+                <h3 class="text-lg font-bold mb-4 font-serif text-brand-blue uppercase tracking-widest text-xs">Bio</h3>
                 <p class="text-gray-600 leading-relaxed font-sans italic">
                     {% if profile_user.profile.bio %}
                         "{{ profile_user.profile.bio }}"
@@ -124,18 +124,18 @@
                 <div class="mt-8 pt-8 border-t border-gray-100 grid grid-cols-2 gap-4">
                     <div class="text-center p-4 bg-brand-offwhite rounded-xl border border-gray-100">
                         <div class="text-2xl font-bold text-brand-blue font-serif">{{ activity.thread_count }}</div>
-                        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Inspirations</div>
+                        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Threads</div>
                     </div>
                     <div class="text-center p-4 bg-brand-offwhite rounded-xl border border-gray-100">
                         <div class="text-2xl font-bold text-brand-teal font-serif">{{ activity.post_count }}</div>
-                        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Contributions</div>
+                        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Posts</div>
                     </div>
                 </div>
             </div>
 
             <!-- Achievements Card -->
             <div class="card-fancy !p-8">
-                <h3 class="text-lg font-bold mb-6 font-serif text-brand-blue uppercase tracking-widest text-xs">Recognition Badges</h3>
+                <h3 class="text-lg font-bold mb-6 font-serif text-brand-blue uppercase tracking-widest text-xs">Badges</h3>
                 <div class="space-y-4">
                     {% if activity.thread_count >= 10 %}
                     <div class="flex items-center p-3 bg-blue-50 rounded-xl border border-blue-100 group hover:scale-[1.02] transition-transform">
@@ -178,10 +178,10 @@
                 <div class="absolute -right-10 -bottom-10 opacity-10 group-hover:scale-110 transition-transform duration-1000 rotate-12">
                     <i class="fas fa-chart-line text-[10rem]"></i>
                 </div>
-                <h3 class="text-white text-[10px] font-bold uppercase tracking-widest mb-6 relative z-10 opacity-70">Activity Velocity</h3>
+                <h3 class="text-white text-[10px] font-bold uppercase tracking-widest mb-6 relative z-10 opacity-70">Activity Level</h3>
                 <div class="relative z-10">
                     <p class="text-2xl font-serif font-bold mb-1 italic">
-                        {% if activity.post_count > 10 %}"Highly Engaged"{% else %}"Active Participant"{% endif %}
+                        {% if activity.post_count > 10 %}"Highly Active"{% else %}"Active Participant"{% endif %}
                     </p>
                     <p class="text-white/60 text-xs font-medium leading-relaxed">{{ profile_user.username|upper }} contributes significantly to macroeconomic discussions.</p>
                 </div>
@@ -194,11 +194,11 @@
             <div class="glass-card rounded-2xl p-2 flex gap-2">
                 <button id="tab-threads" onclick="switchTab('threads')" 
                         class="flex-1 py-4 px-6 rounded-xl font-bold text-sm transition-all duration-300 font-sans tracking-tight bg-brand-blue text-white shadow-lg">
-                    Recent Seeds ({{ recent_threads|length }})
+                    Recent Threads ({{ recent_threads|length }})
                 </button>
                 <button id="tab-posts" onclick="switchTab('posts')" 
                         class="flex-1 py-4 px-6 rounded-xl font-bold text-sm transition-all duration-300 font-sans tracking-tight text-gray-500 hover:bg-white hover:text-brand-blue">
-                    Peer Dialogues ({{ recent_posts|length }})
+                    Recent Posts ({{ recent_posts|length }})
                 </button>
             </div>
 
@@ -209,7 +209,7 @@
                     {% if recent_threads %}
                         {% for thread in recent_threads %}
                         <div class="group card-fancy !p-8 border-2 border-transparent hover:border-brand-teal/20 transition-all duration-300 cursor-pointer flex gap-6" 
-                             onclick="window.location.href='{% url 'community:thread_detail' thread.pk %}'">
+                             onclick="window.location.href=`{% url 'community:thread_detail' thread.pk %}`">
                             <div class="hidden md:flex flex-col items-center justify-center w-20 bg-brand-offwhite rounded-2xl group-hover:bg-brand-teal/5 transition-colors p-4">
                                 <span class="text-xl font-bold text-brand-blue mb-1 font-serif">{{ thread.view_count|default:"0" }}</span>
                                 <span class="text-[8px] font-bold text-gray-400 uppercase tracking-tighter">Views</span>
@@ -233,7 +233,7 @@
                                 <i class="fas fa-pen-nib"></i>
                             </div>
                             <h3 class="text-xl font-bold mb-2 font-serif">Quiet Explorer</h3>
-                            <p class="text-gray-500 text-sm max-w-xs mx-auto">This user hasn't sparked any discussions yet. Their started threads will appear here once archived.</p>
+                            <p class="text-gray-500 text-sm max-w-xs mx-auto">This user hasn't started any discussions yet. Their threads will appear here.</p>
                         </div>
                     {% endif %}
                 </div>
@@ -278,7 +278,7 @@
             <div class="bg-gradient-to-br from-brand-blue to-brand-teal rounded-brand-card p-1">
                 <div class="bg-white rounded-[10px] p-10 flex flex-col md:flex-row items-center gap-8">
                     <div class="flex-1 text-center md:text-left">
-                        <h4 class="text-2xl font-bold mb-3 font-serif text-brand-blue tracking-tight">Expand Your Digital Footprint</h4>
+                        <h4 class="text-2xl font-bold mb-3 font-serif text-brand-blue tracking-tight">Join the Discussion</h4>
                         <p class="text-gray-500 text-sm leading-relaxed font-sans">Your expertise is valuable to the community. Propose new topics or help other researchers refine their methodologies.</p>
                     </div>
                     <div class="flex shrink-0 gap-3">

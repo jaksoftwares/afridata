@@ -148,13 +148,32 @@
 
         <!-- Dataset Grid Content -->
         <div class="flex-1">
+            <!-- Dedicated Dataset Search -->
+            <div class="mb-8">
+                <div class="relative group shadow-sm rounded-2xl">
+                    <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400 group-focus-within:text-brand-blue text-lg transition-colors"></i>
+                    </div>
+                    <input type="text" id="datasetLiveSearch" placeholder="Search datasets by title, topic, keyword, organization, or description..." 
+                           class="w-full pl-14 pr-12 py-4.5 bg-white border border-gray-200 rounded-2xl text-[15px] text-gray-900 font-medium focus:ring-4 focus:ring-brand-blue/10 focus:border-brand-blue transition-all outline-none shadow-sm" autocomplete="off">
+                    <div class="absolute inset-y-0 right-0 pr-4 flex items-center gap-2">
+                        <div id="datasetSearchLoading" class="hidden pointer-events-none">
+                            <i class="fas fa-spinner fa-spin text-brand-blue"></i>
+                        </div>
+                        <button type="button" id="clearDatasetSearch" class="hidden text-gray-400 hover:text-red-500 transition-colors focus:outline-none w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Active Filters & Result Count -->
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-6">
                 <div class="flex items-center space-x-4">
-                    <h2 class="text-xl font-bold text-gray-900 font-title">Resource Archive</h2>
+                    <h2 class="text-xl font-bold text-gray-900 font-title">Datasets</h2>
                     <div class="h-4 w-px bg-gray-200"></div>
-                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
-                        Showing {{ page_obj.paginator.count }} datasets
+                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest" id="datasetCountDisplay">
+                        Showing <span id="currentDatasetCount">{{ page_obj.paginator.count }}</span> datasets
                     </p>
                 </div>
                 
@@ -174,9 +193,9 @@
         {% for dataset in datasets %}
         <div class="group card-fancy !p-0 overflow-hidden flex flex-col border-2 border-transparent hover:border-brand-teal/20 transition-all duration-300 cursor-pointer" onclick="window.location.href=`{% url 'dataset_detail' dataset.slug %}`">
 
-            <!-- Dataset Cover Image Placeholder -->
-            <div class="h-44 w-full relative overflow-hidden bg-gray-100">
-                <img src="{{ dataset.get_cover_photo_url }}" 
+            <!-- Dataset Cover Image -->
+            <div class="aspect-video w-full relative overflow-hidden bg-gray-100">
+                <img src="{{ dataset.cover_photo }}" 
                      alt="Dataset Cover" 
                      class="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700">
                 
@@ -219,7 +238,7 @@
                 </div>
 
                 <h3 class="text-xl font-bold mb-3 group-hover:text-brand-blue transition-colors line-clamp-2 leading-tight font-title">{{ dataset.title }}</h3>
-                <p class="text-gray-500 text-xs mb-8 leading-relaxed line-clamp-2">{% if dataset.bio %}{{ dataset.bio }}{% else %}Analytical repository containing curated African datasets optimized for research and structural modeling.{% endif %}</p>
+                <p class="text-gray-500 text-xs mb-8 leading-relaxed line-clamp-2">{% if dataset.bio %}{{ dataset.bio }}{% else %}Curated African datasets optimized for research.{% endif %}</p>
                 
                 <div class="flex flex-wrap gap-2 mb-8">
                     {% for topic in dataset.topics|slice:":3" %}
@@ -252,19 +271,44 @@
             <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-brand-offwhite text-gray-300 text-4xl mb-6">
                 <i class="fas fa-search"></i>
             </div>
-            <h3 class="text-2xl font-bold text-gray-900 mb-2">No Matching Archives</h3>
+            <h3 class="text-2xl font-bold text-gray-900 mb-2">No Matching Datasets</h3>
             <p class="text-gray-500 max-w-sm mx-auto mb-10">Adjust your filters or try searching for broader terms in the Pan-African metadata database.</p>
             <a href="{% url 'dataset_list' %}" class="btn-primary !px-10 !py-4 shadow-xl">Reset Search</a>
         </div>
         {% endfor %}
             </div>
 
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <div class="mt-12 flex justify-center">
+                <nav class="inline-flex bg-white rounded-2xl shadow-xl p-2 border border-gray-100 gap-1">
+                    {% if page_obj.has_previous %}
+                    <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_category %}category={{ current_category }}&{% endif %}{% if current_format %}format={{ current_format }}&{% endif %}{% if current_premium %}premium={{ current_premium }}&{% endif %}{% if current_quality %}quality={{ current_quality }}&{% endif %}{% if current_sort %}sort={{ current_sort }}&{% endif %}page={{ page_obj.previous_page_number }}" 
+                       class="p-4 rounded-xl text-gray-400 hover:bg-brand-offwhite hover:text-brand-blue transition-all">
+                        <i class="fas fa-chevron-left text-xs"></i>
+                    </a>
+                    {% endif %}
+
+                    <div class="flex items-center px-6 text-sm font-bold text-gray-500 uppercase tracking-widest border-x border-gray-50 whitespace-nowrap">
+                        <span>Page {{ page_obj.number }} <span class="mx-2 text-gray-200">/</span> {{ page_obj.paginator.num_pages }}</span>
+                    </div>
+
+                    {% if page_obj.has_next %}
+                    <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_category %}category={{ current_category }}&{% endif %}{% if current_format %}format={{ current_format }}&{% endif %}{% if current_premium %}premium={{ current_premium }}&{% endif %}{% if current_quality %}quality={{ current_quality }}&{% endif %}{% if current_sort %}sort={{ current_sort }}&{% endif %}page={{ page_obj.next_page_number }}" 
+                       class="p-4 rounded-xl text-gray-400 hover:bg-brand-offwhite hover:text-brand-blue transition-all">
+                        <i class="fas fa-chevron-right text-xs"></i>
+                    </a>
+                    {% endif %}
+                </nav>
+            </div>
+            {% endif %}
+
             <!-- Discovery CTA -->
             <div class="mt-20 mb-12 p-10 rounded-[2rem] bg-brand-blue relative overflow-hidden text-center">
                 <div class="absolute inset-0 z-0 opacity-20 bg-[radial-gradient(circle_at_top_right,_var(--brand-teal)_0,_transparent_60%)]"></div>
                 <div class="relative z-10">
                     <h3 class="text-xl md:text-2xl font-bold text-white mb-2 font-title">Didn't find what you were looking for?</h3>
-                    <p class="text-brand-offwhite/60 mb-6 max-w-lg mx-auto text-xs brand-body">Explore the full public archive to see what's new in African research.</p>
+                    <p class="text-brand-offwhite/60 mb-6 max-w-lg mx-auto text-xs brand-body">Explore all datasets to see what's new in African research.</p>
                     <a href="{% url 'dataset_list' %}" class="inline-flex items-center px-6 py-3 bg-white text-brand-blue rounded-xl text-xs font-bold hover:bg-brand-teal hover:text-white transition-all shadow-xl">
                         Explore all datasets
                     </a>
@@ -272,31 +316,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Pagination -->
-    {% if page_obj.has_other_pages %}
-    <div class="mt-20 flex justify-center">
-        <nav class="inline-flex bg-white rounded-2xl shadow-xl p-2 border border-gray-100 gap-1">
-            {% if page_obj.has_previous %}
-            <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_category %}category={{ current_category }}&{% endif %}{% if current_format %}format={{ current_format }}&{% endif %}{% if current_premium %}premium={{ current_premium }}&{% endif %}{% if current_quality %}quality={{ current_quality }}&{% endif %}{% if current_sort %}sort={{ current_sort }}&{% endif %}page={{ page_obj.previous_page_number }}" 
-               class="p-4 rounded-xl text-gray-400 hover:bg-brand-offwhite hover:text-brand-blue transition-all">
-                <i class="fas fa-chevron-left text-xs"></i>
-            </a>
-            {% endif %}
-
-            <div class="flex items-center px-6 text-sm font-bold text-gray-500 uppercase tracking-widest border-x border-gray-50 whitespace-nowrap">
-                <span>Page {{ page_obj.number }} <span class="mx-2 text-gray-200">/</span> {{ page_obj.paginator.num_pages }}</span>
-            </div>
-
-            {% if page_obj.has_next %}
-            <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_category %}category={{ current_category }}&{% endif %}{% if current_format %}format={{ current_format }}&{% endif %}{% if current_premium %}premium={{ current_premium }}&{% endif %}{% if current_quality %}quality={{ current_quality }}&{% endif %}{% if current_sort %}sort={{ current_sort }}&{% endif %}page={{ page_obj.next_page_number }}" 
-               class="p-4 rounded-xl text-gray-400 hover:bg-brand-offwhite hover:text-brand-blue transition-all">
-                <i class="fas fa-chevron-right text-xs"></i>
-            </a>
-            {% endif %}
-        </nav>
-    </div>
-    {% endif %}
 </div>
 {% endblock %}
 
@@ -366,6 +385,102 @@
         // Load preference
         const savedView = localStorage.getItem('dataset_view');
         if (savedView) setView(savedView);
+
+        // Live Search Logic
+        const datasetLiveSearch = document.getElementById('datasetLiveSearch');
+        const clearDatasetSearch = document.getElementById('clearDatasetSearch');
+        const datasetSearchLoading = document.getElementById('datasetSearchLoading');
+        const currentDatasetCount = document.getElementById('currentDatasetCount');
+        
+        let liveSearchTimer;
+        
+        if (datasetLiveSearch) {
+            // Check if there is a search param in the URL initially to prefill
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('search')) {
+                datasetLiveSearch.value = urlParams.get('search');
+                if (datasetLiveSearch.value.trim() !== '') {
+                    clearDatasetSearch.classList.remove('hidden');
+                }
+            }
+
+            datasetLiveSearch.addEventListener('input', function() {
+                const query = this.value;
+                
+                if (query.trim() !== '') {
+                    clearDatasetSearch.classList.remove('hidden');
+                } else {
+                    clearDatasetSearch.classList.add('hidden');
+                }
+                
+                clearTimeout(liveSearchTimer);
+                datasetSearchLoading.classList.remove('hidden');
+                
+                liveSearchTimer = setTimeout(() => {
+                    performLiveSearch(query);
+                }, 400);
+            });
+            
+            clearDatasetSearch.addEventListener('click', function() {
+                datasetLiveSearch.value = '';
+                this.classList.add('hidden');
+                datasetSearchLoading.classList.remove('hidden');
+                performLiveSearch('');
+            });
+            
+            function performLiveSearch(query) {
+                // Get current URL and params
+                const url = new URL(window.location.href);
+                if (query.trim() === '') {
+                    url.searchParams.delete('search');
+                } else {
+                    url.searchParams.set('search', query);
+                }
+                
+                // Fetch new HTML
+                fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    datasetSearchLoading.classList.add('hidden');
+                    
+                    // Parse the returned HTML
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    
+                    const newContainer = doc.getElementById('datasetContainer');
+                    const newCount = doc.getElementById('currentDatasetCount');
+                    const newPagination = doc.querySelector('.mt-12.flex.justify-center');
+                    
+                    if (newContainer) {
+                        container.innerHTML = newContainer.innerHTML;
+                    }
+                    if (newCount && currentDatasetCount) {
+                        currentDatasetCount.innerText = newCount.innerText;
+                    }
+                    
+                    // Handle pagination block
+                    const currentPagination = document.querySelector('.mt-12.flex.justify-center');
+                    if (newPagination && currentPagination) {
+                        currentPagination.innerHTML = newPagination.innerHTML;
+                    } else if (newPagination && !currentPagination) {
+                        container.insertAdjacentHTML('afterend', `<div class="mt-12 flex justify-center">${newPagination.innerHTML}</div>`);
+                    } else if (!newPagination && currentPagination) {
+                        currentPagination.remove();
+                    }
+                    
+                    // Update URL without page reload
+                    window.history.pushState({}, '', url);
+                })
+                .catch(err => {
+                    console.error('Live search error:', err);
+                    datasetSearchLoading.classList.add('hidden');
+                });
+            }
+        }
     });
 </script>
 {% endblock %}

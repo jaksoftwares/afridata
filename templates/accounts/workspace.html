@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ user.get_full_name }}'s Profile - AfriData{% endblock %}
+{% block title %}My Workspace - AfriData{% endblock %}
 
 {% block extra_css %}
 <!-- Link to user_profile.css -->
@@ -10,8 +10,8 @@
 
 {% block header_content %}
 <div class="text-center py-8">
-  <h1 class="text-4xl font-bold font-title mb-2">User Profile</h1>
-  <p class="text-xl opacity-90">Manage your AfriData presence</p>
+  <h1 class="text-4xl font-bold font-title mb-2">My Workspace</h1>
+  <p class="text-xl opacity-90">Manage your datasets, tokens, and activity</p>
 </div>
 {% endblock %}
 
@@ -55,7 +55,7 @@
       </div>
       <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
         <button class="btn-primary px-6 py-3" onclick="toggleEditMode()">Edit Profile</button>
-        <button class="btn-secondary px-6 py-3" onclick="shareProfile()">Share Profile</button>
+        <a href="{% url 'community:user_profile' user.username %}" class="btn-secondary px-6 py-3 no-underline inline-block text-center leading-[inherit]">View Public Profile</a>
       </div>
     </div>
   </div>
@@ -239,6 +239,10 @@
         <p class="text-sm text-purple-200">Your referrer</p>
       </div>
       {% endif %}
+    </div>
+    <div class="mt-4 flex space-x-3">
+      <button class="bg-white/40 hover:bg-white/60 text-brand-blue px-4 py-2 rounded-lg font-medium transition-colors" onclick="viewReferralDetails()">View Details</button>
+      <button class="bg-brand-blue hover:bg-brand-blue/90 text-white px-4 py-2 rounded-lg font-medium transition-colors" onclick="copyReferralLink()">Copy Referral Link</button>
     </div>
   </div>
   {% endif %}
@@ -582,21 +586,7 @@
     window.location.href = "{% url 'edit_profile' %}";
   }
 
-  function shareProfile() {
-    const profileUrl = window.location.href;
-    if (navigator.share) {
-      navigator.share({
-        title: "{{ user.get_full_name }}'s Profile",
-        text: "Check out {{ user.get_full_name }}'s data contributions on AfriData",
-        url: profileUrl
-      });
-    } else {
-      // Fallback - copy to clipboard
-      navigator.clipboard.writeText(profileUrl).then(() => {
-        alert('Profile URL copied to clipboard!');
-      });
-    }
-  }
+
 
   function shareDataset(slug) {
     const datasetUrl = `${window.location.origin}/dataset/${slug}/`;
@@ -623,13 +613,12 @@
   }
 
   function viewReferralDetails() {
-    // Show referral modal or redirect to referral page
-    alert('Referral details functionality coming soon!');
+    window.location.href = "{% url 'referrals' %}";
   }
 
   // Copy referral link
   function copyReferralLink() {
-    const referralUrl = `${window.location.origin}/register?ref={{ user.username }}`;
+    const referralUrl = `${window.location.origin}{% url 'login_signup' %}?mode=signup&ref={{ user.username }}`;
     navigator.clipboard.writeText(referralUrl).then(() => {
       alert('Referral link copied to clipboard!');
     }).catch(err => {

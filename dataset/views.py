@@ -675,11 +675,22 @@ def dataset_list(request):
     # Handle search
     search_query = request.GET.get('search', '')
     if search_query:
-        datasets = datasets.filter(
-            Q(title__icontains=search_query) |  # pyrefly: ignore[unsupported-operation]
-            Q(bio__icontains=search_query) |
-            Q(topics__icontains=search_query)
-        )
+        from django.db.models import Case, When, IntegerField, Value
+        datasets = datasets.annotate(
+            search_relevance=Case(
+                When(title__iexact=search_query, then=Value(100)),
+                When(title__icontains=search_query, then=Value(80)),
+                When(topics__icontains=search_query, then=Value(60)),
+                When(bio__icontains=search_query, then=Value(40)),
+                default=Value(0),
+                output_field=IntegerField(),
+            )
+        ).filter(
+            Q(title__icontains=search_query) |  # type: ignore
+            Q(bio__icontains=search_query) |  # type: ignore
+            Q(topics__icontains=search_query) |  # type: ignore
+            Q(author__username__icontains=search_query)
+        ).order_by('-search_relevance')
     
     # Handle category filter
     category = request.GET.get('category', '')
@@ -716,7 +727,10 @@ def dataset_list(request):
     elif sort_by == 'tokens_desc':
         datasets = datasets.order_by('-token_cost')
     else:  # relevance (default)
-        datasets = datasets.order_by('-views', '-downloads')
+        if search_query:
+            datasets = datasets.order_by('-search_relevance', '-views', '-downloads')
+        else:
+            datasets = datasets.order_by('-views', '-downloads')
     
     # Pagination
     paginator = Paginator(datasets, 12)  # Show 12 datasets per page
@@ -743,7 +757,7 @@ def dataset_list(request):
             'quality_tier': dataset.get_quality_tier_display(),
             'file_size_mb': round(dataset.file_size_mb, 2),
             'has_documentation': dataset.has_documentation,
-            'cover_photo': dataset.cover_photo.url if dataset.cover_photo else None,
+            'cover_photo': dataset.get_cover_photo_url,
         })
     
     context = {
@@ -758,38 +772,6 @@ def dataset_list(request):
     }
     return render(request, 'dataset/dataset_list.html', context)
 
-
-@login_required
-def user_dashboard(request):
-    """User dashboard showing personal statistics and activity"""
-    user_profile = request.user.profile
-    
-    # Get user's datasets
-    user_datasets = Dataset.objects.filter(author=request.user).order_by('-created_at')[:5]
-    
-    # Get user's downloads
-    user_downloads = Download.objects.filter(user=request.user).select_related('dataset').order_by('-created_at')[:5]
-    
-    # Get recent transactions
-    recent_transactions = TokenTransaction.objects.filter(user=request.user).order_by('-created_at')[:10]
-    
-    # Calculate statistics
-    total_uploads = Dataset.objects.filter(author=request.user).count()
-    total_downloads_received = Dataset.objects.filter(author=request.user).aggregate(Sum('downloads'))['downloads__sum'] or 0
-    total_views_received = Dataset.objects.filter(author=request.user).aggregate(Sum('views'))['views__sum'] or 0
-    
-    context = {
-        'user_profile': user_profile,
-        'user_datasets': user_datasets,
-        'user_downloads': user_downloads,
-        'recent_transactions': recent_transactions,
-        'total_uploads': total_uploads,
-        'total_downloads_received': total_downloads_received,
-        'total_views_received': total_views_received,
-        'downloads_remaining': user_profile.monthly_download_limit - user_profile.downloads_this_month,
-    }
-    
-    return render(request, 'accounts/dashboard.html', context)
 
 
 @login_required

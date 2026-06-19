@@ -255,12 +255,13 @@ def search_datasets(request):
         })
     
     # Search across multiple fields
+    # Use select_related and limit results to prevent DB overwhelm during concurrent searches
     datasets = Dataset.objects.filter(
         Q(title__icontains=query) |  # type: ignore
         Q(bio__icontains=query) |  # type: ignore
         Q(topics__icontains=query) |  # type: ignore
         Q(author__username__icontains=query)
-    ).select_related('author').order_by('-created_at')
+    ).select_related('author').order_by('-created_at')[:20]
     
     # Format results
     results = []
@@ -288,6 +289,87 @@ def search_datasets(request):
         'success': True,
         'count': len(results),
         'datasets': results
+    })
+
+
+def global_search(request):
+    """
+    Global platform search API.
+    Searches across Datasets and Organizations (Users).
+    Returns grouped results for the global search dropdown.
+    """
+    query = request.GET.get('q', '').strip()
+    
+    if not query:
+        return JsonResponse({
+            'success': True,
+            'results': {
+                'datasets': [],
+                'organizations': [],
+                'resources': [],
+                'standards': []
+            }
+        })
+    
+    # 1. Search Datasets (Relevance ordered: Exact title > partial title > keywords/bio)
+    from django.db.models import Case, When, IntegerField, Value
+    
+    datasets = Dataset.objects.annotate(
+        relevance=Case(
+            When(title__iexact=query, then=Value(100)),
+            When(title__icontains=query, then=Value(80)),
+            When(topics__icontains=query, then=Value(60)),
+            When(bio__icontains=query, then=Value(40)),
+            default=Value(0),
+            output_field=IntegerField(),
+        )
+    ).filter(
+        Q(title__icontains=query) |  # type: ignore
+        Q(bio__icontains=query) |  # type: ignore
+        Q(topics__icontains=query) |  # type: ignore
+        Q(author__username__icontains=query)
+    ).select_related('author').order_by('-relevance', '-downloads')[:5]
+
+    dataset_results = []
+    for d in datasets:
+        dataset_results.append({
+            'id': d.id,
+            'title': d.title,
+            'url': f'/dataset/{d.slug}/',
+            'type': d.get_dataset_type_display(),
+            'subtitle': f"By {d.author.get_full_name() or d.author.username}"
+        })
+
+    # 2. Search Organizations (Users with organization field)
+    User = get_user_model()
+    org_users = User.objects.filter(
+        Q(profile__organization__icontains=query) |  # type: ignore
+        Q(username__icontains=query) |  # type: ignore
+        Q(full_name__icontains=query)
+    ).select_related('profile').distinct()[:3]
+    
+    org_results = []
+    for u in org_users:
+        org_name = u.profile.organization if hasattr(u, 'profile') and u.profile.organization else (u.get_full_name() or u.username)
+        org_results.append({
+            'id': u.id,
+            'title': org_name,
+            'url': f'/user/{u.username}/', # Or wherever user profiles are
+            'subtitle': 'Organization / User'
+        })
+
+    # 3. Resources & Standards (Empty for now)
+    resource_results = []
+    standard_results = []
+
+    return JsonResponse({
+        'success': True,
+        'results': {
+            'datasets': dataset_results,
+            'organizations': org_results,
+            'resources': resource_results,
+            'standards': standard_results
+        }
     })
 
 
@@ -553,3 +635,9 @@ def subscribe_newsletter(request):
         return redirect(next_url)
     
     return redirect('home')
+
+def faq_page(request):
+    """
+    Render the Frequently Asked Questions (FAQ) page.
+    """
+    return render(request, 'home/faq.html')

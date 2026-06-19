@@ -102,8 +102,8 @@
 <!-- Trending Section -->
 <section class="max-w-7xl mx-auto px-4 py-24">
     <div class="text-center mb-16">
-        <h2 class="text-3xl font-bold mb-4">Ecosystem Trends</h2>
-        <p class="text-gray-500 max-w-2xl mx-auto">Most popular datasets and topics this week.</p>
+        <h2 class="text-3xl font-bold mb-4">Popular Datasets</h2>
+        <p class="text-gray-500 max-w-2xl mx-auto">Explore popular datasets and topics this week.</p>
     </div>
             
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
@@ -175,7 +175,7 @@
         <aside class="lg:w-1/4 space-y-8">
             <div class="card-fancy !p-8 !bg-brand-offwhite/50 border-0">
                 <h4 class="text-xs font-bold text-brand-blue uppercase tracking-[.2em] mb-8 flex items-center">
-                    <i class="fas fa-layer-group mr-3 text-brand-teal"></i> Taxonomy
+                    <i class="fas fa-layer-group mr-3 text-brand-teal"></i> Categories
                 </h4>
                 <ul class="space-y-1.5 m-0 p-0 list-none">
                     <li onclick="filterByCategory('all')" class="group p-3 rounded-xl cursor-pointer transition-all hover:bg-white text-gray-600 font-semibold text-sm flex justify-between items-center">
@@ -200,7 +200,7 @@
                 <div class="relative z-10">
                     <h5 class="text-lg font-bold mb-3 !text-white leading-tight">Can't find specific data?</h5>
                     <p class="text-xs text-white/70 mb-8 leading-relaxed">Our data acquisition team can source custom datasets tailored to your specific research parameters.</p>
-                    <button onclick="showContactForm()" class="w-full !bg-white !text-brand-blue font-bold btn-primary !py-4 shadow-xl">Contact Procurement</button>
+                    <button onclick="showContactForm()" class="w-full !bg-white !text-brand-blue font-bold btn-primary !py-4 shadow-xl">Contact Us</button>
                 </div>
             </div>
         </aside>
@@ -215,14 +215,14 @@
                         {% elif recommended_source == 'warm_start' %}
                             Discover High-Quality Data
                         {% else %}
-                            Discover Highly Rated Datasets
+                            Browse Datasets
                         {% endif %}
                     </h3>
                     <p class="text-gray-400 text-sm font-medium uppercase tracking-widest text-[10px]">
                         {% if recommended_source == 'personalized' %}
                             Personalized AI recommendations based on your activity
                         {% else %}
-                            Verified high-integrity datasets
+                            Verified Datasets
                             {% if not user.is_authenticated %}
                                 — <a href="{% url 'login_signup' %}" class="text-brand-teal hover:underline">Log in</a> for personalized recommendations
                             {% endif %}
@@ -272,7 +272,7 @@
                                     </span>
                                 </div>
                                 <h4 class="text-xl font-bold mb-3 group-hover:text-brand-blue transition-colors font-title">{{ dataset.title }}</h4>
-                                <p class="text-gray-500 text-xs mb-8 leading-relaxed line-clamp-2 brand-body">{% if dataset.bio %}{{ dataset.bio }}{% else %}This repository contains structured data optimized for research and machine learning models within the African context.{% endif %}</p>
+                                <p class="text-gray-500 text-xs mb-8 leading-relaxed line-clamp-2 brand-body">{% if dataset.bio %}{{ dataset.bio }}{% else %}These datasets contain structured data optimized for research and machine learning models within the African context.{% endif %}</p>
                             </div>
 
                             <div class="flex items-center justify-between pt-6 border-t border-gray-50 mt-auto">
@@ -299,8 +299,8 @@
                         <i class="fas fa-layer-group"></i>
                     </div>
                     <h3 class="text-xl font-bold mb-3">Expanding the Library</h3>
-                    <p class="text-gray-500 max-w-sm mb-10 leading-relaxed text-sm">We are currently curating new high-integrity datasets. Check back soon or contribute your research to our community.</p>
-                    <button onclick="window.location.href=`{% url 'login_signup' %}`" class="btn-primary !px-12 !py-4 shadow-xl">Join AfriData Ecosystem</button>
+                    <p class="text-gray-500 max-w-sm mb-10 leading-relaxed text-sm">We are currently curating new datasets. Check back soon or contribute your research to our community.</p>
+                    <button onclick="window.location.href=`{% url 'login_signup' %}`" class="btn-primary !px-12 !py-4 shadow-xl">Join AfriData</button>
                 </div>
                 {% endfor %}
             </div>
@@ -308,7 +308,7 @@
             {% if recommended_datasets %}
             <div class="mt-16 text-center">
                 <button onclick="window.location.href=`{% url 'dataset_list' %}`" class="btn-secondary !px-14 !py-4 !border-gray-200 !text-gray-500 hover:!border-brand-teal hover:!text-brand-teal hover:!bg-brand-teal/5 font-bold tracking-widest text-xs uppercase">
-                    View Entire Dataset Pipeline <i class="fas fa-chevron-right ml-3 text-[10px]"></i>
+                    View Datasets <i class="fas fa-chevron-right ml-3 text-[10px]"></i>
                 </button>
             </div>
             {% endif %}
@@ -383,7 +383,7 @@
   }
 
   function showContactForm() {
-    alert('Our procurement team is currently processing high demand. Form reference: #DATA-REQ-402');
+    alert('Our team is currently processing high demand. Form reference: #DATA-REQ-402');
   }
 
   document.getElementById('searchInput').addEventListener('keypress', function(e) {

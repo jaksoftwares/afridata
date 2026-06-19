@@ -1,0 +1,688 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Frequently Asked Questions - AfriData{% endblock %}
+
+{% block header_class %}gradient-header{% endblock %}
+
+{% block header_content %}
+<div class="relative min-h-[400px] flex items-center justify-center py-24 px-4 overflow-hidden">
+    <!-- Sophisticated Background from Home Page -->
+    <div class="absolute inset-0 z-0 pointer-events-none">
+        <div class="absolute top-[-20%] right-[-10%] w-[60%] h-[70%] bg-brand-teal/15 blur-[120px] rounded-full"></div>
+        <div class="absolute bottom-[-10%] left-[-10%] w-[50%] h-[60%] bg-brand-blue/25 blur-[100px] rounded-full"></div>
+    </div>
+    
+    <div class="max-w-4xl mx-auto text-center relative z-10 w-full">
+        <h1 class="text-5xl md:text-6xl font-bold mb-6 tracking-tight !text-white font-serif">
+            Frequently Asked Questions
+        </h1>
+        <p class="text-lg md:text-xl mb-10 text-white/80 font-light max-w-2xl mx-auto leading-relaxed font-sans">
+            Find answers to common questions about datasets, data publishing, organizations, access requests, standards, and platform usage.
+        </p>
+
+        <!-- Search Bar -->
+        <div class="max-w-2xl mx-auto relative group">
+            <div class="absolute -inset-1 bg-gradient-to-r from-brand-teal/30 to-brand-green/30 rounded-2xl blur-lg opacity-0 group-focus-within:opacity-100 transition duration-700"></div>
+            <div class="relative flex items-center bg-white rounded-2xl shadow-3xl overflow-hidden p-1.5 border border-white/20">
+                <div class="pl-6 text-gray-400">
+                    <i class="fas fa-search text-xl"></i>
+                </div>
+                <input id="faqSearch" type="text" 
+                       placeholder="Search for answers... (e.g., How do I publish a dataset?)" 
+                       class="w-full bg-transparent border-0 focus:ring-0 text-gray-700 text-lg py-4 px-4 placeholder-gray-400 outline-none">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 -mt-16 pb-24 relative z-20">
+    
+    <!-- Quick Navigation -->
+    <div class="flex flex-wrap justify-center gap-2 mb-12 bg-white/80 backdrop-blur-md p-4 rounded-3xl shadow-lg border border-gray-100 mx-auto sticky top-20 z-30">
+        <a href="#getting-started" class="faq-nav-pill px-5 py-2 rounded-full text-sm font-bold text-gray-500 hover:text-brand-blue hover:bg-brand-offwhite transition-colors">Getting Started</a>
+        <a href="#datasets" class="faq-nav-pill px-5 py-2 rounded-full text-sm font-bold text-gray-500 hover:text-brand-blue hover:bg-brand-offwhite transition-colors">Datasets</a>
+        <a href="#publishing-data" class="faq-nav-pill px-5 py-2 rounded-full text-sm font-bold text-gray-500 hover:text-brand-blue hover:bg-brand-offwhite transition-colors">Publishing Data</a>
+        <a href="#organizations" class="faq-nav-pill px-5 py-2 rounded-full text-sm font-bold text-gray-500 hover:text-brand-blue hover:bg-brand-offwhite transition-colors">Organizations</a>
+        <a href="#access-requests" class="faq-nav-pill px-5 py-2 rounded-full text-sm font-bold text-gray-500 hover:text-brand-blue hover:bg-brand-offwhite transition-colors">Access Requests</a>
+        <a href="#data-standards" class="faq-nav-pill px-5 py-2 rounded-full text-sm font-bold text-gray-500 hover:text-brand-blue hover:bg-brand-offwhite transition-colors">Data Standards</a>
+        <a href="#privacy-security" class="faq-nav-pill px-5 py-2 rounded-full text-sm font-bold text-gray-500 hover:text-brand-blue hover:bg-brand-offwhite transition-colors">Privacy & Security</a>
+        <a href="#technical-support" class="faq-nav-pill px-5 py-2 rounded-full text-sm font-bold text-gray-500 hover:text-brand-blue hover:bg-brand-offwhite transition-colors">Technical Support</a>
+    </div>
+
+    <!-- No Results State -->
+    <div id="noResultsMsg" class="hidden text-center py-16 bg-white rounded-2xl shadow-sm border border-gray-100 mb-12">
+        <div class="w-16 h-16 bg-brand-offwhite rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+            <i class="fas fa-search text-2xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-gray-800 mb-2 font-serif">No matching questions found</h3>
+        <p class="text-gray-500">Try adjusting your search terms or browse the categories below.</p>
+    </div>
+
+    <div class="space-y-10" id="faqContainer">
+        
+        <!-- Getting Started -->
+        <section id="getting-started" class="faq-category scroll-mt-40">
+            <h2 class="text-2xl font-bold mb-6 font-serif text-brand-blue border-b border-gray-100 pb-2">Getting Started</h2>
+            <div class="space-y-4">
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">What is AfriData?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        AfriData is a comprehensive data platform designed to make high-quality, verified datasets across the African continent accessible, interoperable, and easy to use. It connects researchers, organizations, and analysts to share and discover valuable insights.
+                    </div>
+                </div>
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">Who can use AfriData?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        AfriData is built for researchers, data scientists, government agencies, non-profits, students, and businesses who need access to reliable data for analysis, policy-making, or application development.
+                    </div>
+                </div>
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">Do I need an account?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        You can browse the platform and view public metadata without an account. However, you must create a free account to download datasets, publish your own data, or participate in the community forums.
+                        <div class="mt-4">
+                            <a href="{% url 'login_signup' %}" class="inline-flex items-center text-sm font-bold text-brand-teal hover:text-brand-blue transition-colors">
+                                Create an Account <i class="fas fa-arrow-right ml-2 text-xs"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">Is AfriData free to use?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        Yes, creating an account, browsing, and downloading public datasets on AfriData is completely free. Some organizations may charge for access to specific, high-value proprietary datasets.
+                    </div>
+                </div>
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">How do I create an account?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        Click the "Create Account" or "Sign Up" button at the top right of any page. You can register using your email address. You will receive a verification email to activate your account.
+                        <div class="mt-4">
+                            <a href="{% url 'login_signup' %}" class="inline-flex items-center text-sm font-bold text-brand-teal hover:text-brand-blue transition-colors">
+                                Sign Up Now <i class="fas fa-arrow-right ml-2 text-xs"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Datasets -->
+        <section id="datasets" class="faq-category scroll-mt-40">
+            <h2 class="text-2xl font-bold mb-6 font-serif text-brand-blue border-b border-gray-100 pb-2">Datasets</h2>
+            <div class="space-y-4">
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">How do I search for datasets?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        Use the main search bar on the Home page or navigate to the "Browse Datasets" page. You can filter results by category, format, license type, and publication date using the sidebar filters.
+                        <div class="mt-4">
+                            <a href="{% url 'dataset_list' %}" class="inline-flex items-center text-sm font-bold text-brand-teal hover:text-brand-blue transition-colors">
+                                Browse Datasets <i class="fas fa-arrow-right ml-2 text-xs"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">What dataset formats are supported?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        AfriData supports open and widely-used formats including CSV, JSON, GeoJSON, Excel (.xlsx), and XML. We highly recommend using non-proprietary formats like CSV and JSON for maximum interoperability.
+                    </div>
+                </div>
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">What do dataset quality scores mean?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        Quality scores reflect how well a dataset adheres to our data standards. The score is calculated automatically based on completeness, accuracy (e.g., absence of null values), metadata richness, and standard formatting.
+                    </div>
+                </div>
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">How do I download a dataset?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        Navigate to the dataset's detail page, ensure you are logged in, and click the "Download" button. Some datasets may require you to agree to a specific license or terms of use before downloading.
+                    </div>
+                </div>
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">Why can't I access a dataset?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        You might not be logged in, or the dataset might be marked as "Restricted" or "Private" by its author. If it's restricted, you will see a button to "Request Access" which sends a message to the data owner.
+                    </div>
+                </div>
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">What is a verified dataset?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        Verified datasets have been manually reviewed by the AfriData curation team to ensure they meet the highest standards of quality, accuracy, and ethical compliance. They are marked with a blue verification checkmark.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Publishing Data -->
+        <section id="publishing-data" class="faq-category scroll-mt-40">
+            <h2 class="text-2xl font-bold mb-6 font-serif text-brand-blue border-b border-gray-100 pb-2">Publishing Data</h2>
+            <div class="space-y-4">
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">How do I publish a dataset?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        Log in to your account, click the "Upload" or "Submit Dataset" button, and follow the multi-step form to upload your file, provide metadata, and set visibility preferences.
+                        <div class="mt-4">
+                            <a href="{% url 'upload_dataset' %}" class="inline-flex items-center text-sm font-bold text-brand-teal hover:text-brand-blue transition-colors">
+                                Upload a Dataset <i class="fas fa-arrow-right ml-2 text-xs"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">What information is required?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        You must provide a clear title, a detailed description, relevant tags, the geographic region, temporal coverage, and select an appropriate license. The actual data file must also be uploaded in a supported format.
+                    </div>
+                </div>
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">How do I add metadata?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        Metadata is entered during the upload process through form fields. You can also upload a separate Data Dictionary or JSON metadata file if your dataset is highly complex.
+                    </div>
+                </div>
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">Can I update a published dataset?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        Yes, dataset authors can edit metadata or upload new versions of the data file by visiting the dataset's detail page and clicking "Edit Dataset." Previous versions will be archived automatically if versioning is enabled.
+                    </div>
+                </div>
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">Can I remove a dataset?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        Yes, you can delete datasets you have published. Go to the dataset page, click "Edit", and select "Delete Dataset". Note that if users have already downloaded it, you cannot force them to delete their local copies.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Organizations -->
+        <section id="organizations" class="faq-category scroll-mt-40">
+            <h2 class="text-2xl font-bold mb-6 font-serif text-brand-blue border-b border-gray-100 pb-2">Organizations</h2>
+            <div class="space-y-4">
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">How do organizations join AfriData?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        Currently, organizations join by having an administrator create a standard user account and then applying for an "Organization Profile" via our contact form. We manually review these to ensure authenticity.
+                    </div>
+                </div>
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">How do I manage organization members?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        Organization admins can invite members, assign roles (Viewer, Editor, Admin), and revoke access from the Organization Settings panel in their dashboard.
+                        <div class="mt-4">
+                            <a href="{% url 'workspace' %}" class="inline-flex items-center text-sm font-bold text-brand-teal hover:text-brand-blue transition-colors">
+                                Go to Dashboard <i class="fas fa-arrow-right ml-2 text-xs"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">Can multiple users manage one organization?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        Yes, multiple users can be granted "Admin" rights, allowing them to manage datasets, approve access requests, and invite new members on behalf of the organization.
+                    </div>
+                </div>
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">How are organizations verified?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        We verify organizations by confirming official email domains, cross-referencing public registries, and direct communication. Verified organizations receive a distinct badge on their profiles and datasets.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Access Requests -->
+        <section id="access-requests" class="faq-category scroll-mt-40">
+            <h2 class="text-2xl font-bold mb-6 font-serif text-brand-blue border-b border-gray-100 pb-2">Access Requests</h2>
+            <div class="space-y-4">
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">How do I request access to restricted data?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        On a restricted dataset page, click the "Request Access" button. You will need to provide a brief explanation of your intended use case, research goals, and institutional affiliation.
+                    </div>
+                </div>
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">How long does approval take?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        Approval times vary depending on the data owner. On average, requests are processed within 3-5 business days.
+                    </div>
+                </div>
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">Who approves requests?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        Requests are sent directly to the individual author or the administrators of the organization that owns the dataset. AfriData staff do not approve or deny access to third-party data.
+                    </div>
+                </div>
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">Can I track my request?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        Yes, you can view the status of all your pending, approved, and denied requests in your user dashboard under the "Access Requests" tab.
+                        <div class="mt-4">
+                            <a href="{% url 'workspace' %}" class="inline-flex items-center text-sm font-bold text-brand-teal hover:text-brand-blue transition-colors">
+                                View Your Requests <i class="fas fa-arrow-right ml-2 text-xs"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Data Standards -->
+        <section id="data-standards" class="faq-category scroll-mt-40">
+            <h2 class="text-2xl font-bold mb-6 font-serif text-brand-blue border-b border-gray-100 pb-2">Data Standards</h2>
+            <div class="space-y-4">
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">What metadata standards are supported?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        We map our core fields to Dublin Core Metadata standards and ISO 19115 for geographic information, ensuring that data published here can be easily integrated with international repositories.
+                        <div class="mt-4">
+                            <a href="{% url 'data_standards' %}" class="inline-flex items-center text-sm font-bold text-brand-teal hover:text-brand-blue transition-colors">
+                                View Data Standards <i class="fas fa-arrow-right ml-2 text-xs"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">What are FAIR Data Principles?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        FAIR stands for Findable, Accessible, Interoperable, and Reusable. These principles act as guidelines to ensure that datasets are structured and documented in a way that maximizes their value for the global research community.
+                    </div>
+                </div>
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">Why are data standards important?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        Standards ensure that data can be correctly interpreted by other humans and machines. Without them, datasets lose context over time, making them difficult to trust or combine with other research.
+                    </div>
+                </div>
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">What documentation should accompany datasets?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        At minimum, provide a clear description. Ideally, you should include a Data Dictionary (explaining column headers and data types) and a Methodology Document (explaining how the data was collected).
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Privacy & Security -->
+        <section id="privacy-security" class="faq-category scroll-mt-40">
+            <h2 class="text-2xl font-bold mb-6 font-serif text-brand-blue border-b border-gray-100 pb-2">Privacy & Security</h2>
+            <div class="space-y-4">
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">How is my data protected?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        All data uploaded to AfriData is encrypted at rest and in transit. Our infrastructure is hosted on secure, compliant cloud servers with regular security audits and strict access controls.
+                    </div>
+                </div>
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">What information is public?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        Your public profile (name, bio, organization) and the metadata of any dataset you mark as "Public" are visible to everyone. Private datasets are hidden from search and public browse.
+                    </div>
+                </div>
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">Who can see my datasets?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        If a dataset is Public, anyone can see it. If it is Restricted, anyone can see the metadata but only approved users can download the file. If it is Private, only you and your organization members can see it.
+                    </div>
+                </div>
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">How are restricted datasets managed?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        Restricted datasets require manual approval for download. The file remains locked on our secure servers, and temporary download links are only generated for users who have been explicitly approved by the data owner.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Technical Support -->
+        <section id="technical-support" class="faq-category scroll-mt-40">
+            <h2 class="text-2xl font-bold mb-6 font-serif text-brand-blue border-b border-gray-100 pb-2">Technical Support</h2>
+            <div class="space-y-4">
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">I forgot my password.</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        Click the "Forgot Password" link on the login page. Enter your email address, and we will send you a secure link to reset your password.
+                    </div>
+                </div>
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">My upload failed.</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        Uploads typically fail due to file size limits or unsupported formats. Ensure your file is under the maximum size limit (e.g., 100MB for CSV) and check your internet connection. If the issue persists, contact support.
+                    </div>
+                </div>
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">A dataset is missing.</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        If a dataset you previously accessed is missing, it may have been removed by the author or taken down by administrators for policy violations.
+                    </div>
+                </div>
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">I'm experiencing an error.</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        Please try clearing your browser cache or using an incognito window. If the error continues, take a screenshot and contact our technical support team detailing the steps that led to the error.
+                    </div>
+                </div>
+                <div class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button class="faq-button w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none focus:bg-brand-offwhite transition-colors" aria-expanded="false">
+                        <span class="font-bold text-gray-800 text-lg">How do I contact support?</span>
+                        <i class="fas fa-chevron-down text-brand-teal transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6 text-gray-600 leading-relaxed pt-2">
+                        You can reach out via our <a href="{% url 'home:contact_us' %}" class="text-brand-teal font-bold hover:underline">Contact Us</a> page, or email us directly at <a href="mailto:{{ CONTACT_EMAIL }}" class="text-brand-teal font-bold hover:underline">{{ CONTACT_EMAIL }}</a>. We aim to respond within 24 hours.
+                        <div class="mt-4">
+                            <a href="{% url 'home:contact_us' %}" class="inline-flex items-center text-sm font-bold text-brand-teal hover:text-brand-blue transition-colors">
+                                Go to Contact Page <i class="fas fa-arrow-right ml-2 text-xs"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+    </div>
+
+    <!-- Official Contact Information Section -->
+    <div class="mt-20">
+        <h2 class="text-2xl font-bold mb-6 font-serif text-brand-blue border-b border-gray-100 pb-2 text-center md:text-left">Official Contact Information</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="card-fancy !p-6 flex flex-col items-center text-center hover:-translate-y-1 transition-transform">
+                <div class="w-12 h-12 bg-brand-teal/10 rounded-xl flex items-center justify-center mb-4 text-brand-teal">
+                    <i class="fas fa-envelope text-xl"></i>
+                </div>
+                <h3 class="font-bold text-gray-800 mb-2">Email</h3>
+                <p class="text-gray-500 text-sm"><a href="mailto:{{ CONTACT_EMAIL }}" class="hover:text-brand-teal">{{ CONTACT_EMAIL }}</a></p>
+            </div>
+            
+            <div class="card-fancy !p-6 flex flex-col items-center text-center hover:-translate-y-1 transition-transform">
+                <div class="w-12 h-12 bg-brand-blue/10 rounded-xl flex items-center justify-center mb-4 text-brand-blue">
+                    <i class="fas fa-phone text-xl"></i>
+                </div>
+                <h3 class="font-bold text-gray-800 mb-2">Phone</h3>
+                <p class="text-gray-500 text-sm">{{ CONTACT_PHONE }}</p>
+            </div>
+            
+            <div class="card-fancy !p-6 flex flex-col items-center text-center hover:-translate-y-1 transition-transform">
+                <div class="w-12 h-12 bg-brand-green/10 rounded-xl flex items-center justify-center mb-4 text-brand-green">
+                    <i class="fas fa-map-marker-alt text-xl"></i>
+                </div>
+                <h3 class="font-bold text-gray-800 mb-2">Office</h3>
+                <p class="text-gray-500 text-sm">{{ CONTACT_OFFICE }}<br>{{ CONTACT_PO_BOX }}</p>
+            </div>
+            
+            <div class="card-fancy !p-6 flex flex-col items-center text-center hover:-translate-y-1 transition-transform">
+                <div class="w-12 h-12 bg-brand-amber/10 rounded-xl flex items-center justify-center mb-4 text-brand-amber">
+                    <i class="fas fa-clock text-xl"></i>
+                </div>
+                <h3 class="font-bold text-gray-800 mb-2">Business Hours</h3>
+                <p class="text-gray-500 text-sm">{{ BUSINESS_HOURS }}</p>
+            </div>
+        </div>
+        
+        <!-- Social Media Links -->
+        <div class="mt-8">
+            <h3 class="text-xl font-bold mb-4 text-center md:text-left text-brand-blue">Follow Us</h3>
+            <div class="flex justify-center md:justify-start gap-4">
+                <a href="{{ SOCIAL_FACEBOOK }}" target="_blank" rel="noopener noreferrer" aria-label="Visit Afridata on Facebook" class="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-brand-grey hover:bg-brand-blue hover:text-white transition-all duration-300 shadow-sm hover:shadow-md">
+                    <i class="fa-brands fa-facebook-f"></i>
+                </a>
+                <a href="{{ SOCIAL_TWITTER }}" target="_blank" rel="noopener noreferrer" aria-label="Visit Afridata on X" class="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-brand-grey hover:bg-brand-blue hover:text-white transition-all duration-300 shadow-sm hover:shadow-md">
+                    <i class="fa-brands fa-x-twitter"></i>
+                </a>
+                <a href="{{ SOCIAL_LINKEDIN }}" target="_blank" rel="noopener noreferrer" aria-label="Visit Afridata on LinkedIn" class="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-brand-grey hover:bg-brand-blue hover:text-white transition-all duration-300 shadow-sm hover:shadow-md">
+                    <i class="fa-brands fa-linkedin-in"></i>
+                </a>
+                <a href="{{ SOCIAL_TIKTOK }}" target="_blank" rel="noopener noreferrer" aria-label="Visit Afridata on TikTok" class="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-brand-grey hover:bg-brand-blue hover:text-white transition-all duration-300 shadow-sm hover:shadow-md">
+                    <i class="fa-brands fa-tiktok"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Support Section -->
+    <div class="mt-20 card-fancy !p-10 md:!p-14 text-center">
+        <div class="w-16 h-16 bg-brand-teal/10 rounded-full flex items-center justify-center mx-auto mb-6 text-brand-teal">
+            <i class="fas fa-life-ring text-2xl"></i>
+        </div>
+        <h2 class="text-3xl font-bold mb-4 font-serif text-brand-blue">Still Need Help?</h2>
+        <p class="text-gray-500 max-w-2xl mx-auto mb-8 text-lg">
+            Can't find the answer you're looking for? Our team and community are here to help you get the most out of AfriData.
+        </p>
+        
+        <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
+            <a href="{% url 'home:contact_us' %}" class="btn-primary w-full sm:w-auto text-center px-8">
+                <i class="fas fa-envelope mr-2"></i> Contact Support
+            </a>
+            <a href="{% url 'community:community' %}" class="btn-secondary w-full sm:w-auto text-center px-8">
+                <i class="fas fa-comments mr-2"></i> Community Forum
+            </a>
+            <a href="{% url 'data_standards' %}" class="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-brand-blue font-bold py-3.5 px-8 rounded-full transition-all duration-300 w-full sm:w-auto text-center shadow-sm">
+                <i class="fas fa-book mr-2"></i> Documentation
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- FAQ Interaction & Search Logic -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // --- Accordion Logic ---
+    const faqButtons = document.querySelectorAll('.faq-button');
+    
+    faqButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const isExpanded = button.getAttribute('aria-expanded') === 'true';
+            const answer = button.nextElementSibling;
+            const icon = button.querySelector('i');
+            
+            // Close all other open accordions
+            document.querySelectorAll('.faq-button[aria-expanded="true"]').forEach(openBtn => {
+                if (openBtn !== button) {
+                    openBtn.setAttribute('aria-expanded', 'false');
+                    openBtn.nextElementSibling.classList.add('hidden');
+                    openBtn.querySelector('i').classList.remove('rotate-180');
+                    openBtn.classList.remove('bg-brand-offwhite');
+                }
+            });
+            
+            // Toggle current accordion
+            if (isExpanded) {
+                button.setAttribute('aria-expanded', 'false');
+                answer.classList.add('hidden');
+                icon.classList.remove('rotate-180');
+                button.classList.remove('bg-brand-offwhite');
+            } else {
+                button.setAttribute('aria-expanded', 'true');
+                answer.classList.remove('hidden');
+                icon.classList.add('rotate-180');
+                button.classList.add('bg-brand-offwhite');
+            }
+        });
+    });
+
+    // --- Live Search Filtering Logic ---
+    const searchInput = document.getElementById('faqSearch');
+    const categories = document.querySelectorAll('.faq-category');
+    const faqItems = document.querySelectorAll('.faq-item');
+    const noResultsMsg = document.getElementById('noResultsMsg');
+    
+    searchInput.addEventListener('input', function(e) {
+        const query = e.target.value.toLowerCase().trim();
+        let totalMatches = 0;
+        
+        categories.forEach(category => {
+            let categoryHasMatch = false;
+            const items = category.querySelectorAll('.faq-item');
+            
+            items.forEach(item => {
+                const questionText = item.querySelector('.faq-button span').textContent.toLowerCase();
+                const answerText = item.querySelector('.faq-answer').textContent.toLowerCase();
+                
+                if (questionText.includes(query) || answerText.includes(query)) {
+                    item.style.display = 'block';
+                    categoryHasMatch = true;
+                    totalMatches++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            // Hide the entire category section if no items match
+            if (categoryHasMatch) {
+                category.style.display = 'block';
+            } else {
+                category.style.display = 'none';
+            }
+        });
+        
+        // Show or hide the "No Results" message
+        if (totalMatches === 0 && query !== '') {
+            noResultsMsg.classList.remove('hidden');
+        } else {
+            noResultsMsg.classList.add('hidden');
+        }
+    });
+
+    // --- Active Nav Pill Logic based on scroll ---
+    const navPills = document.querySelectorAll('.faq-nav-pill');
+    
+    window.addEventListener('scroll', () => {
+        let current = '';
+        const scrollPosition = window.scrollY + 200; // offset for sticky nav
+
+        categories.forEach(category => {
+            if (category.style.display !== 'none') {
+                const categoryTop = category.offsetTop;
+                const categoryHeight = category.offsetHeight;
+                
+                if (scrollPosition >= categoryTop && scrollPosition < categoryTop + categoryHeight) {
+                    current = category.getAttribute('id');
+                }
+            }
+        });
+        
+        navPills.forEach(pill => {
+            pill.classList.remove('text-brand-blue', 'bg-brand-offwhite');
+            pill.classList.add('text-gray-500');
+            if (pill.getAttribute('href') === '#' + current) {
+                pill.classList.remove('text-gray-500');
+                pill.classList.add('text-brand-blue', 'bg-brand-offwhite');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

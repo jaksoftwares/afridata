@@ -109,7 +109,7 @@ class PipelineRunListCreateView(
 
     queryset = PipelineRun.objects.all()
     permission_classes = [IsOwnerOrAdmin]
-    authentication_classes = [BasicAuthentication, SessionAuthentication]
+    authentication_classes = [SessionAuthentication]
 
     def get_serializer_class(self) -> Type[BaseSerializer]: # type: ignore[override]
         if self.request.method == "POST":
@@ -192,7 +192,7 @@ class PipelineRunDetailView(
     queryset         = PipelineRun.objects.all()
     serializer_class = PipelineRunSerializer
     permission_classes = [IsOwnerOrAdmin]
-    authentication_classes = [BasicAuthentication, SessionAuthentication]
+    authentication_classes = [SessionAuthentication]
 
     def get(self, request: Request, pk: str, *args, **kwargs) -> Response:
         run = _get_run_or_404(pk)
@@ -223,7 +223,7 @@ class PipelineRunSchemaView(APIView):
         }
     """
     permission_classes = [IsResultViewer]
-    authentication_classes = [BasicAuthentication, SessionAuthentication]
+    authentication_classes = [SessionAuthentication]
 
     def get(self, request: Request, pk: str, *args, **kwargs) -> Response:
         run = _get_run_or_404(pk)
@@ -292,7 +292,7 @@ class PipelineRunColumnProfilesView(
         ]
     """
     permission_classes = [IsResultViewer]
-    authentication_classes = [BasicAuthentication, SessionAuthentication]
+    authentication_classes = [SessionAuthentication]
 
     serializer_class = ColumnProfileSerializer
 

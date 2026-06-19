@@ -15,17 +15,17 @@
 
     <div class="max-w-xl mx-auto space-y-6">
         <h2 class="text-3xl md:text-5xl font-serif font-bold text-brand-blue leading-tight">
-            Pipeline Exception
+            Processing Exception
         </h2>
         
         <div class="p-6 bg-red-50/50 border border-red-100 rounded-2xl">
             <p class="font-mono text-sm text-red-700 leading-relaxed">
-                {{ error|default:"An unexpected interruption occurred during the data standardization sequence." }}
+                {{ error|default:"An unexpected error occurred during data processing." }}
             </p>
         </div>
 
         <p class="text-brand-grey/60 text-lg font-light leading-relaxed">
-            Don't worry, your data is safe. This usually happens due to schema inconsistencies or transient network issues during AI analysis.
+            Your data is safe. This usually happens due to data formatting issues or network problems.
         </p>
 
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">

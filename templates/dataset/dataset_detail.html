@@ -23,9 +23,15 @@
 
 {% block header_content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative overflow-hidden">
-    <!-- Subtle Background Elements -->
+    <!-- Dataset Cover Image Background -->
     <div class="absolute inset-0 z-0 pointer-events-none">
-        <div class="absolute top-[-20%] right-[-10%] w-[40%] h-[70%] bg-white/5 blur-[100px] rounded-full"></div>
+        {% if dataset %}
+        <img src="{{ dataset.get_cover_photo_url }}" alt="Background" class="w-full h-full object-cover opacity-20">
+        {% else %}
+        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=800&h=400" alt="Background" class="w-full h-full object-cover opacity-20">
+        {% endif %}
+        <div class="absolute inset-0 bg-gradient-to-r from-brand-blue via-brand-blue/80 to-transparent"></div>
+        <div class="absolute top-[-20%] right-[-10%] w-[40%] h-[70%] bg-white/10 blur-[100px] rounded-full mix-blend-overlay"></div>
     </div>
 
     <div class="relative z-10">
@@ -247,7 +253,7 @@
                         </div>
                         <h4 class="text-sm font-bold text-gray-700">No AI Metadata Generated Yet</h4>
                         <p class="text-xs text-gray-400 mt-1 mb-6 max-w-sm">
-                            This dataset does not have AI-enriched metadata profiles yet. Generate it now using our advanced LLM profiling pipeline.
+                            This dataset does not have AI-enriched metadata profiles yet. Generate it now using our metadata generator.
                         </p>
                         {% if request.user.is_authenticated %}
                         <button class="trigger-metadata-btn inline-flex items-center px-5 py-2.5 bg-brand-teal hover:bg-brand-teal-dark text-white text-xs font-bold rounded-xl shadow-sm hover:shadow transition-all space-x-2">
@@ -557,7 +563,7 @@
 
             <!-- Metadata Scores -->
             <div class="card-fancy !p-8">
-                <h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-6">Discovery Optimization</h4>
+                <h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-6">Optimization</h4>
                 <div class="space-y-6">
                     <div>
                         <div class="flex justify-between items-center mb-2">

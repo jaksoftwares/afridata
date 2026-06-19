@@ -10,6 +10,7 @@ urlpatterns = [
     
     # API endpoints for dataset operations
     path('api/search/', views.search_datasets, name='search_datasets'),
+    path('api/search/global/', views.global_search, name='global_search'),
     path('api/trending/', views.trending_datasets, name='trending_datasets'),
     path('api/filter/', views.filter_datasets, name='filter_datasets'),
     path('api/stats/', views.dataset_stats, name='dataset_stats'),
@@ -22,4 +23,7 @@ urlpatterns = [
     
     # Newsletter
     path('subscribe/', views.subscribe_newsletter, name='subscribe_newsletter'),
+    
+    # FAQ
+    path('faq/', views.faq_page, name='faq'),
 ]

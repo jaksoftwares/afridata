@@ -36,7 +36,7 @@
                                 </div>
                                 <div>
                                     <h3 class="font-semibold text-lg text-brand-blue">Our Office</h3>
-                                    <p class="text-brand-grey/80">Jomo Kenyatta University of Agriculture and Technology<br>P.O. BOX: 62000-00200, Nairobi, Kenya.</p>
+                                    <p class="text-brand-grey/80">{{ CONTACT_OFFICE }}<br>{{ CONTACT_PO_BOX }}</p>
                                 </div>
                             </div>
 
@@ -46,7 +46,7 @@
                                 </div>
                                 <div>
                                     <h3 class="font-semibold text-lg text-brand-blue">Email Us</h3>
-                                    <p class="text-brand-grey/80">info.jhub@jkuat.ac.ke</p>
+                                    <p class="text-brand-grey/80">{{ CONTACT_EMAIL }}</p>
                                 </div>
                             </div>
 
@@ -56,7 +56,7 @@
                                 </div>
                                 <div>
                                     <h3 class="font-semibold text-lg text-brand-blue">Call Us</h3>
-                                    <p class="text-brand-grey/80">Tel: +254 67 52181/4 LAN Ext 2814.</p>
+                                    <p class="text-brand-grey/80">Tel: {{ CONTACT_PHONE }}</p>
                                 </div>
                             </div>
                         </div>
@@ -66,17 +66,17 @@
                     <div>
                         <h3 class="text-xl font-bold text-brand-blue mb-6">Follow Us</h3>
                         <div class="flex gap-4">
-                            <a href="#" class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-brand-grey hover:bg-brand-blue hover:text-white transition-all duration-300">
-                                <i class="fa-brands fa-twitter"></i>
-                            </a>
-                            <a href="#" class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-brand-grey hover:bg-brand-blue hover:text-white transition-all duration-300">
-                                <i class="fa-brands fa-linkedin-in"></i>
-                            </a>
-                            <a href="#" class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-brand-grey hover:bg-brand-blue hover:text-white transition-all duration-300">
+                            <a href="{{ SOCIAL_FACEBOOK }}" target="_blank" rel="noopener noreferrer" aria-label="Visit Afridata on Facebook" class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-brand-grey hover:bg-brand-blue hover:text-white transition-all duration-300">
                                 <i class="fa-brands fa-facebook-f"></i>
                             </a>
-                            <a href="#" class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-brand-grey hover:bg-brand-blue hover:text-white transition-all duration-300">
-                                <i class="fa-brands fa-github"></i>
+                            <a href="{{ SOCIAL_TWITTER }}" target="_blank" rel="noopener noreferrer" aria-label="Visit Afridata on X" class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-brand-grey hover:bg-brand-blue hover:text-white transition-all duration-300">
+                                <i class="fa-brands fa-x-twitter"></i>
+                            </a>
+                            <a href="{{ SOCIAL_LINKEDIN }}" target="_blank" rel="noopener noreferrer" aria-label="Visit Afridata on LinkedIn" class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-brand-grey hover:bg-brand-blue hover:text-white transition-all duration-300">
+                                <i class="fa-brands fa-linkedin-in"></i>
+                            </a>
+                            <a href="{{ SOCIAL_TIKTOK }}" target="_blank" rel="noopener noreferrer" aria-label="Visit Afridata on TikTok" class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-brand-grey hover:bg-brand-blue hover:text-white transition-all duration-300">
+                                <i class="fa-brands fa-tiktok"></i>
                             </a>
                         </div>
                     </div>
@@ -124,39 +124,17 @@
 <!-- FAQ Section Integration -->
 <section class="py-20 bg-white">
     <div class="container mx-auto px-6">
-        <div class="text-center mb-16">
-            <h2 class="text-3xl font-bold text-brand-blue mb-4">Frequently Asked Questions</h2>
-            <p class="text-brand-grey/70">Quick answers to common questions.</p>
-        </div>
-        <div class="max-w-3xl mx-auto space-y-4">
-            <div class="card-fancy !p-0 overflow-hidden">
-                <button onclick="this.nextElementSibling.classList.toggle('hidden')" class="w-full px-8 py-6 text-left flex items-center justify-between hover:bg-brand-offwhite transition-colors group">
-                    <span class="font-semibold text-brand-blue">How can I contribute datasets to AfriData?</span>
-                    <i class="fa-solid fa-chevron-down text-brand-teal group-hover:translate-y-1 transition-transform"></i>
-                </button>
-                <div class="px-8 pb-6 hidden text-brand-grey text-sm">
-                    <p>Simply create an account, verify your email, and navigate to the <strong>Upload Dataset</strong> page. Fill in the dataset metadata, upload your file, and hit submit. Your dataset will be published immediately for the community to access!</p>
-                </div>
+        <div class="max-w-4xl mx-auto bg-brand-offwhite rounded-[2rem] p-10 md:p-14 text-center border border-gray-100 shadow-xl">
+            <div class="w-16 h-16 bg-brand-teal/10 rounded-full flex items-center justify-center mx-auto mb-6 text-brand-teal">
+                <i class="fa-solid fa-question text-2xl"></i>
             </div>
-            <div class="card-fancy !p-0 overflow-hidden">
-                <button onclick="this.nextElementSibling.classList.toggle('hidden')" class="w-full px-8 py-6 text-left flex items-center justify-between hover:bg-brand-offwhite transition-colors group">
-                    <span class="font-semibold text-brand-blue">What data formats are supported?</span>
-                    <i class="fa-solid fa-chevron-down text-brand-teal group-hover:translate-y-1 transition-transform"></i>
-                </button>
-                <div class="px-8 pb-6 hidden text-brand-grey text-sm">
-                    <p class="mb-2"><strong class="text-brand-blue">Allowed Formats:</strong> We accept structured data and document files. Supported extensions include: CSV, Excel (.xlsx, .xls), PDF, Plain Text (.txt), JSON, XML, ZIP archives, YAML (.yml, .yaml), and Apache Parquet.</p>
-                    <p><strong class="text-red-400">Not Allowed:</strong> Please do not upload media files (Images, Audio, Videos) or executable programs (.exe, .sh).</p>
-                </div>
-            </div>
-            <div class="card-fancy !p-0 overflow-hidden">
-                <button onclick="this.nextElementSibling.classList.toggle('hidden')" class="w-full px-8 py-6 text-left flex items-center justify-between hover:bg-brand-offwhite transition-colors group">
-                    <span class="font-semibold text-brand-blue">Is there an API for developers?</span>
-                    <i class="fa-solid fa-chevron-down text-brand-teal group-hover:translate-y-1 transition-transform"></i>
-                </button>
-                <div class="px-8 pb-6 hidden text-brand-grey text-sm">
-                    <p>Yes! We offer a comprehensive API for developers to programmatically search, filter, and download datasets. You can find the full documentation in the <strong>API Interface</strong> section from the main navigation menu once logged in.</p>
-                </div>
-            </div>
+            <h2 class="text-3xl font-bold text-brand-blue mb-4">Have a Question?</h2>
+            <p class="text-brand-grey/80 text-lg mb-8 max-w-2xl mx-auto">
+                Looking for immediate answers? Explore our comprehensive Help Center for detailed guides on datasets, publishing, accounts, and platform standards.
+            </p>
+            <a href="{% url 'home:faq' %}" class="btn-primary !px-10 !py-4 text-lg shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all inline-flex items-center">
+                Visit the FAQ Page <i class="fa-solid fa-arrow-right ml-3 text-sm"></i>
+            </a>
         </div>
     </div>
 </section>

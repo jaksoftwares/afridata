@@ -24,7 +24,7 @@
                 <p class="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1">Status</p>
                 <div class="flex items-center justify-end gap-2 text-white">
                     {% if job.status == 'completed' %}
-                        <span class="text-xs font-black uppercase tracking-tighter text-brand-green">Pipeline Success</span>
+                        <span class="text-xs font-black uppercase tracking-tighter text-brand-green">Success</span>
                         <i class="fas fa-circle-check text-brand-green"></i>
                     {% elif job.status == 'processing' %}
                         <span class="text-xs font-black uppercase tracking-tighter text-brand-amber">Active Processing</span>
@@ -93,7 +93,7 @@
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
                     <div class="lg:col-span-2 space-y-8">
                         <div>
-                            <h3 class="text-xs font-bold text-brand-grey/40 uppercase tracking-widest mb-6">Pipeline Metadata</h3>
+                            <h3 class="text-xs font-bold text-brand-grey/40 uppercase tracking-widest mb-6">Job Metadata</h3>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-12">
                                 <div>
                                     <p class="text-[10px] text-gray-400 uppercase font-bold mb-1">Original Filename</p>

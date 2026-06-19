@@ -169,7 +169,11 @@ def authenticate_login(request):
             success=False,
             user_agent=user_agent
         )
-        return redirect('login_signup')
+        return render(request, 'accounts/login.html', {
+            'page_title': 'Sign In',
+            'form_data': {'email': email},
+            'field_errors': {'email': 'Email is required'} if not email else {'password': 'Password is required'}
+        })
     
     # Authenticate user
     user = authenticate(request, username=email, password=password)
@@ -222,8 +226,10 @@ def authenticate_login(request):
             return redirect('home')
         else:
             messages.error(request, 'Your account is deactivated. Please contact support.')
+            field_errors = {'non_field_errors': 'Your account is deactivated. Please contact support.'}
     else:
         messages.error(request, 'Invalid email or password.')
+        field_errors = {'password': 'Invalid email or password.'}
         
     # Log failed attempt(for both inactive users and invalid credentials)
     LoginAttempt.objects.create(
@@ -236,7 +242,11 @@ def authenticate_login(request):
     # Debug: Confirm we're redirecting due to failed login
     logger.debug(f"Login failed for {email}, redirecting to login page")
     
-    return redirect('login_signup')
+    return render(request, 'accounts/login.html', {
+        'page_title': 'Sign In',
+        'form_data': {'email': email},
+        'field_errors': field_errors
+    })
 
 
 @csrf_protect
@@ -267,26 +277,27 @@ def process_signup(request):
         
         # Validation
         errors = []
+        field_errors = {}
         
         if not email:
-            errors.append('Email is required.')
+            field_errors['email'] = 'Email is required.'
         elif not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
-            errors.append('Please enter a valid email address.')
+            field_errors['email'] = 'Please enter a valid email address.'
         elif CustomUser.objects.filter(email=email).exists():
-            errors.append('Email already exists.')
+            field_errors['email'] = 'An account with this email already exists.'
         
         if not password:
-            errors.append('Password is required.')
+            field_errors['password'] = 'Password is required.'
         elif len(password) < 8:
-            errors.append('Password must be at least 8 characters long.')
+            field_errors['password'] = 'Password must be at least 8 characters long.'
         
         if password != confirm_password:
-            errors.append('Passwords do not match.')
+            field_errors['confirm_password'] = 'Passwords do not match.'
         
         if not full_name:
-            errors.append('Full name is required.')
+            field_errors['full_name'] = 'Full name is required.'
         elif len(full_name) < 2:
-            errors.append('Full name must be at least 2 characters long.')
+            field_errors['full_name'] = 'Full name must be at least 2 characters long.'
             
         # Generate username from full_name or email if not provided
         if not username:
@@ -302,76 +313,111 @@ def process_signup(request):
                 counter += 1
             logger.debug(f"Generated username: {username}")
         elif len(username) < 3:
-            errors.append('Username must be at least 3 characters long.')
+            field_errors['username'] = 'Username must be at least 3 characters long.'
         elif CustomUser.objects.filter(username__iexact=username).exists():
-            errors.append('Username already exists.')
+            field_errors['username'] = 'This username is already taken.'
         elif not re.match(r'^[a-zA-Z0-9_]+$', username):
-            errors.append('Username can only contain letters, numbers, and underscores.')
+            field_errors['username'] = 'Username can only contain letters, numbers, and underscores.'
         
         # Validate referral code if provided
         referrer = None
         if referral_code:
             try:
                 referrer = CustomUser.objects.get(referral_code=referral_code)
-            except CustomUser.DoesNotExist:  # type: ignore  # type: ignore
-                errors.append('Invalid referral code.')
+            except CustomUser.DoesNotExist:  # type: ignore
+                field_errors['referral_code'] = 'Invalid referral code.'
         
         # Validate password strength
-        try:
-            validate_password(password)
-        except ValidationError as e:
-            errors.extend(e.messages)
+        if password:
+            try:
+                validate_password(password)
+            except ValidationError as e:
+                field_errors['password'] = e.messages[0] if e.messages else 'Password is too weak.'
+                errors.extend(e.messages)
         
-        logger.debug(f"Validation errors: {errors}")
+        logger.debug(f"Validation errors: {errors}, Field errors: {field_errors}")
         
-        if errors:
+        form_data = {
+            'email': email,
+            'full_name': full_name,
+            'username': username,
+            'phone_number': phone_number,
+            'bio': bio,
+            'referral_code': referral_code,
+        }
+        
+        if errors or field_errors:
             for error in errors:
                 messages.error(request, error)
-            return redirect(f"{reverse('login_signup')}?next={next_url}")
+            return render(request, 'accounts/signup.html', {
+                'page_title': 'Sign Up',
+                'field_errors': field_errors,
+                'form_data': form_data
+            })
         
         # Create user with transaction
-        with transaction.atomic():  # type: ignore
-            logger.debug("Starting user creation...")
-            
-            # Create user
-            user = CustomUser.objects.create_user(
-                username=username,
-                email=email,
-                password=password,
-                full_name=full_name,
-                phone_number=phone_number,
-                bio=bio,
-                last_login_ip=get_client_ip(request),
-                referred_by=referrer
-            )
-            
-            logger.debug(f"User created with ID: {user.id}")
-            
-            # The UserProfile will be created automatically by the post_save signal
-            # along with signup bonus and referral handling
-            
-            # Log successful signup attempt
-            LoginAttempt.objects.create(
-                email=email,
-                ip_address=get_client_ip(request),
-                success=True,
-                user_agent=request.META.get('HTTP_USER_AGENT', '')
-            )
-            
-            send_verification_email(user)
-            request.session['verification_email'] = user.email
-            logger.debug("Verification email sent, redirecting to verify_email")
-            
-            messages.success(request, f'Account created successfully! Please check your email inbox or spam folder for the verification code.')
-            return redirect('verify_email')
+        from django.db import IntegrityError
+        try:
+            with transaction.atomic():  # type: ignore
+                logger.debug("Starting user creation...")
+                
+                # Create user
+                user = CustomUser.objects.create_user(
+                    username=username,
+                    email=email,
+                    password=password,
+                    full_name=full_name,
+                    phone_number=phone_number,
+                    bio=bio,
+                    last_login_ip=get_client_ip(request),
+                    referred_by=referrer
+                )
+                
+                logger.debug(f"User created with ID: {user.id}")
+                
+                # The UserProfile will be created automatically by the post_save signal
+                # along with signup bonus and referral handling
+                
+                # Log successful signup attempt
+                LoginAttempt.objects.create(
+                    email=email,
+                    ip_address=get_client_ip(request),
+                    success=True,
+                    user_agent=request.META.get('HTTP_USER_AGENT', '')
+                )
+                
+                send_verification_email(user)
+                request.session['verification_email'] = user.email
+                logger.debug("Verification email sent, redirecting to verify_email")
+                
+                messages.success(request, f'Account created successfully! Please check your email inbox or spam folder for the verification code.')
+                return redirect('verify_email')
+                
+        except IntegrityError as e:
+            # Race condition caught
+            logger.error(f"IntegrityError during signup: {str(e)}")
+            error_msg = str(e).lower()
+            if 'email' in error_msg:
+                field_errors['email'] = 'An account with this email already exists.'
+                messages.error(request, 'An account with this email already exists.')
+            elif 'username' in error_msg:
+                field_errors['username'] = 'This username is already taken.'
+                messages.error(request, 'This username is already taken.')
+            else:
+                messages.error(request, 'A database error occurred. Please try again.')
+                
+            return render(request, 'accounts/signup.html', {
+                'page_title': 'Sign Up',
+                'field_errors': field_errors,
+                'form_data': form_data
+            })
             
     except Exception as e:
         logger.error(f"Signup error: {str(e)}")
-        logger.error(f"Error type: {type(e)}")
         import traceback
         logger.error(f"Traceback: {traceback.format_exc()}")
         
-        messages.error(request, f'An error occurred during signup: {str(e)}')
+        messages.error(request, f'An error occurred during signup. Please try again.')
         # Log failed signup attempt
         LoginAttempt.objects.create(
             email=locals().get('email', ''),  # type: ignore
@@ -379,7 +425,10 @@ def process_signup(request):
             success=False,
             user_agent=request.META.get('HTTP_USER_AGENT', '')
         )
-        return redirect(f"{reverse('login_signup')}?next={next_url}")
+        return render(request, 'accounts/signup.html', {
+            'page_title': 'Sign Up',
+            'form_data': locals().get('form_data', {})
+        })
 
 
 
@@ -545,9 +594,8 @@ def check_referral_code(request):
 User = get_user_model()
 
 @login_required
-def profile_view(request):
-    """Displays user profile with dynamic data including token information"""
-    """Displays user profile with dynamic data including token information"""
+def workspace_view(request):
+    """Displays user workspace with dynamic data including token information"""
     user = request.user
     
     # Get or create user profile
@@ -601,10 +649,10 @@ def profile_view(request):
         'referrals': referrals,
         'referrals_count': referrals_count,
         'recent_purchases': recent_purchases,
-        'page_title': f"{user.get_full_name()}'s Profile" if user.get_full_name() else f"{user.username}'s Profile"
+        'page_title': "My Workspace"
     }
     
-    return render(request, 'accounts/profile.html', context)
+    return render(request, 'accounts/workspace.html', context)
 
 
 @login_required
@@ -654,7 +702,7 @@ def edit_profile_view(request):
                 profile.save()
                 
                 messages.success(request, 'Profile updated successfully!')
-                return redirect('profile')
+                return redirect('workspace')
                 
         except Exception as e:
             messages.error(request, f'Error updating profile: {str(e)}')
