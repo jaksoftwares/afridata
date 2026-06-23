@@ -91,7 +91,10 @@ def dataset_detail(request, slug):
             file_content = dataset.file.read()
             
             # Determine file type and read accordingly
-            if dataset.dataset_type == 'csv':
+            if dataset.dataset_type == 'unstructured':
+                # Skip pandas parsing for unstructured data
+                df = pd.DataFrame()
+            elif dataset.dataset_type == 'csv':
                 try:
                     df = pd.read_csv(io.BytesIO(file_content), encoding='utf-8')
                 except Exception:
@@ -295,7 +298,9 @@ def dataset_preview(request, slug):
             dataset.file.seek(0)
             file_content = dataset.file.read()
             
-            if dataset.dataset_type == 'csv':
+            if dataset.dataset_type == 'unstructured':
+                df = pd.DataFrame()
+            elif dataset.dataset_type == 'csv':
                 df = pd.read_csv(io.BytesIO(file_content))
             elif dataset.dataset_type == 'excel':
                 df = pd.read_excel(io.BytesIO(file_content))
@@ -512,32 +517,33 @@ def upload_dataset(request):
             dataset.token_cost = dataset.calculate_token_cost()
             dataset.save()
             
-            # Trigger metadata AI engine asynchronously
-            try:
-                source = SourceType.EXCEL if dataset.dataset_type == 'excel' else SourceType.CSV
-                run = PipelineRun.objects.create(
-                    dataset=dataset,
-                    source=source,
-                    source_path=dataset.file.path,
-                    dataset_title=dataset.title,
-                    dataset_description=dataset.bio,
-                    status=RunStatus.PENDING,
-                )
-                threading.Thread(
-                    target=_run_pipeline_task_with_db_cleanup,
-                    kwargs={
-                        "run_id": str(run.id),
-                        "source": source,
-                        "source_path": dataset.file.path,
-                        "dataset_title": dataset.title,
-                        "dataset_description": dataset.bio,
-                    },
-                    daemon=True
-                ).start()
-            except Exception as e:
-                # Log error but don't fail upload
-                import logging
-                logging.getLogger(__name__).exception("Failed to trigger metadata pipeline: %s", e)
+            # Trigger metadata AI engine asynchronously if supported
+            if dataset.dataset_type in ['csv', 'excel', 'parquet', 'json']:
+                try:
+                    source = SourceType.EXCEL if dataset.dataset_type == 'excel' else SourceType.CSV
+                    run = PipelineRun.objects.create(
+                        dataset=dataset,
+                        source=source,
+                        source_path=dataset.file.path,
+                        dataset_title=dataset.title,
+                        dataset_description=dataset.bio,
+                        status=RunStatus.PENDING,
+                    )
+                    threading.Thread(
+                        target=_run_pipeline_task_with_db_cleanup,
+                        kwargs={
+                            "run_id": str(run.id),
+                            "source": source,
+                            "source_path": dataset.file.path,
+                            "dataset_title": dataset.title,
+                            "dataset_description": dataset.bio,
+                        },
+                        daemon=True
+                    ).start()
+                except Exception as e:
+                    # Log error but don't fail upload
+                    import logging
+                    logging.getLogger(__name__).exception("Failed to trigger metadata pipeline: %s", e)
             
             # Award upload bonus tokens to the user
             upload_bonus = dataset.get_upload_bonus_tokens()
@@ -899,4 +905,4 @@ def delete_dataset(request, slug):
         
     dataset.delete()
     messages.success(request, 'Dataset deleted successfully!')
-    return redirect('user_dashboard')
+    return redirect('workspace')

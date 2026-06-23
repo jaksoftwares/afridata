@@ -1,270 +1,428 @@
+{% extends 'base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Purchase Tokens - DataHub</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="{% static 'mpesa/css/token_purchase.css' %}" rel="stylesheet">
-</head>
-<body class="gradient-bg">
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-10">
-                <!-- Header -->
-                <div class="text-center text-white mb-5">
-                    <h1 class="display-4 fw-bold mb-3">
-                         Purchase Tokens
-                    </h1>
-                    <p class="lead">Unlock premium datasets and boost your research with our token packages</p>
-                </div>
 
-                <!-- Current Balance -->
-                <div class="token-balance text-center">
-                    <div class="row align-items-center">
-                        <div class="col-md-6">
-                            <h3 class="mb-1">
-                                 Current Balance
-                            </h3>
-                            <h2 class="fw-bold">{{ user.profile.token_balance }} Tokens</h2>
-                        </div>
-                        <div class="col-md-6">
-                            <small class="opacity-75">
-                                Total Earned: {{ user.profile.total_tokens_earned }} | 
-                                Total Spent: {{ user.profile.total_tokens_spent }}
-                            </small>
-                        </div>
-                    </div>
-                </div>
+{% block title %}Purchase Tokens - AfriData{% endblock %}
 
-                <!-- Token Packages -->
-                <div class="row g-4 mb-5">
-                    <!-- Basic Package -->
-                    <div class="col-lg-3 col-md-6">
-                        <div class="card token-card h-100">
-                            <div class="card-body text-center p-4">
-                                <div class="token-icon mx-auto">
-                                    
-                                </div>
-                                <h4 class="card-title fw-bold">Basic</h4>
-                                <h2 class="text-primary fw-bold">100 <small class="text-muted">Tokens</small></h2>
-                                <p class="text-muted mb-4">Perfect for occasional downloads</p>
-                                <div class="price mb-3">
-                                    <span class="h3 fw-bold">KES 1,000</span>
-                                    <small class="text-muted d-block">~$10 USD</small>
-                                </div>
-                                <button class="btn purchase-btn w-100" onclick="purchaseTokens('basic', 100, 1000)">
-                                     Purchase
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+{% block extra_css %}
+<!-- No longer importing Bootstrap -->
+{% endblock %}
 
-                    <!-- Standard Package -->
-                    <div class="col-lg-3 col-md-6">
-                        <div class="card token-card h-100 popular">
-                            <div class="card-body text-center p-4">
-                                <div class="token-icon mx-auto">
-                                    
-                                </div>
-                                <h4 class="card-title fw-bold">Standard</h4>
-                                <h2 class="text-primary fw-bold">500 <small class="text-muted">Tokens</small></h2>
-                                <p class="text-muted mb-4">Great value for regular users</p>
-                                <div class="price mb-3">
-                                    <span class="h3 fw-bold">KES 4,000</span>
-                                    <small class="text-muted d-block">~$40 USD</small>
-                                    <small class="text-success"><i class="fas fa-arrow-down"></i> Save 20%</small>
-                                </div>
-                                <button class="btn purchase-btn w-100" onclick="purchaseTokens('standard', 500, 4000)">
-                                     Purchase
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+{% block header_content %}
+<div class="text-center py-12 relative overflow-hidden">
+    <!-- Decorative background elements -->
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full max-w-4xl mx-auto z-0 pointer-events-none">
+        <div class="absolute -left-20 top-0 w-64 h-64 bg-brand-teal/10 rounded-full blur-3xl"></div>
+        <div class="absolute -right-20 bottom-0 w-64 h-64 bg-brand-blue/10 rounded-full blur-3xl"></div>
+    </div>
+    
+    <div class="relative z-10">
+        <h1 class="text-4xl md:text-5xl font-bold font-serif text-gray-900 mb-4 tracking-tight">Purchase Tokens</h1>
+        <p class="text-xl text-gray-500 max-w-2xl mx-auto font-sans">Unlock premium datasets and boost your research with our token packages</p>
+    </div>
+</div>
+{% endblock %}
 
-                    <!-- Premium Package -->
-                    <div class="col-lg-3 col-md-6">
-                        <div class="card token-card h-100">
-                            <div class="card-body text-center p-4">
-                                <div class="token-icon mx-auto">
-                                    
-                                </div>
-                                <h4 class="card-title fw-bold">Premium</h4>
-                                <h2 class="text-primary fw-bold">1,200 <small class="text-muted">Tokens</small></h2>
-                                <p class="text-muted mb-4">Best for power users</p>
-                                <div class="price mb-3">
-                                    <span class="h3 fw-bold">KES 8,000</span>
-                                    <small class="text-muted d-block">~$80 USD</small>
-                                    <small class="text-success"><i class="fas fa-arrow-down"></i> Save 33%</small>
-                                </div>
-                                <button class="btn purchase-btn w-100" onclick="purchaseTokens('premium', 1200, 8000)">
-                                     Purchase
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Mega Package -->
-                    <div class="col-lg-3 col-md-6">
-                        <div class="card token-card h-100">
-                            <div class="card-body text-center p-4">
-                                <div class="token-icon mx-auto">
-                                    
-                                </div>
-                                <h4 class="card-title fw-bold">Mega</h4>
-                                <h2 class="text-primary fw-bold">3,000 <small class="text-muted">Tokens</small></h2>
-                                <p class="text-muted mb-4">Ultimate package for teams</p>
-                                <div class="price mb-3">
-                                    <span class="h3 fw-bold">KES 15,000</span>
-                                    <small class="text-muted d-block">~$150 USD</small>
-                                    <small class="text-success"><i class="fas fa-arrow-down"></i> Save 50%</small>
-                                </div>
-                                <button class="btn purchase-btn w-100" onclick="purchaseTokens('mega', 3000, 15000)">
-                                     Purchase
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Payment Methods -->
-                <div class="payment-methods">
-                    <h4 class="text-center mb-4">
-                         Secure Payment Methods
-                    </h4>
-                    <div class="row text-center">
-                        <div class="col-md-4 mb-3">
-                            <div class="p-3">
-                                
-                                <h6>M-Pesa</h6>
-                                <small class="text-muted">Pay securely with your mobile money</small>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="p-3">
-                                
-                                <h6>Secure Processing</h6>
-                                <small class="text-muted">256-bit SSL encryption</small>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="p-3">
-                                
-                                <h6>Instant Delivery</h6>
-                                <small class="text-muted">Tokens added immediately</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Recent Purchases -->
-                {% if recent_purchases %}
-                <div class="card mt-4">
-                    <div class="card-header">
-                        <h5 class="mb-0"> Recent Purchases</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-sm">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Package</th>
-                                        <th>Tokens</th>
-                                        <th>Amount</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for purchase in recent_purchases %}
-                                    <tr>
-                                        <td>{{ purchase.created_at|date:"M d, Y" }}</td>
-                                        <td>{{ purchase.get_package_display }}</td>
-                                        <td>{{ purchase.tokens_purchased }}</td>
-                                        <td>KES {{ purchase.kes_amount }}</td>
-                                        <td>
-                                            <span class="badge bg-{% if purchase.payment_status == 'completed' %}success{% elif purchase.payment_status == 'pending' %}warning{% else %}danger{% endif %}">
-                                                {{ purchase.get_payment_status_display }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 pb-16 font-sans">
+    
+    <!-- Current Balance -->
+    <div class="card-fancy p-8 mb-12 flex flex-col md:flex-row items-center justify-between border border-brand-teal/20 relative overflow-hidden group">
+        <div class="absolute -right-10 -bottom-10 w-32 h-32 bg-brand-teal/5 rounded-full blur-2xl group-hover:bg-brand-teal/10 transition-colors duration-700"></div>
+        
+        <div class="flex items-center mb-6 md:mb-0 relative z-10">
+            <div class="w-16 h-16 bg-gradient-to-br from-brand-teal to-teal-700 rounded-2xl shadow-lg flex items-center justify-center text-white mr-6 transform -rotate-3 group-hover:rotate-0 transition-transform">
+                <i class="fas fa-coins text-2xl"></i>
+            </div>
+            <div>
+                <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-1">Current Balance</h3>
+                <h2 class="text-3xl font-bold font-serif text-gray-900">{{ user.profile.token_balance }} <span class="text-lg text-brand-teal font-sans">Tokens</span></h2>
+            </div>
+        </div>
+        
+        <div class="flex space-x-6 relative z-10">
+            <div class="bg-brand-offwhite p-4 rounded-xl border border-gray-100 text-center min-w-[120px]">
+                <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Earned</span>
+                <span class="text-lg font-bold text-brand-teal">{{ user.profile.total_tokens_earned }}</span>
+            </div>
+            <div class="bg-brand-offwhite p-4 rounded-xl border border-gray-100 text-center min-w-[120px]">
+                <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Spent</span>
+                <span class="text-lg font-bold text-red-400">{{ user.profile.total_tokens_spent }}</span>
             </div>
         </div>
     </div>
 
-    <!-- M-Pesa Payment Modal -->
-    <div class="modal fade" id="mpesaModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                         M-Pesa Payment
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <!-- Token Packages -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+        
+        <!-- Basic Package -->
+        <div class="card-fancy p-6 flex flex-col h-full border border-gray-100 hover:border-brand-teal/30 transition-colors group relative">
+            <div class="text-center mb-6 pt-4">
+                <div class="w-14 h-14 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400 group-hover:text-brand-teal transition-colors">
+                    <i class="fas fa-star text-xl"></i>
                 </div>
-                <div class="modal-body">
-                <form id="mpesaForm" method="POST" data-stk-url="{% url 'stk' %}">
-                        {% csrf_token %}
-                        <div class="text-center mb-4">
-                            <div class="token-icon mx-auto mb-3">
-                                
-                            </div>
-                            <h4 id="packageTitle">Package Details</h4>
-                            <p class="text-muted" id="packageDetails">Tokens and amount</p>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="phone" class="form-label">M-Pesa Phone Number</label>
-                            <div class="input-group">
-                                <span class="input-group-text">+254</span>
-                                <input type="tel" class="form-control" id="phone" name="phone" 
-                                       placeholder="712345678" pattern="[0-9]{9}" required
-                                       value="{{ user.phone_number|slice:'4:' }}">
-                            </div>
-                            <small class="form-text text-muted">Enter your Safaricom number without country code</small>
-                        </div>
-
-                        <input type="hidden" id="amount" name="amount">
-                        <input type="hidden" id="tokens" name="tokens">
-                        <input type="hidden" id="package" name="package">
-
-                        <div class="d-grid">
-                            <button type="submit" class="btn purchase-btn btn-lg">
-                                 Pay with M-Pesa
-                            </button>
-                        </div>
-                    </form>
+                <h4 class="text-lg font-bold font-serif text-gray-800 mb-2">Basic</h4>
+                <div class="flex items-baseline justify-center">
+                    <span class="text-3xl font-bold text-brand-teal">100</span>
+                    <span class="text-sm text-gray-400 ml-2 uppercase tracking-widest font-bold">Tokens</span>
                 </div>
+                <p class="text-xs text-gray-500 mt-3">Perfect for occasional downloads</p>
+            </div>
+            <div class="mt-auto text-center border-t border-gray-50 pt-6">
+                <div class="mb-4">
+                    <span class="block text-2xl font-bold text-gray-900 mb-1">KES 1,000</span>
+                    <span class="text-xs text-gray-400 uppercase tracking-widest">~$10 USD</span>
+                </div>
+                <button class="w-full py-3 bg-white border border-gray-200 text-gray-700 font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-gray-50 hover:border-brand-teal transition-colors shadow-sm" onclick="purchaseTokens('basic', 100, 1000)">
+                    Purchase
+                </button>
+            </div>
+        </div>
+
+        <!-- Standard Package -->
+        <div class="card-fancy p-6 flex flex-col h-full border-2 border-brand-teal/40 relative shadow-md transform lg:-translate-y-4">
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-brand-teal text-white text-[10px] font-bold uppercase tracking-widest py-1 px-4 rounded-full shadow-sm">
+                Most Popular
+            </div>
+            <div class="text-center mb-6 pt-4">
+                <div class="w-16 h-16 bg-brand-teal/10 rounded-full flex items-center justify-center mx-auto mb-4 text-brand-teal">
+                    <i class="fas fa-rocket text-2xl"></i>
+                </div>
+                <h4 class="text-lg font-bold font-serif text-gray-800 mb-2">Standard</h4>
+                <div class="flex items-baseline justify-center">
+                    <span class="text-4xl font-bold text-brand-teal">500</span>
+                    <span class="text-sm text-gray-400 ml-2 uppercase tracking-widest font-bold">Tokens</span>
+                </div>
+                <p class="text-xs text-gray-500 mt-3">Great value for regular users</p>
+            </div>
+            <div class="mt-auto text-center border-t border-brand-teal/10 pt-6">
+                <div class="mb-4">
+                    <span class="block text-3xl font-bold text-gray-900 mb-1">KES 4,000</span>
+                    <span class="text-xs text-gray-400 uppercase tracking-widest mb-2 block">~$40 USD</span>
+                    <span class="inline-block bg-green-50 text-green-600 text-[10px] font-bold uppercase tracking-widest py-1 px-2 rounded-md"><i class="fas fa-arrow-down mr-1"></i> Save 20%</span>
+                </div>
+                <button class="w-full py-3.5 bg-brand-teal text-white font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-teal-600 transition-colors shadow-md" onclick="purchaseTokens('standard', 500, 4000)">
+                    Purchase
+                </button>
+            </div>
+        </div>
+
+        <!-- Premium Package -->
+        <div class="card-fancy p-6 flex flex-col h-full border border-gray-100 hover:border-brand-teal/30 transition-colors group">
+            <div class="text-center mb-6 pt-4">
+                <div class="w-14 h-14 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400 group-hover:text-purple-500 transition-colors">
+                    <i class="fas fa-gem text-xl"></i>
+                </div>
+                <h4 class="text-lg font-bold font-serif text-gray-800 mb-2">Premium</h4>
+                <div class="flex items-baseline justify-center">
+                    <span class="text-3xl font-bold text-brand-teal">1,200</span>
+                    <span class="text-sm text-gray-400 ml-2 uppercase tracking-widest font-bold">Tokens</span>
+                </div>
+                <p class="text-xs text-gray-500 mt-3">Best for power users</p>
+            </div>
+            <div class="mt-auto text-center border-t border-gray-50 pt-6">
+                <div class="mb-4">
+                    <span class="block text-2xl font-bold text-gray-900 mb-1">KES 8,000</span>
+                    <span class="text-xs text-gray-400 uppercase tracking-widest mb-2 block">~$80 USD</span>
+                    <span class="inline-block bg-green-50 text-green-600 text-[10px] font-bold uppercase tracking-widest py-1 px-2 rounded-md"><i class="fas fa-arrow-down mr-1"></i> Save 33%</span>
+                </div>
+                <button class="w-full py-3 bg-white border border-gray-200 text-gray-700 font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-gray-50 hover:border-brand-teal transition-colors shadow-sm" onclick="purchaseTokens('premium', 1200, 8000)">
+                    Purchase
+                </button>
+            </div>
+        </div>
+
+        <!-- Mega Package -->
+        <div class="card-fancy p-6 flex flex-col h-full border border-gray-100 hover:border-brand-teal/30 transition-colors group">
+            <div class="text-center mb-6 pt-4">
+                <div class="w-14 h-14 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400 group-hover:text-orange-500 transition-colors">
+                    <i class="fas fa-crown text-xl"></i>
+                </div>
+                <h4 class="text-lg font-bold font-serif text-gray-800 mb-2">Mega</h4>
+                <div class="flex items-baseline justify-center">
+                    <span class="text-3xl font-bold text-brand-teal">3,000</span>
+                    <span class="text-sm text-gray-400 ml-2 uppercase tracking-widest font-bold">Tokens</span>
+                </div>
+                <p class="text-xs text-gray-500 mt-3">Ultimate package for teams</p>
+            </div>
+            <div class="mt-auto text-center border-t border-gray-50 pt-6">
+                <div class="mb-4">
+                    <span class="block text-2xl font-bold text-gray-900 mb-1">KES 15,000</span>
+                    <span class="text-xs text-gray-400 uppercase tracking-widest mb-2 block">~$150 USD</span>
+                    <span class="inline-block bg-green-50 text-green-600 text-[10px] font-bold uppercase tracking-widest py-1 px-2 rounded-md"><i class="fas fa-arrow-down mr-1"></i> Save 50%</span>
+                </div>
+                <button class="w-full py-3 bg-white border border-gray-200 text-gray-700 font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-gray-50 hover:border-brand-teal transition-colors shadow-sm" onclick="purchaseTokens('mega', 3000, 15000)">
+                    Purchase
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Success Modal -->
-    <div class="modal fade" id="successModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-body text-center p-5">
-                    
-                    <h3>Payment Initiated!</h3>
-                    <p class="text-muted">Please complete the payment on your phone. Tokens will be added automatically once payment is confirmed.</p>
-                    <button type="button" class="btn btn-success" data-bs-dismiss="modal" onclick="location.reload()">
-                         Refresh Page
-                    </button>
+    <!-- Payment Methods & Trust Indicators -->
+    <div class="bg-gray-50 rounded-2xl p-8 border border-gray-100 mb-12">
+        <h4 class="text-center text-sm font-bold text-gray-800 uppercase tracking-widest mb-8">Secure Payment Methods</h4>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+            <div class="p-4">
+                <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm text-green-600">
+                    <i class="fas fa-mobile-alt text-xl"></i>
                 </div>
+                <h6 class="font-bold text-gray-800 mb-2 text-sm uppercase tracking-widest">M-Pesa</h6>
+                <p class="text-xs text-gray-500 leading-relaxed">Pay securely and instantly with your mobile money account</p>
+            </div>
+            <div class="p-4">
+                <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm text-brand-teal">
+                    <i class="fas fa-shield-alt text-xl"></i>
+                </div>
+                <h6 class="font-bold text-gray-800 mb-2 text-sm uppercase tracking-widest">Secure Processing</h6>
+                <p class="text-xs text-gray-500 leading-relaxed">All transactions are secured with 256-bit SSL encryption</p>
+            </div>
+            <div class="p-4">
+                <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm text-brand-blue">
+                    <i class="fas fa-bolt text-xl"></i>
+                </div>
+                <h6 class="font-bold text-gray-800 mb-2 text-sm uppercase tracking-widest">Instant Delivery</h6>
+                <p class="text-xs text-gray-500 leading-relaxed">Tokens are added to your balance immediately after payment</p>
             </div>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-    <script src="{% static 'mpesa/javascript/token_purchase.js' %}"></script>
-</body>
-</html>
+    <!-- Recent Purchases -->
+    {% if recent_purchases %}
+    <div class="card-fancy p-8">
+        <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+            <h5 class="text-lg font-bold font-serif text-gray-800"><i class="fas fa-history text-gray-400 mr-2"></i> Recent Purchases</h5>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr>
+                        <th class="py-3 px-4 bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-widest rounded-l-lg">Date</th>
+                        <th class="py-3 px-4 bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-widest">Package</th>
+                        <th class="py-3 px-4 bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-widest">Tokens</th>
+                        <th class="py-3 px-4 bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-widest">Amount</th>
+                        <th class="py-3 px-4 bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-widest rounded-r-lg">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm">
+                    {% for purchase in recent_purchases %}
+                    <tr class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                        <td class="py-4 px-4 text-gray-600">{{ purchase.created_at|date:"M d, Y" }}</td>
+                        <td class="py-4 px-4 font-semibold text-gray-800">{{ purchase.get_package_display }}</td>
+                        <td class="py-4 px-4 font-bold text-brand-teal">+{{ purchase.tokens_purchased }}</td>
+                        <td class="py-4 px-4 text-gray-600">KES {{ purchase.kes_amount }}</td>
+                        <td class="py-4 px-4">
+                            {% if purchase.payment_status == 'completed' %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold bg-green-100 text-green-800 uppercase tracking-widest">
+                                <i class="fas fa-check mr-1"></i> {{ purchase.get_payment_status_display }}
+                            </span>
+                            {% elif purchase.payment_status == 'pending' %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold bg-yellow-100 text-yellow-800 uppercase tracking-widest">
+                                <i class="fas fa-clock mr-1"></i> {{ purchase.get_payment_status_display }}
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold bg-red-100 text-red-800 uppercase tracking-widest">
+                                <i class="fas fa-times mr-1"></i> {{ purchase.get_payment_status_display }}
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- Tailwind Modals -->
+
+<!-- M-Pesa Payment Modal -->
+<div id="mpesaModal" class="hidden fixed inset-0 z-50 items-center justify-center font-sans modal-overlay">
+    <!-- Backdrop -->
+    <div class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity opacity-0 modal-overlay"></div>
+    
+    <!-- Modal Content -->
+    <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden transform scale-95 opacity-0 transition-all duration-300">
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
+            <h5 class="text-lg font-bold font-serif text-gray-800 flex items-center">
+                <i class="fas fa-mobile-alt text-green-600 mr-2"></i> M-Pesa Payment
+            </h5>
+            <button type="button" class="text-gray-400 hover:text-gray-600 transition-colors" onclick="toggleModal('mpesaModal', false)">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        
+        <!-- Body -->
+        <div class="p-6">
+            <form id="mpesaForm" method="POST" data-stk-url="{% url 'stk' %}">
+                {% csrf_token %}
+                <div class="text-center mb-6 bg-brand-offwhite p-4 rounded-xl border border-gray-100">
+                    <h4 id="packageTitle" class="text-sm font-bold text-gray-800 uppercase tracking-widest mb-1">Package Details</h4>
+                    <p class="text-brand-teal font-bold text-lg" id="packageDetails">Tokens and amount</p>
+                </div>
+                
+                <div class="mb-6">
+                    <label for="phone" class="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-2">M-Pesa Phone Number</label>
+                    <div class="flex rounded-lg shadow-sm border border-gray-300 overflow-hidden focus-within:ring-2 focus-within:ring-brand-teal focus-within:border-brand-teal transition-shadow">
+                        <span class="inline-flex items-center px-4 bg-gray-50 text-gray-500 font-bold border-r border-gray-300 text-sm">
+                            +254
+                        </span>
+                        <input type="tel" class="flex-1 block w-full px-4 py-3 sm:text-sm border-0 focus:ring-0" id="phone" name="phone" 
+                               placeholder="712345678" pattern="[0-9]{9}" required
+                               value="{{ user.phone_number|slice:'4:' }}">
+                    </div>
+                    <small class="block mt-2 text-xs text-gray-500"><i class="fas fa-info-circle mr-1"></i> Enter your Safaricom number without country code</small>
+                </div>
+
+                <input type="hidden" id="amount" name="amount">
+                <input type="hidden" id="tokens" name="tokens">
+                <input type="hidden" id="package" name="package">
+
+                <button type="submit" class="w-full flex justify-center items-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold uppercase tracking-widest text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
+                    <i class="fas fa-mobile-alt mr-2 text-lg"></i> Pay with M-Pesa
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div id="successModal" class="hidden fixed inset-0 z-50 items-center justify-center font-sans modal-overlay">
+    <!-- Backdrop -->
+    <div class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity opacity-0 modal-overlay"></div>
+    
+    <!-- Modal Content -->
+    <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 overflow-hidden transform scale-95 opacity-0 transition-all duration-300 text-center p-8">
+        <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 text-green-500 shadow-inner">
+            <i class="fas fa-check text-4xl"></i>
+        </div>
+        <h3 class="text-2xl font-bold font-serif text-gray-900 mb-3">Payment Initiated!</h3>
+        <p class="text-sm text-gray-600 leading-relaxed mb-8">
+            Please check your phone and enter your M-Pesa PIN to complete the transaction. Your tokens will be added automatically once confirmed.
+        </p>
+        <button type="button" class="w-full py-3 bg-brand-teal text-white font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-teal-600 transition-colors shadow-sm" onclick="location.reload()">
+            <i class="fas fa-sync-alt mr-2"></i> Refresh Page
+        </button>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentPackage = {};
+
+    function toggleModal(modalId, show) {
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+        
+        if (show) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            // Add a slight delay for opacity transition
+            setTimeout(() => {
+                const backdrop = modal.querySelector('.bg-gray-900\\/50');
+                const content = modal.querySelector('.transform');
+                if(backdrop) backdrop.classList.remove('opacity-0');
+                if(content) content.classList.remove('scale-95', 'opacity-0');
+            }, 10);
+        } else {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            const backdrop = modal.querySelector('.bg-gray-900\\/50');
+            const content = modal.querySelector('.transform');
+            if(backdrop) backdrop.classList.add('opacity-0');
+            if(content) content.classList.add('scale-95', 'opacity-0');
+        }
+    }
+
+    function closeAllModals() {
+        toggleModal('mpesaModal', false);
+        toggleModal('successModal', false);
+    }
+
+    // Close modals when clicking outside
+    document.addEventListener('click', function(e) {
+        if (e.target.matches('.modal-overlay')) {
+            closeAllModals();
+        }
+    });
+
+    window.purchaseTokens = function(packageType, tokens, amount) {
+        currentPackage = {
+            type: packageType,
+            tokens: tokens,
+            amount: amount
+        };
+
+        const packageNames = {
+            'basic': 'Basic Package',
+            'standard': 'Standard Package',
+            'premium': 'Premium Package',
+            'mega': 'Mega Package'
+        };
+
+        document.getElementById('packageTitle').textContent = packageNames[packageType];
+        document.getElementById('packageDetails').textContent = `${tokens.toLocaleString()} Tokens for KES ${amount.toLocaleString()}`;
+        document.getElementById('amount').value = amount;
+        document.getElementById('tokens').value = tokens;
+        document.getElementById('package').value = packageType;
+
+        toggleModal('mpesaModal', true);
+    };
+
+    document.getElementById('mpesaForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const form = this;
+        const formData = new FormData(form);
+        const phone = formData.get('phone');
+
+        // Validate phone number
+        if (!/^[0-9]{9}$/.test(phone)) {
+            alert('Please enter a valid 9-digit phone number (e.g., 712345678)');
+            return;
+        }
+
+        // Add 254 prefix
+        formData.set('phone', '254' + phone);
+
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Processing...';
+        submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+
+        // Get STK URL from form attribute
+        const stkUrl = form.getAttribute('data-stk-url');
+
+        fetch(stkUrl, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            toggleModal('mpesaModal', false);
+
+            if (data.success) {
+                toggleModal('successModal', true);
+            } else {
+                alert('Payment initiation failed: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+            submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+        });
+    });
+</script>
+{% endblock %}

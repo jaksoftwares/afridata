@@ -17,12 +17,15 @@ python manage.py collectstatic --noinput
 
 if [ "$DJANGO_SUPERUSER_USERNAME" ]
 then
-  echo "👤 Creating superuser..."
+  echo "👤 Creating env-based superuser..."
   python manage.py createsuperuser \
     --noinput \
     --username "$DJANGO_SUPERUSER_USERNAME" \
     --email "$DJANGO_SUPERUSER_EMAIL"
 fi
+
+echo "👤 Setting up predefined super admins..."
+python setup_admins.py
 
 echo "🚀 Starting Gunicorn server..."
 exec gunicorn afridata.wsgi:application --bind 0.0.0.0:8000 --limit-request-field_size 32768

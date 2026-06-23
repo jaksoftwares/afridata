@@ -18,6 +18,12 @@ services:
     build: .
     volumes:
       - .:/app
+      # Persistent named volumes for user uploads so they survive container rebuilds
+      - afridata_media:/app/media
+      - afridata_datasets:/app/datasets
+      - afridata_profile_pics:/app/profile_pics
+      - afridata_exports:/app/exports
+      - afridata_processed:/app/processed
     ports:
       - "8000:8000"
     depends_on:
@@ -30,3 +36,8 @@ services:
 
 volumes:
   mysql_data:
+  afridata_media:
+  afridata_datasets:
+  afridata_profile_pics:
+  afridata_exports:
+  afridata_processed:

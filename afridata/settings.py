@@ -244,3 +244,4 @@ DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER)
 CONTACT_EMAIL_RECIPIENT = env('CONTACT_EMAIL_RECIPIENT', default='info.jhub@jkuat.ac.ke')
 
 X_FRAME_OPTIONS = 'SAMEORIGIN'
+# Force reload to pick up .env changes

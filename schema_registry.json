@@ -469,5 +469,66 @@
       }
     },
     "created_at": "2026-06-17T12:24:01.272050"
+  },
+  "trade_&_commerce_ecomm": {
+    "domain": "trade & commerce",
+    "dataset_name": "ecomm",
+    "raw_columns": [
+      "product_id",
+      "product_name",
+      "product_description",
+      "category",
+      "subcategory",
+      "brand",
+      "price",
+      "rating_avg",
+      "review_count",
+      "stock_quantity",
+      "date_added"
+    ],
+    "schema": {
+      "domain": "Trade & Commerce",
+      "alignment_confidence": 0.95,
+      "official_standard": {
+        "product_id": "Utf8",
+        "product_name": "Utf8",
+        "product_description": "Utf8",
+        "category": "Utf8",
+        "subcategory": "Utf8",
+        "brand": "Utf8",
+        "unit_price": "Float64",
+        "rating_average": "Float64",
+        "review_count": "Int64",
+        "stock_quantity": "Int64",
+        "date_added": "Date"
+      },
+      "mapping_instructions": {
+        "product_id": "product_id",
+        "product_name": "product_name",
+        "product_description": "product_description",
+        "category": "category",
+        "subcategory": "subcategory",
+        "brand": "brand",
+        "price": "unit_price",
+        "rating_avg": "rating_average",
+        "review_count": "review_count",
+        "stock_quantity": "stock_quantity",
+        "date_added": "date_added"
+      },
+      "transformation_needed": {
+        "product_id": null,
+        "product_name": null,
+        "product_description": null,
+        "category": null,
+        "subcategory": null,
+        "brand": null,
+        "unit_price": "cast(Float64)",
+        "rating_average": "cast(Float64)",
+        "review_count": "cast(Int64)",
+        "stock_quantity": "cast(Int64)",
+        "date_added": "strptime('%Y-%m-%d')"
+      }
+    },
+    "created_at": "2026-06-23T23:43:48.763136"
   }
 }

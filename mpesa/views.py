@@ -9,13 +9,14 @@ env = environ.Env()
 env.read_env(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
+from django.utils import timezone
 from decimal import Decimal
 
 import requests
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db import transaction
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -54,7 +55,7 @@ def token_purchase(request):
     except Exception as e:
         logger.error(f"Error in token_purchase view: {e}")
         messages.error(request, "Error loading token purchase page. Please try again.")
-        return redirect('accounts:token_dashboard')  # Redirect to token dashboard
+        return redirect('token_dashboard')  # Redirect to token dashboard
 
 @login_required
 def token(request):
@@ -129,7 +130,7 @@ def stk(request):
             return JsonResponse({'success': False, 'message': 'Invalid phone number format. Use format: 0712345678'}, status=400)
         
         # Create pending purchase record
-        with transaction.atomic():
+        with transaction.atomic():  # type: ignore
             token_purchase = TokenPurchase.objects.create(
                 user=request.user,
                 package=package_type,
@@ -270,7 +271,7 @@ def mpesa_callback(request):
                 stripe_payment_intent_id=checkout_request_id,
                 payment_status='pending'
             )
-        except TokenPurchase.DoesNotExist:
+        except ObjectDoesNotExist:
             logger.warning(f"No matching purchase found for CheckoutRequestID: {checkout_request_id}")
             return HttpResponse(status=200)
 
@@ -281,7 +282,7 @@ def mpesa_callback(request):
 
         if result_code == 0:
             # Successful payment
-            with transaction.atomic():
+            with transaction.atomic():  # type: ignore
                 token_purchase.payment_status = 'completed'
                 token_purchase.completed_at = timezone.now()
                 token_purchase.save(update_fields=['payment_status', 'completed_at'])
@@ -329,8 +330,7 @@ def mpesa_callback(request):
 def payment_status(request, purchase_id):
     """Check payment status"""
     try:
-        purchase = get_object_or_404(
-            TokenPurchase, 
+        purchase = TokenPurchase.objects.get(
             id=purchase_id, 
             user=request.user
         )
@@ -343,7 +343,7 @@ def payment_status(request, purchase_id):
             'completed_at': purchase.completed_at.isoformat() if purchase.completed_at else None
         })
         
-    except TokenPurchase.DoesNotExist:
+    except ObjectDoesNotExist:
         return JsonResponse({
             'error': 'Purchase not found'
         }, status=404)
@@ -371,7 +371,7 @@ def transaction_history(request):
     except Exception as e:
         logger.error(f"Error in transaction_history view: {e}")
         messages.error(request, "Error loading transaction history.")
-        return redirect('accounts:token_dashboard')
+        return redirect('token_dashboard')
 
 @login_required
 def check_balance(request):

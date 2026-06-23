@@ -135,6 +135,7 @@
     <div class="flex flex-col lg:flex-row gap-10">
         <!-- Main Content Area -->
         <div class="flex-1 space-y-10 min-w-0">
+            {% if dataset.dataset_type != 'unstructured' %}
             <!-- Data Insights & Visualization -->
             <div class="card-fancy !p-8">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -231,11 +232,11 @@
                         </div>
                     </div>
                     <div class="w-8 h-8 rounded-full bg-brand-offwhite flex items-center justify-center text-gray-500 border border-gray-100 hover:bg-brand-teal/5 hover:text-brand-teal transition-all" id="metadata-toggle-icon-container">
-                        <i class="fas fa-chevron-down transform transition-transform duration-300 {% if pipeline_run and pipeline_run.status == 'PENDING' or pipeline_run and pipeline_run.status == 'RUNNING' %}rotate-180{% endif %}" id="metadata-toggle-icon"></i>
+                        <i class="fas fa-chevron-down transform transition-transform duration-300" id="metadata-toggle-icon"></i>
                     </div>
                 </div>
 
-                <div id="metadata-content" class="{% if pipeline_run and pipeline_run.status == 'PENDING' or pipeline_run and pipeline_run.status == 'RUNNING' %}{% else %}hidden{% endif %} mt-8 pt-8 border-t border-gray-100 space-y-8">
+                <div id="metadata-content" class="hidden mt-8 pt-8 border-t border-gray-100 space-y-8">
                     {% if pipeline_run and pipeline_run.status == 'PENDING' or pipeline_run and pipeline_run.status == 'RUNNING' %}
                     <!-- Loading state -->
                     <div class="flex flex-col items-center justify-center py-12 text-center">
@@ -456,6 +457,59 @@
                     </div>
                     {% endif %}
                     {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% else %}
+            <!-- Alternative UI for unstructured data -->
+            <div class="card-fancy !p-12 text-center bg-gradient-to-b from-brand-offwhite to-white border border-brand-teal/10 shadow-sm relative overflow-hidden group">
+                <div class="absolute -right-20 -top-20 w-64 h-64 bg-brand-teal/5 rounded-full blur-3xl group-hover:bg-brand-teal/10 transition-colors duration-700 pointer-events-none"></div>
+                <div class="absolute -left-20 -bottom-20 w-64 h-64 bg-brand-blue/5 rounded-full blur-3xl group-hover:bg-brand-blue/10 transition-colors duration-700 pointer-events-none"></div>
+                
+                <div class="relative z-10">
+                    <div class="w-24 h-24 mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center mb-6 text-brand-teal transform rotate-3 group-hover:rotate-0 transition-all duration-300">
+                        <i class="fas fa-cubes text-4xl"></i>
+                    </div>
+                    
+                    <h3 class="text-2xl font-bold font-serif text-gray-800 mb-3">Machine Learning Asset</h3>
+                    <p class="text-gray-500 max-w-md mx-auto text-sm leading-relaxed mb-8">
+                        This is a raw unstructured data asset optimized for direct loading into AI pipelines and model training environments.
+                    </p>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto mb-10 text-left">
+                        <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                            <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Format</span>
+                            <span class="font-mono text-sm text-brand-blue font-bold">{{ dataset.file.name|slice:"-10:"|default:".bin" }}</span>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                            <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Architecture</span>
+                            <span class="text-sm font-semibold text-gray-700">Tensor / Weights</span>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                            <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Compatibility</span>
+                            <span class="text-sm font-semibold text-gray-700">PyTorch / Scikit</span>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                            <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Security</span>
+                            <span class="text-sm font-semibold text-brand-teal flex items-center"><i class="fas fa-shield-check mr-1.5"></i> Scanned</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-brand-blue/5 rounded-2xl p-6 border border-brand-blue/10 max-w-2xl mx-auto text-left">
+                        <h4 class="text-xs font-bold uppercase tracking-widest text-brand-blue mb-3">Quick Start Usage</h4>
+                        <div class="bg-gray-900 rounded-xl p-4 overflow-x-auto">
+<pre class="text-green-400 font-mono text-xs leading-relaxed">
+# Download the dataset using Python
+import requests
+
+url = "{{ request.scheme }}://{{ request.get_host }}{% url 'download_dataset' dataset.slug %}"
+response = requests.get(url)
+with open("model_weights{{ dataset.file.name|slice:'-4:' }}", "wb") as f:
+    f.write(response.content)
+</pre>
+                        </div>
+                    </div>
                 </div>
             </div>
             {% endif %}

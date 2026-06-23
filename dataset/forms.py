@@ -14,6 +14,7 @@ DATASET_TYPE_CHOICES = [
     ('zip', 'ZIP Archive'),
     ('yaml', 'YAML'),
     ('parquet', 'Parquet'),
+    ('unstructured', 'Unstructured ML/AI Data'),
 ]
 
 class DatasetUploadForm(forms.ModelForm):
@@ -27,7 +28,7 @@ class DatasetUploadForm(forms.ModelForm):
                 'maxlength': '255'
             }),
             'file': forms.FileInput(attrs={
-                'accept': '.csv,.xlsx,.xls,.pdf,.txt,.json,.xml,.zip,.yaml,.yml,.parquet',
+                'accept': '.csv,.xlsx,.xls,.pdf,.txt,.json,.xml,.zip,.yaml,.yml,.parquet,.bin,.dat,.pt,.pkl,.h5,.safetensors,.onnx,.joblib',
                 'style': 'display: none;'  # Hidden as we use custom upload area
             }),
             'cover_photo': forms.FileInput(attrs={
@@ -141,12 +142,58 @@ class DatasetUploadForm(forms.ModelForm):
             raise forms.ValidationError('File size cannot exceed 10MB')
         
         # Check file extension
-        allowed_extensions = ['.csv', '.xlsx', '.xls', '.pdf', '.txt', '.json', '.xml', '.zip', '.yaml', '.yml', '.parquet']
+        allowed_extensions = ['.csv', '.xlsx', '.xls', '.pdf', '.txt', '.json', '.xml', '.zip', '.yaml', '.yml', '.parquet', '.bin', '.dat', '.pt', '.pkl', '.h5', '.safetensors', '.onnx', '.joblib']
         file_extension = '.' + file.name.lower().split('.')[-1]
         if file_extension not in allowed_extensions:
             raise forms.ValidationError(
                 f'Only these file types are allowed: {", ".join(allowed_extensions)}'
             )
+            
+        # --- Security Validation Pipeline ---
+        import filetype
+        import tempfile
+        import os
+        from picklescan.scanner import scan_file_path
+
+        # 1. Magic Number Check to prevent executable disguising
+        try:
+            chunk = file.read(2048)
+            file.seek(0)
+            kind = filetype.guess(chunk)
+            
+            # If we detect dangerous executable mime types, immediately reject
+            if kind and kind.mime in ['application/x-msdownload', 'application/x-executable', 'application/x-sh', 'application/x-mach-binary']:
+                raise forms.ValidationError("Security Error: Executable files are strictly prohibited.")
+        except Exception as e:
+            if isinstance(e, forms.ValidationError):
+                raise e
+            pass # Non-fatal if filetype module fails to guess
+            
+        # 2. ML Tensor Vulnerability Scan (Picklescan)
+        if file_extension in ['.pkl', '.pt']:
+            try:
+                # Write to temp file because picklescan requires a file path
+                with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) as tmp:
+                    for c in file.chunks():
+                        tmp.write(c)
+                    tmp_path = tmp.name
+                
+                scan_result = scan_file_path(tmp_path)
+                os.unlink(tmp_path)
+                
+                if scan_result.issues_count > 0:
+                    raise forms.ValidationError(
+                        f"Security Error: Malicious or unsafe code detected in this {file_extension} file. "
+                        f"Please convert to .safetensors and try again."
+                    )
+            except Exception as e:
+                # Reset file pointer if temp file writing failed midway
+                file.seek(0)
+                if isinstance(e, forms.ValidationError):
+                    raise e
+                raise forms.ValidationError(f"Security Error: Unable to verify the safety of this {file_extension} file.")
+            
+        file.seek(0) # Always reset file pointer before returning
         
         return file
     
@@ -173,7 +220,8 @@ class DatasetUploadForm(forms.ModelForm):
                 'xml': ['.xml'],
                 'zip': ['.zip'],
                 'yaml': ['.yaml', '.yml'],
-                'parquet': ['.parquet']
+                'parquet': ['.parquet'],
+                'unstructured': ['.bin', '.dat', '.pt', '.pkl', '.h5', '.safetensors', '.onnx', '.joblib']
             }
             
             expected_extensions = type_extension_map.get(dataset_type, [])

@@ -94,10 +94,11 @@
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
 
-    <!-- Top Left Logo -->
+    <!-- Back to Home -->
     <div class="absolute top-6 left-6 md:top-8 md:left-10 z-50">
-        <a href="/" class="hover:-translate-y-0.5 transition-all block bg-white/95 backdrop-blur-sm rounded-full px-5 py-2 shadow-xl border border-white/50">
-            <img src="{% static 'images/afridata-logo.svg' %}" alt="AfriData Logo" class="h-8 md:h-10 w-auto object-contain" style="transform: scale(1.15); transform-origin: center;">
+        <a href="/" class="group flex items-center space-x-2 text-[13px] font-semibold text-brand-grey hover:text-brand-blue transition-colors bg-white/50 hover:bg-white backdrop-blur-md px-4 py-2 rounded-full border border-gray-200/50 shadow-sm">
+            <i class="fas fa-arrow-left text-[11px] group-hover:-translate-x-1 transition-transform"></i>
+            <span>Back to Home</span>
         </a>
     </div>
 

@@ -23,6 +23,7 @@ class Dataset(models.Model):
         ('zip', 'ZIP Archive'),
         ('yaml', 'YAML'),
         ('parquet', 'Parquet'),
+        ('unstructured', 'Unstructured ML/AI Data'),
     ]
     
     QUALITY_TIERS = [

@@ -58,3 +58,6 @@ pyyaml==6.0.3
 
 python-dateutil>=2.8.2
 
+# Security Validation
+filetype>=1.2.0
+picklescan>=0.2.0
