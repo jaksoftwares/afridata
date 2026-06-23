@@ -91,12 +91,28 @@ def initiate_standardization(request, dataset_slug):
         job.mark_processing_started()
         
         try:
-            # Run pipeline processing using the existing file path
-            result = process_dataset(
-                file_path=dataset.file.path,
-                domain=domain,
-                dataset_name=dataset_name
-            )
+            import tempfile
+            tmp_path = None
+            try:
+                file_path_to_use = dataset.file.path
+            except NotImplementedError:
+                ext = os.path.splitext(dataset.file.name)[1]
+                with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
+                    dataset.file.seek(0)
+                    tmp.write(dataset.file.read())
+                    tmp_path = tmp.name
+                file_path_to_use = tmp_path
+
+            try:
+                # Run pipeline processing using the existing file path
+                result = process_dataset(
+                    file_path=file_path_to_use,
+                    domain=domain,
+                    dataset_name=dataset_name
+                )
+            finally:
+                if tmp_path and os.path.exists(tmp_path):
+                    os.unlink(tmp_path)
             
             # Extract metrics from result
             job.rows_original = result.get('report', {}).get('summary', {}).get('original_rows', 0)

@@ -524,7 +524,7 @@ def upload_dataset(request):
                     run = PipelineRun.objects.create(
                         dataset=dataset,
                         source=source,
-                        source_path=dataset.file.path,
+                        source_path=dataset.file.name,
                         dataset_title=dataset.title,
                         dataset_description=dataset.bio,
                         status=RunStatus.PENDING,
@@ -534,7 +534,7 @@ def upload_dataset(request):
                         kwargs={
                             "run_id": str(run.id),
                             "source": source,
-                            "source_path": dataset.file.path,
+                            "source_path": dataset.file.name,
                             "dataset_title": dataset.title,
                             "dataset_description": dataset.bio,
                         },

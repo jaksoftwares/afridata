@@ -382,8 +382,22 @@ def run_pipeline_task(
         "dataset_description": dataset_description,
     }
 
+    tmp_path = None
     if source in ("csv", "excel"):
-        pipeline_kwargs["path"] = source_path
+        try:
+            pipeline_kwargs["path"] = run.dataset.file.path
+        except (NotImplementedError, AttributeError):
+            import tempfile
+            import os
+            ext = os.path.splitext(source_path)[1]
+            with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
+                if hasattr(run, 'dataset') and run.dataset and run.dataset.file:
+                    run.dataset.file.seek(0)
+                    tmp.write(run.dataset.file.read())
+                else:
+                    raise ValueError(f"Cannot read file: path is inaccessible and no dataset attached for {source_path}")
+                tmp_path = tmp.name
+            pipeline_kwargs["path"] = tmp_path
 
     elif source == "sql":
         # SQL sources need a live SQLAlchemy engine.  The engine is built
@@ -491,9 +505,18 @@ def run_pipeline_task(
         run_id, result.elapsed_s if result else 0.0,
     )
 
-    return {
-        "run_id":       run_id,
-        "status":       "SUCCESS",
-        "elapsed_s":    result.elapsed_s if result else 0.0,
-        "column_count": column_count,
-    }
+    try:
+        return {
+            "run_id":       run_id,
+            "status":       "SUCCESS",
+            "elapsed_s":    result.elapsed_s if result else 0.0,
+            "column_count": column_count,
+        }
+    finally:
+        if tmp_path:
+            import os
+            if os.path.exists(tmp_path):
+                try:
+                    os.unlink(tmp_path)
+                except Exception as e:
+                    logger.warning(f"Failed to delete temp file {tmp_path}: {e}")
