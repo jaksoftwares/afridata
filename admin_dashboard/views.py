@@ -312,6 +312,63 @@ def dataset_management(request):
 
 
 @user_passes_test(is_superuser)
+@require_POST
+def dataset_action(request, dataset_id):
+    """Handle individual dataset actions like approve, reject, delete via AJAX"""
+    try:
+        dataset = get_object_or_404(Dataset, id=dataset_id)
+        data = json.loads(request.body)
+        action = data.get('action')
+        
+        if action == 'approve':
+            dataset.is_published = True
+            dataset.save()
+            return JsonResponse({'success': True, 'message': 'Dataset approved successfully'})
+        elif action == 'reject':
+            dataset.is_published = False
+            dataset.save()
+            return JsonResponse({'success': True, 'message': 'Dataset rejected successfully'})
+        elif action == 'delete':
+            dataset.delete()
+            return JsonResponse({'success': True, 'message': 'Dataset deleted successfully'})
+            
+        return JsonResponse({'success': False, 'error': 'Invalid action'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@user_passes_test(is_superuser)
+@require_POST
+def dataset_bulk_action(request):
+    """Handle bulk dataset actions via AJAX"""
+    try:
+        data = json.loads(request.body)
+        action = data.get('action')
+        dataset_ids = data.get('dataset_ids', [])
+        
+        if not dataset_ids:
+            return JsonResponse({'success': False, 'error': 'No datasets selected'})
+            
+        datasets = Dataset.objects.filter(id__in=dataset_ids)
+        
+        if action == 'approve':
+            datasets.update(is_published=True)
+        elif action == 'reject':
+            datasets.update(is_published=False)
+        elif action == 'delete':
+            datasets.delete()
+        elif action == 'feature':
+            # Add feature flag logic if your model supports it, otherwise ignore
+            pass
+        else:
+            return JsonResponse({'success': False, 'error': 'Invalid bulk action'})
+            
+        return JsonResponse({'success': True, 'message': f'Bulk action {action} completed for {len(dataset_ids)} datasets'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@user_passes_test(is_superuser)
 def moderation_queue(request):
     """Dataset moderation queue management"""
     status_filter = request.GET.get('status', 'pending')
@@ -744,6 +801,65 @@ def community_management(request):
 
 
 @user_passes_test(is_superuser)
+@require_POST
+def community_create_topic(request):
+    """Admin endpoint to create a new Topic"""
+    name = request.POST.get('name')
+    description = request.POST.get('description', '')
+    is_active = request.POST.get('is_active') == 'on'
+    
+    if not name:
+        messages.error(request, "Topic name is required.")
+        return redirect('admin_dashboard:community_management')
+        
+    try:
+        Topic.objects.create(
+            name=name,
+            description=description,
+            is_active=is_active
+        )
+        messages.success(request, f"Topic '{name}' created successfully.")
+    except Exception as e:
+        messages.error(request, f"Error creating topic: {e}")
+        
+    return redirect('admin_dashboard:community_management')
+
+@user_passes_test(is_superuser)
+@require_POST
+def community_delete_topic(request, topic_id):
+    """Admin endpoint to delete a Topic via AJAX"""
+    try:
+        topic = get_object_or_404(Topic, id=topic_id)
+        topic_name = topic.name
+        topic.delete()
+        return JsonResponse({'success': True, 'message': f'Topic "{topic_name}" deleted.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@user_passes_test(is_superuser)
+@require_POST
+def community_delete_thread(request, thread_id):
+    """Admin endpoint to delete a Thread via AJAX"""
+    try:
+        thread = get_object_or_404(Thread, id=thread_id)
+        thread.delete()
+        return JsonResponse({'success': True, 'message': 'Thread deleted successfully.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@user_passes_test(is_superuser)
+@require_POST
+def community_delete_post(request, post_id):
+    """Admin endpoint to delete a Post via AJAX"""
+    try:
+        post = get_object_or_404(Post, id=post_id)
+        post.delete()
+        return JsonResponse({'success': True, 'message': 'Post deleted successfully.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@user_passes_test(is_superuser)
 def api_management(request):
     """Enhanced API keys and usage management"""
     # API Keys statistics
@@ -766,12 +882,14 @@ def api_management(request):
     ).values('day').annotate(count=Count('id')).order_by('day')
     
     # API error statistics
-    error_stats = APIUsage.objects.filter(
+    error_stats = list(APIUsage.objects.filter(
         timestamp__gte=seven_days_ago,
-        status_code__gte=400
-    ).values('status_code').annotate(
+        response_code__gte=400
+    ).values('response_code').annotate(
         count=Count('id')
-    ).order_by('-count')
+    ).order_by('-count'))
+    
+    total_errors = sum(stat['count'] for stat in error_stats) if error_stats else 0
     
     context = {
         'total_api_keys': total_api_keys,
@@ -780,9 +898,31 @@ def api_management(request):
         'endpoint_stats': endpoint_stats,
         'daily_usage': list(daily_usage),
         'error_stats': error_stats,
+        'total_errors': total_errors,
     }
     
     return render(request, 'admin_dashboard/api_management.html', context)
+
+@user_passes_test(is_superuser)
+@require_POST
+def update_rate_limits(request):
+    """Admin endpoint to update API rate limits"""
+    rate_limit = request.POST.get('rate_limit')
+    burst_limit = request.POST.get('burst_limit')
+    enable_rate_limiting = request.POST.get('enable_rate_limiting') == 'on'
+    log_violations = request.POST.get('log_rate_limit_violations') == 'on'
+    
+    try:
+        DashboardSettings.objects.update_or_create(key='api_rate_limit', defaults={'value': rate_limit, 'setting_type': 'integer'})
+        DashboardSettings.objects.update_or_create(key='api_burst_limit', defaults={'value': burst_limit, 'setting_type': 'integer'})
+        DashboardSettings.objects.update_or_create(key='api_enable_rate_limiting', defaults={'value': str(enable_rate_limiting).lower(), 'setting_type': 'boolean'})
+        DashboardSettings.objects.update_or_create(key='api_log_violations', defaults={'value': str(log_violations).lower(), 'setting_type': 'boolean'})
+        
+        messages.success(request, "API rate limits updated successfully.")
+    except Exception as e:
+        messages.error(request, f"Error updating API rate limits: {e}")
+        
+    return redirect('admin_dashboard:api_management')
 
 
 @user_passes_test(is_superuser)
@@ -870,6 +1010,20 @@ def reports(request):
     }
     
     return render(request, 'admin_dashboard/reports.html', context)
+
+
+@user_passes_test(is_superuser)
+@require_POST
+def delete_report(request, report_id):
+    """Delete an admin report"""
+    try:
+        report = get_object_or_404(AdminReport, id=report_id)
+        report_name = report.name
+        report.delete()
+        messages.success(request, f"Report '{report_name}' deleted successfully.")
+    except Exception as e:
+        messages.error(request, f"Error deleting report: {e}")
+    return redirect('admin_dashboard:reports')
 
 
 @user_passes_test(is_superuser)
@@ -1068,7 +1222,28 @@ def export_data(request):
                 adjustment.adjustment_type, adjustment.amount, adjustment.reason,
                 adjustment.created_at
             ])
-    
+    elif data_type == 'api_usage':
+        response['Content-Disposition'] = 'attachment; filename="api_usage_export.csv"'
+        writer = csv.writer(response)
+        writer.writerow([
+            'ID', 'User', 'API Key Prefix', 'Endpoint', 'Method',
+            'Status Code', 'Response Time (ms)', 'IP Address', 'Timestamp'
+        ])
+        
+        usages = APIUsage.objects.select_related('api_key', 'api_key__user')
+        if date_from:
+            usages = usages.filter(timestamp__date__gte=date_from)
+        if date_to:
+            usages = usages.filter(timestamp__date__lte=date_to)
+        
+        for usage in usages:
+            writer.writerow([
+                usage.id, 
+                usage.api_key.user.email if usage.api_key and usage.api_key.user else 'Unknown',
+                usage.api_key.prefix if usage.api_key else 'Unknown',
+                usage.endpoint, usage.method, usage.response_code,
+                usage.response_time, usage.ip_address, usage.timestamp
+            ])
     # Log the export action
     log_admin_action(
         request.user, 'export', f'{data_type.title()}Export',
@@ -1079,6 +1254,47 @@ def export_data(request):
     return response
 
 
+def _fill_missing_dates(start_date, end_date, data_list, extra_keys=None):
+    """Fill in missing dates with zero counts for continuous charting."""
+    if extra_keys is None:
+        extra_keys = []
+    
+    # Create dictionary of existing data keyed by date string
+    data_dict = {}
+    for item in data_list:
+        day_val = item['day']
+        if hasattr(day_val, 'strftime'):
+            day_str = day_val.strftime('%Y-%m-%d')
+        else:
+            day_str = str(day_val)
+        item_copy = dict(item)
+        item_copy['day'] = day_str
+        data_dict[day_str] = item_copy
+        
+    result = []
+    current_date = start_date.date() if hasattr(start_date, 'date') else start_date
+    end_date_val = end_date.date() if hasattr(end_date, 'date') else end_date
+    
+    while current_date <= end_date_val:
+        day_str = current_date.strftime('%Y-%m-%d')
+        if day_str in data_dict:
+            result.append(data_dict[day_str])
+        else:
+            empty_item = {'day': day_str, 'count': 0}
+            for k in extra_keys:
+                empty_item[k] = 0
+            result.append(empty_item)
+        current_date += timedelta(days=1)
+        
+    return result
+
+
+@user_passes_test(is_superuser)
+def analytics_dashboard(request):
+    """Render the main analytics dashboard page"""
+    return render(request, 'admin_dashboard/analytics.html')
+
+
 @user_passes_test(is_superuser)
 def analytics_api(request):
     """Enhanced API endpoint for dashboard analytics"""
@@ -1086,6 +1302,7 @@ def analytics_api(request):
     days = int(request.GET.get('days', 30))
     
     start_date = timezone.now() - timedelta(days=days)
+    end_date = timezone.now()
     
     if metric_type == 'users':
         # User registration over time
@@ -1096,7 +1313,7 @@ def analytics_api(request):
         ).values('day').annotate(count=Count('id')).order_by('day')
         
         return JsonResponse({
-            'data': list(daily_registrations),
+            'data': _fill_missing_dates(start_date, end_date, list(daily_registrations)),
             'total': CustomUser.objects.filter(created_at__gte=start_date).count()
         })
     
@@ -1109,7 +1326,7 @@ def analytics_api(request):
         ).values('day').annotate(count=Count('id')).order_by('day')
         
         return JsonResponse({
-            'data': list(daily_api_usage),
+            'data': _fill_missing_dates(start_date, end_date, list(daily_api_usage)),
             'total': APIUsage.objects.filter(timestamp__gte=start_date).count()
         })
     
@@ -1122,7 +1339,7 @@ def analytics_api(request):
         ).values('day').annotate(count=Count('id')).order_by('day')
         
         return JsonResponse({
-            'data': list(daily_datasets),
+            'data': _fill_missing_dates(start_date, end_date, list(daily_datasets)),
             'total': Dataset.objects.filter(created_at__gte=start_date).count()
         })
     
@@ -1136,7 +1353,7 @@ def analytics_api(request):
         ).values('day').annotate(count=Count('id')).order_by('day')
         
         return JsonResponse({
-            'data': list(daily_posts),
+            'data': _fill_missing_dates(start_date, end_date, list(daily_posts)),
             'total': Post.objects.filter(created_at__gte=start_date, is_active=True).count()
         })
     
@@ -1149,7 +1366,7 @@ def analytics_api(request):
         ).values('day').annotate(count=Count('id')).order_by('day')
         
         return JsonResponse({
-            'data': list(daily_moderation),
+            'data': _fill_missing_dates(start_date, end_date, list(daily_moderation)),
             'total': UserModerationAction.objects.filter(created_at__gte=start_date).count()
         })
     
@@ -1165,7 +1382,7 @@ def analytics_api(request):
         ).order_by('day')
         
         return JsonResponse({
-            'data': list(daily_tokens),
+            'data': _fill_missing_dates(start_date, end_date, list(daily_tokens), extra_keys=['total_amount']),
             'total_adjustments': TokenAdjustment.objects.filter(created_at__gte=start_date).count(),
             'total_amount': TokenAdjustment.objects.filter(created_at__gte=start_date).aggregate(
                 total=Sum('amount')

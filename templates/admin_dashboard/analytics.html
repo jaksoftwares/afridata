@@ -1,0 +1,229 @@
+{% extends 'admin_dashboard/base.html' %}
+
+{% block title %}Analytics - Admin Dashboard{% endblock %}
+{% block page_title %}Analytics Overview{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title mb-1">Platform Growth</h5>
+                        <p class="text-muted mb-0 small">Monitor your platform's activity and user engagement over time.</p>
+                    </div>
+                    <select class="form-select w-auto shadow-sm" id="timeRange" onchange="updateAllCharts()">
+                        <option value="7">Last 7 Days</option>
+                        <option value="30" selected>Last 30 Days</option>
+                        <option value="90">Last 90 Days</option>
+                        <option value="365">Last Year</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Users Chart -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white border-0 pt-4 pb-0">
+                <h6 class="card-title mb-0 d-flex align-items-center">
+                    <div class="bg-primary bg-opacity-10 text-primary rounded p-2 me-2">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    User Registrations
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" style="position: relative; height:300px;">
+                    <canvas id="usersChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Datasets Chart -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white border-0 pt-4 pb-0">
+                <h6 class="card-title mb-0 d-flex align-items-center">
+                    <div class="bg-success bg-opacity-10 text-success rounded p-2 me-2">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    Dataset Creations
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" style="position: relative; height:300px;">
+                    <canvas id="datasetsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- API Usage Chart -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white border-0 pt-4 pb-0">
+                <h6 class="card-title mb-0 d-flex align-items-center">
+                    <div class="bg-info bg-opacity-10 text-info rounded p-2 me-2">
+                        <i class="fas fa-network-wired"></i>
+                    </div>
+                    API Usage
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" style="position: relative; height:300px;">
+                    <canvas id="apiChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Community Chart -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white border-0 pt-4 pb-0">
+                <h6 class="card-title mb-0 d-flex align-items-center">
+                    <div class="bg-warning bg-opacity-10 text-warning rounded p-2 me-2">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    Community Activity
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" style="position: relative; height:300px;">
+                    <canvas id="communityChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Chart instances
+let charts = {};
+
+const defaultOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: { display: false },
+        tooltip: {
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            titleColor: '#2c3e50',
+            bodyColor: '#2c3e50',
+            borderColor: '#e9ecef',
+            borderWidth: 1,
+            padding: 10,
+            displayColors: false,
+            callbacks: {
+                title: function(tooltipItems) {
+                    return tooltipItems[0].label;
+                }
+            }
+        }
+    },
+    scales: {
+        y: { 
+            beginAtZero: true, 
+            grid: { 
+                borderDash: [2, 4],
+                color: '#f8f9fa'
+            },
+            ticks: {
+                precision: 0,
+                color: '#6c757d'
+            }
+        },
+        x: { 
+            grid: { display: false },
+            ticks: {
+                color: '#6c757d',
+                maxTicksLimit: 7
+            }
+        }
+    },
+    interaction: {
+        intersect: false,
+        mode: 'index',
+    },
+    elements: {
+        line: { tension: 0.4 },
+        point: { 
+            radius: 0, 
+            hitRadius: 10, 
+            hoverRadius: 6,
+            backgroundColor: '#fff',
+            borderWidth: 2
+        }
+    }
+};
+
+function initChart(canvasId, label, color) {
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    
+    // Create gradient
+    let gradient = ctx.createLinearGradient(0, 0, 0, 300);
+    gradient.addColorStop(0, color.replace('1)', '0.3)'));
+    gradient.addColorStop(1, color.replace('1)', '0.0)'));
+
+    return new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: label,
+                data: [],
+                borderColor: color,
+                backgroundColor: gradient,
+                fill: true,
+                borderWidth: 2,
+                pointBorderColor: color
+            }]
+        },
+        options: defaultOptions
+    });
+}
+
+function loadChartData(metricType, chartId, days) {
+    fetch(`{% url 'admin_dashboard:analytics_api' %}?type=${metricType}&days=${days}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.data) {
+                const labels = data.data.map(item => {
+                    const d = new Date(item.day);
+                    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                });
+                const values = data.data.map(item => item.count);
+                
+                charts[chartId].data.labels = labels;
+                charts[chartId].data.datasets[0].data = values;
+                charts[chartId].update();
+            }
+        });
+}
+
+function updateAllCharts() {
+    const days = document.getElementById('timeRange').value;
+    loadChartData('users', 'usersChart', 'rgba(52, 152, 219, 1)');
+    loadChartData('datasets', 'datasetsChart', 'rgba(46, 204, 113, 1)');
+    loadChartData('api_usage', 'apiChart', 'rgba(23, 162, 184, 1)');
+    loadChartData('community', 'communityChart', 'rgba(243, 156, 18, 1)');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    charts['usersChart'] = initChart('usersChart', 'Users', 'rgba(52, 152, 219, 1)');
+    charts['datasetsChart'] = initChart('datasetsChart', 'Datasets', 'rgba(46, 204, 113, 1)');
+    charts['apiChart'] = initChart('apiChart', 'API Calls', 'rgba(23, 162, 184, 1)');
+    charts['communityChart'] = initChart('communityChart', 'Community Actions', 'rgba(243, 156, 18, 1)');
+    
+    updateAllCharts();
+});
+</script>
+{% endblock %}

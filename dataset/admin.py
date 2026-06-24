@@ -1,4 +1,5 @@
 # dataset/admin.py
+# pyrefly: ignore-all-errors  # Django admin false positives — no django-stubs support in Pyrefly yet
 from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
@@ -22,10 +23,10 @@ class CommentInline(admin.TabularInline):
 @admin.register(Dataset)
 class DatasetAdmin(admin.ModelAdmin):
     """Enhanced admin interface for Dataset"""
-    inlines = [CommentInline]
+    inlines = (CommentInline,)
     
     # Fields to display in the dataset list
-    list_display = (
+    list_display = (  # type: ignore
         'title', 'author_link', 'dataset_type', 'rating_display', 
         'downloads', 'views', 'comment_count', 'topics_preview', 
         'created_at', 'file_link', 'rating'
@@ -52,14 +53,25 @@ class DatasetAdmin(admin.ModelAdmin):
     # Fields layout in the detail/edit form
     fieldsets = (
         ('Basic Information', {
-            'fields': ('title', 'author', 'bio')
+            'fields': ('title', 'slug', 'author', 'bio', 'cover_photo')
         }),
         ('File Information', {
-            'fields': ('file', 'dataset_type')
+            'fields': ('file', 'dataset_type', 'file_size_mb')
         }),
         ('Categorization', {
             'fields': ('topics',),
             'description': 'Enter topics separated by commas (e.g., "machine learning, data science, python")'
+        }),
+        ('Premium & Tokens', {
+            'fields': ('is_premium', 'token_cost', 'premium_price_usd', 'premium_token_discount', 'quality_tier')
+        }),
+        ('Detailed Metadata', {
+            'fields': (
+                'has_documentation', 'metadata_quality_score', 'original_author', 
+                'data_source', 'collection_date', 'language', 'dataset_license', 
+                'update_frequency', 'geographic_coverage', 'temporal_coverage', 'usage_notes'
+            ),
+            'classes': ('collapse',)
         }),
         ('Statistics', {
             'fields': ('rating', 'downloads', 'views'),
@@ -71,17 +83,19 @@ class DatasetAdmin(admin.ModelAdmin):
         })
     )
     
+    prepopulated_fields = {'slug': ('title',)}
+    
     # Read-only fields
-    readonly_fields = ('created_at', 'updated_at', 'downloads', 'views')
+    readonly_fields = ('created_at', 'updated_at', 'downloads', 'views', 'file_size_mb')
     
     # Custom methods for list display
+    @admin.display(description='Author', ordering='author__email')
     def author_link(self, obj):
         """Display author with link to user admin"""
         url = reverse('admin:accounts_customuser_change', args=[obj.author.pk])
         return format_html('<a href="{}">{}</a>', url, obj.author.email)
-    author_link.short_description = 'Author'
-    author_link.admin_order_field = 'author__email'
     
+    @admin.display(description='Rating', ordering='rating')
     def rating_display(self, obj):
         """Display rating with stars"""
         stars = '' * int(obj.rating) + '' * (5 - int(obj.rating))
@@ -90,9 +104,8 @@ class DatasetAdmin(admin.ModelAdmin):
             obj.rating,
             stars
         )
-    rating_display.short_description = 'Rating'
-    rating_display.admin_order_field = 'rating'
     
+    @admin.display(description='Topics')
     def topics_preview(self, obj):
         """Display first few topics"""
         topics = obj.get_topics_list()
@@ -102,8 +115,8 @@ class DatasetAdmin(admin.ModelAdmin):
         if len(topics) > 3:
             preview += f" (+{len(topics) - 3} more)"
         return preview
-    topics_preview.short_description = 'Topics'
     
+    @admin.display(description='Comments')
     def comment_count(self, obj):
         """Display number of comments"""
         count = obj.comments.count()
@@ -113,8 +126,8 @@ class DatasetAdmin(admin.ModelAdmin):
                 count
             )
         return "No comments"
-    comment_count.short_description = 'Comments'
     
+    @admin.display(description='File')
     def file_link(self, obj):
         """Display download link for the file"""
         if obj.file:
@@ -123,23 +136,23 @@ class DatasetAdmin(admin.ModelAdmin):
                 obj.file.url
             )
         return "No file"
-    file_link.short_description = 'File'
     
     # Custom actions
-    actions = ['reset_downloads', 'reset_views', 'increment_downloads']
+    actions = ('reset_downloads', 'reset_views', 'increment_downloads',)
     
+    @admin.action(description="Reset download count")
     def reset_downloads(self, request, queryset):
         """Reset download count to 0"""
         updated = queryset.update(downloads=0)
         self.message_user(request, f'Download count reset for {updated} datasets.')
-    reset_downloads.short_description = "Reset download count"
     
+    @admin.action(description="Reset view count")
     def reset_views(self, request, queryset):
         """Reset view count to 0"""
         updated = queryset.update(views=0)
         self.message_user(request, f'View count reset for {updated} datasets.')
-    reset_views.short_description = "Reset view count"
     
+    @admin.action(description="Increment download count (+1)")
     def increment_downloads(self, request, queryset):
         """Increment download count by 1 (for testing purposes)"""
         for dataset in queryset:
@@ -147,7 +160,6 @@ class DatasetAdmin(admin.ModelAdmin):
             dataset.save()
         count = queryset.count()
         self.message_user(request, f'Download count incremented for {count} datasets.')
-    increment_downloads.short_description = "Increment download count (+1)"
     
     # Override queryset to add annotations for better performance
     def get_queryset(self, request):
@@ -160,7 +172,7 @@ class DatasetAdmin(admin.ModelAdmin):
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
     """Enhanced admin interface for Comment"""
-    list_display = (
+    list_display = (  # type: ignore
         'id', 'dataset_link', 'author_link', 'content_preview', 
         'upvotes_display', 'created_at', 'upvotes'
     )
@@ -195,27 +207,26 @@ class CommentAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at',)
     
     # Custom methods for list display
+    @admin.display(description='Dataset', ordering='dataset__title')
     def dataset_link(self, obj):
         """Display dataset title with link to dataset admin"""
         url = reverse('admin:dataset_dataset_change', args=[obj.dataset.pk])
         return format_html('<a href="{}">{}</a>', url, obj.dataset.title)
-    dataset_link.short_description = 'Dataset'
-    dataset_link.admin_order_field = 'dataset__title'
     
+    @admin.display(description='Author', ordering='author__email')
     def author_link(self, obj):
         """Display author with link to user admin"""
         url = reverse('admin:accounts_customuser_change', args=[obj.author.pk])
         return format_html('<a href="{}">{}</a>', url, obj.author.email)
-    author_link.short_description = 'Author'
-    author_link.admin_order_field = 'author__email'
     
+    @admin.display(description='Content')
     def content_preview(self, obj):
         """Display truncated content"""
         if len(obj.content) > 50:
             return obj.content[:50] + "..."
         return obj.content
-    content_preview.short_description = 'Content'
     
+    @admin.display(description='Upvotes', ordering='upvotes')
     def upvotes_display(self, obj):
         """Display upvotes with thumbs up icon"""
         if obj.upvotes > 0:
@@ -224,18 +235,17 @@ class CommentAdmin(admin.ModelAdmin):
                 obj.upvotes
             )
         return "0"
-    upvotes_display.short_description = 'Upvotes'
-    upvotes_display.admin_order_field = 'upvotes'
     
     # Custom actions
-    actions = ['reset_upvotes', 'add_upvote', 'feature_comments']
+    actions = ('reset_upvotes', 'add_upvote', 'feature_comments',)
     
+    @admin.action(description="Reset upvotes to 0")
     def reset_upvotes(self, request, queryset):
         """Reset upvotes to 0"""
         updated = queryset.update(upvotes=0)
         self.message_user(request, f'Upvotes reset for {updated} comments.')
-    reset_upvotes.short_description = "Reset upvotes to 0"
     
+    @admin.action(description="Add 1 upvote")
     def add_upvote(self, request, queryset):
         """Add one upvote to selected comments"""
         for comment in queryset:
@@ -243,8 +253,8 @@ class CommentAdmin(admin.ModelAdmin):
             comment.save()
         count = queryset.count()
         self.message_user(request, f'Added 1 upvote to {count} comments.')
-    add_upvote.short_description = "Add 1 upvote"
     
+    @admin.action(description="Feature comments (+10 upvotes)")
     def feature_comments(self, request, queryset):
         """Add 10 upvotes to feature selected comments"""
         for comment in queryset:
@@ -252,7 +262,6 @@ class CommentAdmin(admin.ModelAdmin):
             comment.save()
         count = queryset.count()
         self.message_user(request, f'Featured {count} comments (+10 upvotes each).')
-    feature_comments.short_description = "Feature comments (+10 upvotes)"
     
     # Override queryset for better performance
     def get_queryset(self, request):

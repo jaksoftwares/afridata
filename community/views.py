@@ -268,3 +268,88 @@ def user_profile(request, username):
         'recent_posts': recent_posts,
     }
     return render(request, 'community/user_profile.html', context)
+
+@login_required
+def edit_thread(request, thread_pk):
+    """Edit a thread"""
+    thread = get_object_or_404(Thread, pk=thread_pk)
+    
+    if request.user != thread.author and not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to edit this thread.')
+        return redirect('community:thread_detail', pk=thread.pk)
+        
+    if request.method == 'POST':
+        form = ThreadForm(request.POST, instance=thread)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Thread updated successfully!')
+            return redirect('community:thread_detail', pk=thread.pk)
+    else:
+        form = ThreadForm(instance=thread)
+        
+    context = {
+        'form': form,
+        'thread': thread,
+        'is_edit': True
+    }
+    return render(request, 'community/create_thread.html', context)
+
+@login_required
+@require_POST
+def delete_thread(request, thread_pk):
+    """Delete a thread"""
+    thread = get_object_or_404(Thread, pk=thread_pk)
+    
+    if request.user != thread.author and not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to delete this thread.')
+        return redirect('community:thread_detail', pk=thread.pk)
+        
+    topic_pk = thread.topic.pk
+    thread.delete()
+    messages.success(request, 'Thread deleted successfully!')
+    return redirect('community:topic_detail', pk=topic_pk)
+
+@login_required
+def edit_post(request, post_pk):
+    """Edit a post"""
+    post = get_object_or_404(Post, pk=post_pk)
+    
+    if request.user != post.author and not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to edit this post.')
+        return redirect('community:thread_detail', pk=post.thread.pk)
+        
+    if request.method == 'POST':
+        form = PostForm(request.POST, instance=post)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Post updated successfully!')
+            return redirect('community:thread_detail', pk=post.thread.pk)
+    else:
+        form = PostForm(instance=post)
+        
+    context = {
+        'form': form,
+        'post': post,
+        'is_edit': True
+    }
+    # In a full app you might use a dedicated edit template or a modal,
+    # but rendering the thread page again with the form prefilled might be easier
+    # Let's render a simple standalone template or reuse something.
+    # To keep it simple without creating a new template, we'll pass it to thread_detail but mark it as edit.
+    # Actually, we should probably create an 'edit_post.html' or redirect to it.
+    return render(request, 'community/edit_post.html', context)
+
+@login_required
+@require_POST
+def delete_post(request, post_pk):
+    """Delete a post"""
+    post = get_object_or_404(Post, pk=post_pk)
+    
+    if request.user != post.author and not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to delete this post.')
+        return redirect('community:thread_detail', pk=post.thread.pk)
+        
+    thread_pk = post.thread.pk
+    post.delete()
+    messages.success(request, 'Post deleted successfully!')
+    return redirect('community:thread_detail', pk=thread_pk)

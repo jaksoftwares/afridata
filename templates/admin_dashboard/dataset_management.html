@@ -4,14 +4,19 @@
 {% block page_title %}Dataset Management{% endblock %}
 
 {% block content %}
-<div class="row mb-3">
-    <div class="col-12">
+<div class="row mb-3 align-items-center">
+    <div class="col-md-8">
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
+            <ol class="breadcrumb mb-0">
                 <li class="breadcrumb-item"><a href="{% url 'admin_dashboard:dashboard_home' %}">Dashboard</a></li>
                 <li class="breadcrumb-item active">Dataset Management</li>
             </ol>
         </nav>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'upload_dataset' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i> Add New Dataset
+        </a>
     </div>
 </div>
 
@@ -195,31 +200,31 @@
                                                 Actions
                                             </button>
                                             <ul class="dropdown-menu">
-                                                <li><a class="dropdown-item" href="#">View Details</a></li>
-                                                <li><a class="dropdown-item" href="#">Edit</a></li>
+                                                <li><a class="dropdown-item" href="{% url 'dataset_detail' dataset.slug %}">View Details</a></li>
+                                                <li><a class="dropdown-item" href="{% url 'edit_dataset' dataset.slug %}">Edit</a></li>
                                                 <li><hr class="dropdown-divider"></li>
                                                 {% if dataset.moderation_queue %}
                                                     {% if dataset.moderation_queue.status == 'pending' %}
                                                         <li><a class="dropdown-item text-success" href="#" 
-                                                               onclick="moderateDataset({{ dataset.id }}, 'approve')">Approve</a></li>
+                                                               onclick="moderateDataset('{{ dataset.id }}', 'approve')">Approve</a></li>
                                                         <li><a class="dropdown-item text-warning" href="#" 
-                                                               onclick="moderateDataset({{ dataset.id }}, 'reject')">Reject</a></li>
+                                                               onclick="moderateDataset('{{ dataset.id }}', 'reject')">Reject</a></li>
                                                     {% elif dataset.moderation_queue.status == 'rejected' %}
                                                         <li><a class="dropdown-item text-success" href="#" 
-                                                               onclick="moderateDataset({{ dataset.id }}, 'approve')">Approve</a></li>
+                                                               onclick="moderateDataset('{{ dataset.id }}', 'approve')">Approve</a></li>
                                                     {% elif dataset.moderation_queue.status == 'approved' %}
                                                         <li><a class="dropdown-item text-warning" href="#" 
-                                                               onclick="moderateDataset({{ dataset.id }}, 'reject')">Reject</a></li>
+                                                               onclick="moderateDataset('{{ dataset.id }}', 'reject')">Reject</a></li>
                                                     {% endif %}
                                                 {% else %}
                                                     <li><a class="dropdown-item text-success" href="#" 
-                                                           onclick="moderateDataset({{ dataset.id }}, 'approve')">Approve</a></li>
+                                                           onclick="moderateDataset('{{ dataset.id }}', 'approve')">Approve</a></li>
                                                     <li><a class="dropdown-item text-warning" href="#" 
-                                                           onclick="moderateDataset({{ dataset.id }}, 'reject')">Reject</a></li>
+                                                           onclick="moderateDataset('{{ dataset.id }}', 'reject')">Reject</a></li>
                                                 {% endif %}
                                                 <li><hr class="dropdown-divider"></li>
                                                 <li><a class="dropdown-item text-danger" href="#" 
-                                                       onclick="deleteDataset({{ dataset.id }})">Delete</a></li>
+                                                       onclick="deleteDataset('{{ dataset.id }}')">Delete</a></li>
                                             </ul>
                                         </div>
                                     </td>
@@ -271,6 +276,26 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- Action Confirmation Modal -->
+<div class="modal fade" id="actionConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-light border-0">
+                <h5 class="modal-title fw-bold" id="actionModalTitle">Confirm Action</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <div class="display-4 text-warning mb-3" id="actionModalIconContainer"><i class="fas fa-exclamation-triangle" id="actionModalIcon"></i></div>
+                <p class="fs-5 mb-0" id="actionModalMessage">Are you sure you want to proceed?</p>
+            </div>
+            <div class="modal-footer border-0 bg-light justify-content-center">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary px-4 shadow-sm" id="actionModalConfirmBtn">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 // Select all functionality
 document.getElementById('selectAll').addEventListener('change', function() {
@@ -278,53 +303,123 @@ document.getElementById('selectAll').addEventListener('change', function() {
     checkboxes.forEach(checkbox => checkbox.checked = this.checked);
 });
 
+let currentAction = null;
+let currentPayload = null;
+let currentEndpoint = null;
+const actionModal = new bootstrap.Modal(document.getElementById('actionConfirmModal'));
+
+function showModal(title, message, btnClass, iconClass, iconColor, callbackEndpoint, payload) {
+    document.getElementById('actionModalTitle').innerText = title;
+    document.getElementById('actionModalMessage').innerText = message;
+    
+    const confirmBtn = document.getElementById('actionModalConfirmBtn');
+    confirmBtn.className = `btn ${btnClass} px-4 shadow-sm`;
+    
+    const iconContainer = document.getElementById('actionModalIconContainer');
+    iconContainer.className = `display-4 ${iconColor} mb-3`;
+    document.getElementById('actionModalIcon').className = iconClass;
+    
+    currentEndpoint = callbackEndpoint;
+    currentPayload = payload;
+    
+    actionModal.show();
+}
+
+document.getElementById('actionModalConfirmBtn').addEventListener('click', function() {
+    const btn = this;
+    const originalText = btn.innerText;
+    btn.innerText = 'Processing...';
+    btn.disabled = true;
+    
+    fetch(currentEndpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify(currentPayload)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('An unexpected error occurred.');
+        btn.innerText = originalText;
+        btn.disabled = false;
+    });
+});
+
 function bulkAction(action) {
     const selected = Array.from(document.querySelectorAll('.dataset-checkbox:checked')).map(cb => cb.value);
     if (selected.length === 0) {
-        alert('Please select at least one dataset');
+        showModal('No Datasets Selected', 'Please select at least one dataset to perform a bulk action.', 'btn-secondary', 'fas fa-info-circle', 'text-secondary', '', null);
+        document.getElementById('actionModalConfirmBtn').style.display = 'none';
         return;
     }
+    document.getElementById('actionModalConfirmBtn').style.display = 'inline-block';
     
-    let confirmMessage;
+    let title = 'Confirm Bulk Action';
+    let message = '';
+    let btnClass = 'btn-primary';
+    let iconClass = 'fas fa-exclamation-circle';
+    let iconColor = 'text-primary';
+    
     switch(action) {
         case 'approve':
-            confirmMessage = `Are you sure you want to approve ${selected.length} dataset(s)?`;
+            title = 'Approve Datasets';
+            message = `Are you sure you want to approve ${selected.length} dataset(s)?`;
+            btnClass = 'btn-success';
+            iconClass = 'fas fa-check-circle';
+            iconColor = 'text-success';
             break;
         case 'reject':
-            confirmMessage = `Are you sure you want to reject ${selected.length} dataset(s)?`;
+            title = 'Reject Datasets';
+            message = `Are you sure you want to reject ${selected.length} dataset(s)?`;
+            btnClass = 'btn-warning text-dark';
+            iconClass = 'fas fa-times-circle';
+            iconColor = 'text-warning';
             break;
         case 'delete':
-            confirmMessage = `Are you sure you want to delete ${selected.length} dataset(s)? This action cannot be undone.`;
+            title = 'Delete Datasets';
+            message = `Are you sure you want to permanently delete ${selected.length} dataset(s)? This action cannot be undone.`;
+            btnClass = 'btn-danger';
+            iconClass = 'fas fa-trash-alt';
+            iconColor = 'text-danger';
             break;
-        case 'feature':
-            confirmMessage = `Are you sure you want to feature ${selected.length} dataset(s)?`;
-            break;
-        default:
-            confirmMessage = `Are you sure you want to ${action} ${selected.length} dataset(s)?`;
     }
     
-    if (confirm(confirmMessage)) {
-        // Implement bulk action logic here
-        console.log(`Bulk ${action}:`, selected);
-        // You would typically send an AJAX request here
-    }
+    showModal(title, message, btnClass, iconClass, iconColor, "{% url 'admin_dashboard:dataset_bulk_action' %}", {
+        action: action,
+        dataset_ids: selected
+    });
 }
 
 function moderateDataset(datasetId, action) {
+    document.getElementById('actionModalConfirmBtn').style.display = 'inline-block';
     const actionText = action === 'approve' ? 'approve' : 'reject';
-    if (confirm(`Are you sure you want to ${actionText} this dataset?`)) {
-        // Implement moderation logic here
-        console.log(`${action} dataset:`, datasetId);
-        // You would typically send an AJAX request here
-    }
+    const title = action === 'approve' ? 'Approve Dataset' : 'Reject Dataset';
+    const btnClass = action === 'approve' ? 'btn-success' : 'btn-warning text-dark';
+    const iconClass = action === 'approve' ? 'fas fa-check-circle' : 'fas fa-times-circle';
+    const iconColor = action === 'approve' ? 'text-success' : 'text-warning';
+    
+    showModal(title, `Are you sure you want to ${actionText} this dataset?`, btnClass, iconClass, iconColor, `/admin_dashboard/datasets/${datasetId}/action/`, {
+        action: action
+    });
 }
 
 function deleteDataset(datasetId) {
-    if (confirm('Are you sure you want to delete this dataset? This action cannot be undone.')) {
-        // Implement delete logic here
-        console.log('Delete dataset:', datasetId);
-        // You would typically send an AJAX request here
-    }
+    document.getElementById('actionModalConfirmBtn').style.display = 'inline-block';
+    showModal('Delete Dataset', 'Are you sure you want to delete this dataset? This action cannot be undone.', 'btn-danger', 'fas fa-trash-alt', 'text-danger', `/admin_dashboard/datasets/${datasetId}/action/`, {
+        action: 'delete'
+    });
 }
 </script>
 {% endblock %}

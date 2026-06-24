@@ -25,6 +25,21 @@
             <div class="card-body">
                 <p class="text-muted mb-4">Export system data in CSV format for analysis or backup purposes.</p>
                 
+                <!-- Date Range Filter -->
+                <div class="row mb-4">
+                    <div class="col-md-5">
+                        <label for="exportDateFrom" class="form-label">Date From</label>
+                        <input type="date" id="exportDateFrom" class="form-control">
+                    </div>
+                    <div class="col-md-5">
+                        <label for="exportDateTo" class="form-label">Date To</label>
+                        <input type="date" id="exportDateTo" class="form-control">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button class="btn btn-outline-secondary w-100" onclick="document.getElementById('exportDateFrom').value=''; document.getElementById('exportDateTo').value='';">Clear</button>
+                    </div>
+                </div>
+                
                 <div class="row g-4">
                     <!-- Users Export -->
                     <div class="col-sm-6">
@@ -35,9 +50,9 @@
                                 <p class="card-text text-muted">
                                     Export all user accounts including email, name, status, and registration date.
                                 </p>
-                                <a href="{% url 'admin_dashboard:export_data' %}?type=users" class="btn btn-primary">
+                                <button onclick="triggerExport('users', 'Users Data')" class="btn btn-primary">
                                     Export Users
-                                </a>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -51,9 +66,9 @@
                                 <p class="card-text text-muted">
                                     Export all datasets with title, author, type, rating, and download counts.
                                 </p>
-                                <a href="{% url 'admin_dashboard:export_data' %}?type=datasets" class="btn btn-success">
+                                <button onclick="triggerExport('datasets', 'Datasets Data')" class="btn btn-success">
                                     Export Datasets
-                                </a>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -67,7 +82,7 @@
                                 <p class="card-text text-muted">
                                     Export API usage statistics and endpoint performance data.
                                 </p>
-                                <button class="btn btn-info" onclick="exportAPIUsage()">
+                                <button onclick="triggerExport('api_usage', 'API Usage Data')" class="btn btn-info">
                                     Export API Data
                                 </button>
                             </div>
@@ -83,7 +98,7 @@
                                 <p class="card-text text-muted">
                                     Export admin activity logs and system events for audit purposes.
                                 </p>
-                                <button class="btn btn-warning" onclick="exportSystemLogs()">
+                                <button onclick="triggerExport('admin_logs', 'System Logs Data')" class="btn btn-warning">
                                     Export Logs
                                 </button>
                             </div>
@@ -204,37 +219,30 @@ function showExportModal() {
     return modal;
 }
 
-function exportAPIUsage() {
+function triggerExport(typeId, displayName) {
+    const dateFrom = document.getElementById('exportDateFrom').value;
+    const dateTo = document.getElementById('exportDateTo').value;
+    
+    // Build URL with parameters
+    let url = `{% url 'admin_dashboard:export_data' %}?type=${typeId}`;
+    if (dateFrom) url += `&date_from=${dateFrom}`;
+    if (dateTo) url += `&date_to=${dateTo}`;
+    
     const modal = showExportModal();
-    // Simulate API call - replace with actual endpoint
+    
+    // Add to recent exports
+    addToRecentExports(displayName, `${typeId}_export.csv`);
+    
+    // Simulate slight delay to show loading modal then trigger actual download
     setTimeout(() => {
-        modal.hide();
-        addToRecentExports('API Usage', 'api_usage_export.csv');
-        alert('API Usage export would be downloaded here');
-    }, 2000);
-}
-
-function exportSystemLogs() {
-    const modal = showExportModal();
-    // Simulate API call - replace with actual endpoint
-    setTimeout(() => {
-        modal.hide();
-        addToRecentExports('System Logs', 'system_logs_export.csv');
-        alert('System Logs export would be downloaded here');
-    }, 2000);
+        window.location.href = url;
+        setTimeout(() => modal.hide(), 500); // Hide modal shortly after download starts
+    }, 1000);
 }
 
 // Update display on page load
 document.addEventListener('DOMContentLoaded', function() {
     updateRecentExportsDisplay();
-    
-    // Add event listeners to existing export links
-    document.querySelectorAll('a[href*="export_data"]').forEach(link => {
-        link.addEventListener('click', function(e) {
-            const type = this.href.includes('users') ? 'Users Data' : 'Datasets Data';
-            addToRecentExports(type, `${type.toLowerCase().replace(' ', '_')}_export.csv`);
-        });
-    });
 });
 </script>
 {% endblock %}

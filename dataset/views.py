@@ -414,7 +414,7 @@ def upvote_comment(request, comment_id):
     if request.headers.get('Content-Type') == 'application/json':
         return JsonResponse({'upvotes': comment.upvotes})
     
-    return redirect('dataset_detail', dataset_id=comment.dataset.id)
+    return redirect('dataset_detail', slug=comment.dataset.slug)
 
 
 @login_required
@@ -872,8 +872,8 @@ def edit_dataset(request, slug):
     """View to allow authors to edit their dataset"""
     dataset = get_object_or_404(Dataset, slug=slug)
     
-    # Ensure only author can edit
-    if request.user != dataset.author:
+    # Ensure only author or superuser can edit
+    if request.user != dataset.author and not request.user.is_superuser:
         messages.error(request, 'You do not have permission to edit this dataset.')
         return redirect('dataset_detail', slug=slug)
         
@@ -898,11 +898,11 @@ def delete_dataset(request, slug):
     """View to allow authors to delete their dataset"""
     dataset = get_object_or_404(Dataset, slug=slug)
     
-    # Ensure only author can delete
-    if request.user != dataset.author:
+    # Ensure only author or superuser can delete
+    if request.user != dataset.author and not request.user.is_superuser:
         messages.error(request, 'You do not have permission to delete this dataset.')
         return redirect('dataset_detail', slug=slug)
         
     dataset.delete()
     messages.success(request, 'Dataset deleted successfully!')
-    return redirect('workspace')
+    return redirect('workspace')

@@ -32,7 +32,7 @@
                                     <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
                                 {% endfor %}
                             </select>
-                            <a href="{% url 'admin_dashboard:bulk_actions_execute' %}" class="btn btn-primary btn-sm">
+                            <a href="#" onclick="alert('Bulk actions execute view is not implemented yet.'); return false;" class="btn btn-primary btn-sm">
                                 New Action
                             </a>
                         </div>
@@ -202,7 +202,7 @@
                         
                         <h5 class="text-muted">No bulk actions found</h5>
                         <p class="text-muted">No bulk actions have been executed yet.</p>
-                        <a href="{% url 'admin_dashboard:bulk_actions_execute' %}" class="btn btn-primary">
+                        <a href="#" onclick="alert('Bulk actions execute view is not implemented yet.'); return false;" class="btn btn-primary">
                             Execute New Action
                         </a>
                     </div>

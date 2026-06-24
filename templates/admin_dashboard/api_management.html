@@ -110,20 +110,20 @@
                                 <tr>
                                     <td>
                                         <span class="badge 
-                                            {% if error.status_code >= 500 %}bg-danger
-                                            {% elif error.status_code >= 400 %}bg-warning
+                                            {% if error.response_code >= 500 %}bg-danger
+                                            {% elif error.response_code >= 400 %}bg-warning
                                             {% else %}bg-secondary{% endif %}">
-                                            {{ error.status_code }}
+                                            {{ error.response_code }}
                                         </span>
                                     </td>
                                     <td>{{ error.count }}</td>
                                     <td>
                                         <div class="progress" style="height: 10px;">
                                             <div class="progress-bar 
-                                                {% if error.status_code >= 500 %}bg-danger
-                                                {% elif error.status_code >= 400 %}bg-warning
+                                                {% if error.response_code >= 500 %}bg-danger
+                                                {% elif error.response_code >= 400 %}bg-warning
                                                 {% else %}bg-secondary{% endif %}" 
-                                                style="width: {{ error.count|percentage:total_errors }}%">
+                                                style="width: {% widthratio error.count total_errors 100 %}%">
                                             </div>
                                         </div>
                                     </td>

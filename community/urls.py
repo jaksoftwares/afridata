@@ -19,6 +19,12 @@ urlpatterns = [
     # AJAX endpoints
     path('post/<int:post_pk>/vote/', views.vote_post, name='vote_post'),
     
+    # Edit / Delete endpoints
+    path('thread/<int:thread_pk>/edit/', views.edit_thread, name='edit_thread'),
+    path('thread/<int:thread_pk>/delete/', views.delete_thread, name='delete_thread'),
+    path('post/<int:post_pk>/edit/', views.edit_post, name='edit_post'),
+    path('post/<int:post_pk>/delete/', views.delete_post, name='delete_post'),
+    
     # Search
     path('search/', views.search_threads, name='search'),
     
