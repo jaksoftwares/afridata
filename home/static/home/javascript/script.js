@@ -246,7 +246,7 @@
             return;
         }
     
-        const fullUrl = `https://afridata.com${endpoint}`;
+        const fullUrl = `https://afridata.jhubafrica.com${endpoint}`;
         showNotification(`Testing ${method} ${endpoint}...`, 'success');
     
         // Simulate API request
@@ -346,7 +346,7 @@
 
     // Real API functions (implement these with your actual API endpoints)
     async function apiRequest(endpoint, options = {}) {
-        const baseUrl = 'https://afridata.com/api/v1';
+        const baseUrl = 'https://afridata.jhubafrica.com/api/v1';
         const url = `${baseUrl}${endpoint}`;
      
         const defaultOptions = {
@@ -386,7 +386,7 @@
     }
 
     async function downloadDataset(id) {
-        const response = await fetch(`https://afridata.com/api/v1/datasets/${id}/download/`, {
+        const response = await fetch(`https://afridata.jhubafrica.com/api/v1/datasets/${id}/download/`, {
             headers: {
                 'Authorization': `Api-Key ${apiKey}`
             }

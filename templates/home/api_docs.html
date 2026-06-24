@@ -64,7 +64,7 @@
                             <h3 class="font-semibold text-blue-900 flex items-center">
                                 Base URL
                             </h3>
-                            <code class="text-sm text-blue-700 break-all">https://afridata.com/api/v1/</code>
+                            <code class="text-sm text-blue-700 break-all">https://afridata.jhubafrica.com/api/v1/</code>
                         </div>
                         <div class="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg border-l-4 border-green-500">
                             <h3 class="font-semibold text-green-900 flex items-center">
@@ -249,7 +249,7 @@
 
 # Get all datasets
 headers = {'Authorization': 'Api-Key YOUR_API_KEY'}
-response = requests.get('https://afridata.com/api/v1/datasets/', headers=headers)
+response = requests.get('https://afridata.jhubafrica.com/api/v1/datasets/', headers=headers)
 datasets = response.json()
 
 # Filter datasets by category and search
@@ -258,16 +258,16 @@ params = {
     'search': 'kenya',
     'sort': 'downloads'
 }
-response = requests.get('https://afridata.com/api/v1/datasets/', 
+response = requests.get('https://afridata.jhubafrica.com/api/v1/datasets/', 
                        headers=headers, params=params)
 
 # Get dataset details
 dataset_id = 1
-response = requests.get(f'https://afridata.com/api/v1/datasets/{dataset_id}/', 
+response = requests.get(f'https://afridata.jhubafrica.com/api/v1/datasets/{dataset_id}/', 
                        headers=headers)
 
 # Download dataset
-response = requests.get(f'https://afridata.com/api/v1/datasets/{dataset_id}/download/', 
+response = requests.get(f'https://afridata.jhubafrica.com/api/v1/datasets/{dataset_id}/download/', 
                        headers=headers)
 with open('dataset.csv', 'wb') as f:
     f.write(response.content)
@@ -279,7 +279,7 @@ data = {
     'bio': 'Latest population data for Kenya',
     'topics': 'demographics, kenya, population'
 }
-response = requests.post('https://afridata.com/api/v1/datasets/upload/', 
+response = requests.post('https://afridata.jhubafrica.com/api/v1/datasets/upload/', 
                         headers=headers, files=files, data=data)</code></pre>
                                 <button class="absolute top-2 right-2 text-gray-400 hover:text-white transition-colors" onclick="copyCode('python-example')">
                                     
@@ -295,16 +295,16 @@ response = requests.post('https://afridata.com/api/v1/datasets/upload/',
                             <div class="code-block relative">
                                 <pre><code class="language-bash"># Get datasets filtered by category
 curl -H "Authorization: Api-Key YOUR_API_KEY" \
-     "https://afridata.com/api/v1/datasets/?category=agriculture&search=kenya"
+     "https://afridata.jhubafrica.com/api/v1/datasets/?category=agriculture&search=kenya"
 
 # Get dataset details
 curl -H "Authorization: Api-Key YOUR_API_KEY" \
-     "https://afridata.com/api/v1/datasets/1/"
+     "https://afridata.jhubafrica.com/api/v1/datasets/1/"
 
 # Download dataset
 curl -H "Authorization: Api-Key YOUR_API_KEY" \
      -o dataset.csv \
-     "https://afridata.com/api/v1/datasets/1/download/"
+     "https://afridata.jhubafrica.com/api/v1/datasets/1/download/"
 
 # Upload new dataset
 curl -X POST \
@@ -313,13 +313,13 @@ curl -X POST \
      -F "title=Kenya Population Census 2024" \
      -F "bio=Latest population data for Kenya" \
      -F "topics=demographics, kenya, population" \
-     https://afridata.com/api/v1/datasets/upload/
+     https://afridata.jhubafrica.com/api/v1/datasets/upload/
 
 # Post a comment
 curl -X POST \
      -H "Authorization: Api-Key YOUR_API_KEY" \
      -F "content=Great dataset! Very useful for research." \
-     https://afridata.com/api/v1/comment/1/post/</code></pre>
+     https://afridata.jhubafrica.com/api/v1/comment/1/post/</code></pre>
                                 <button class="absolute top-2 right-2 text-gray-400 hover:text-white transition-colors" onclick="copyCode('curl-example')">
                                     
                                 </button>
@@ -337,21 +337,21 @@ const headers = {
     'Authorization': 'Api-Key YOUR_API_KEY'
 };
 
-fetch('https://afridata.com/api/v1/datasets/?category=agriculture&search=kenya', {
+fetch('https://afridata.jhubafrica.com/api/v1/datasets/?category=agriculture&search=kenya', {
     headers: headers
 })
 .then(response => response.json())
 .then(data => console.log(data));
 
 // Get dataset details
-fetch('https://afridata.com/api/v1/datasets/1/', {
+fetch('https://afridata.jhubafrica.com/api/v1/datasets/1/', {
     headers: headers
 })
 .then(response => response.json())
 .then(data => console.log(data));
 
 // Download dataset
-fetch('https://afridata.com/api/v1/datasets/1/download/', {
+fetch('https://afridata.jhubafrica.com/api/v1/datasets/1/download/', {
     headers: headers
 })
 .then(response => response.blob())
@@ -370,7 +370,7 @@ formData.append('title', 'Kenya Population Census 2024');
 formData.append('bio', 'Latest population data for Kenya');
 formData.append('topics', 'demographics, kenya, population');
 
-fetch('https://afridata.com/api/v1/datasets/upload/', {
+fetch('https://afridata.jhubafrica.com/api/v1/datasets/upload/', {
     method: 'POST',
     headers: headers,
     body: formData

@@ -252,7 +252,7 @@ Permanent URLs are prohibited.
 
 Bad:
 
-https://afridata.com/download/123
+https://afridata.jhubafrica.com/download/123
 
 Reason:
 
@@ -265,7 +265,7 @@ Temporary signed URLs
 
 Example:
 
-https://storage.afridata.com/...
+https://storage.afridata.jhubafrica.com/...
 ?signature=xxxxx
 &expires=300
 
