@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     'schema_graph',
     'django_extensions',
     'standardiser',
+    'django_cleanup.apps.CleanupConfig',
 ]
 
 MIDDLEWARE = [

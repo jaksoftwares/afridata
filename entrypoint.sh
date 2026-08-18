@@ -1,13 +1,13 @@
 #!/bin/sh
 
+# Exit immediately if a command exits with a non-zero status.
+set -e
+
 echo "🔄 Waiting for database..."
 while ! nc -z $DB_HOST $DB_PORT; do
   sleep 1
 done
 echo "✅ Database is ready!"
-
-echo "🛠 Checking for missing migrations..."
-python manage.py makemigrations
 
 echo "🛠 Running migrations..."
 python manage.py migrate
