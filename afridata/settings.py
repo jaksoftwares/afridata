@@ -253,7 +253,7 @@ LLM_MAX_TOKENS = env('LLM_MAX_TOKENS', default=4096)
 SCHEMA_REGISTRY_FILE = BASE_DIR / 'schema_registry.json'
 
 MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_ROOT = BASE_DIR / "appdata"
 
 # Celery — used by recommendations/tasks.py to refresh cached recommendations
 # asynchronously whenever a UserInteraction is saved/deleted (see signals.py).
