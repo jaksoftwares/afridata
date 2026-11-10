@@ -167,7 +167,7 @@
                             </div>
                         </div>
                         <div class="text-[11px] text-center mt-4 border-t border-gray-100 pt-3">
-                            <p class="font-bold text-gray-500 uppercase tracking-tighter mb-2">Maximum file size: 10MB</p>
+                            <p class="font-bold text-gray-500 uppercase tracking-tighter mb-2">Maximum file size: 2GB</p>
                             <div class="flex flex-col gap-1 justify-center text-gray-500 font-medium">
                                 <p><span class="text-brand-teal font-bold uppercase tracking-wider mr-1">Allowed:</span> CSV, Excel (XLSX/XLS), PDF, TXT, JSON, XML, ZIP, YAML, Parquet</p>
                                 <p><span class="text-red-400 font-bold uppercase tracking-wider mr-1">Not Allowed:</span> Images (JPG/PNG), Videos, Audio, Executables (EXE/SH)</p>
@@ -380,11 +380,11 @@
 
     // Validate file
     function validateFile(file) {
-        const maxSize = 10 * 1024 * 1024; // 10MB
+        const maxSize = 2 * 1024 * 1024 * 1024; // 2GB, matches MAX_DATASET_UPLOAD_SIZE on the server
         const allowedExtensions = ['.csv', '.xlsx', '.xls', '.pdf', '.txt', '.json', '.xml', '.zip', '.yaml', '.yml', '.parquet'];
 
         if (file.size > maxSize) {
-            return 'File size must be less than 10MB';
+            return 'File is too large. The maximum dataset size is 2GB.';
         }
 
         const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
@@ -489,54 +489,77 @@
         }
     }
 
+    // Show real upload progress (bytes sent), then a processing state while the server saves the file.
+    function setProgress(percent, label) {
+        progressFill.style.width = percent + '%';
+        progressPercent.textContent = percent + '%';
+        if (label) document.getElementById('progress-text').textContent = label;
+    }
+
+    function resetSubmitState() {
+        submitBtn.disabled = false;
+        submitText.textContent = 'Upload';
+        progressContainer.classList.add('hidden');
+        setProgress(0, 'Uploading...');
+    }
+
+    function describeFailure(xhr) {
+        if (xhr.status === 413) return 'This file is too large for the server to accept. The maximum is 2GB.';
+        if (xhr.status === 0) return 'The connection was lost during the upload. Check your connection and try again.';
+        if (xhr.status >= 500) return 'The server could not finish saving your file. Nothing was saved; please try again.';
+        // A redirect to the login page comes back as HTML, not JSON.
+        if (xhr.status === 200 || xhr.status === 302) return 'Your session may have expired. Please log in again and retry.';
+        return 'Upload failed. Please check the fields below and try again.';
+    }
+
     form.addEventListener('submit', function(e) {
         e.preventDefault();
-        
+
         clearFieldErrors();
         hideMessage();
-        
+
         submitBtn.disabled = true;
-        submitText.textContent = 'Processing...';
+        submitText.textContent = 'Uploading...';
         progressContainer.classList.remove('hidden');
-        
-        let progress = 0;
-        const progressInterval = setInterval(() => {
-            progress += Math.random() * 15;
-            if (progress > 95) progress = 95;
-            progressFill.style.width = progress + '%';
-            progressPercent.textContent = Math.round(progress) + '%';
-        }, 300);
-        
-        const formData = new FormData(form);
-        
-        fetch(window.location.href, {
-            method: 'POST',
-            body: formData,
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(response => response.json())
-        .then(data => {
-            clearInterval(progressInterval);
-            progressFill.style.width = '100%';
-            progressPercent.textContent = '100%';
-            
-            if (data.success) {
-                showMessage('success', data.message, data.tokens_earned);
-                setTimeout(() => {
-                    window.location.href = data.redirect_url;
-                }, 2000);
-            } else {
-                if (data.errors) showFieldErrors(data.errors);
-                showMessage('error', data.message || 'Upload failed. Please check the fields below.');
-                submitBtn.disabled = false;
-                submitText.textContent = 'Upload';
+        setProgress(0, 'Uploading...');
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', window.location.href);
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+        xhr.upload.onprogress = function(evt) {
+            if (evt.lengthComputable) {
+                const pct = Math.round((evt.loaded / evt.total) * 100);
+                setProgress(pct, pct < 100 ? 'Uploading...' : 'Saving your dataset...');
             }
-        })
-        .catch(error => {
-            clearInterval(progressInterval);
-            showMessage('error', 'A connection error occurred. Reverting to standard submission...');
-            setTimeout(() => form.submit(), 1500);
-        });
+        };
+
+        xhr.onload = function() {
+            let data = null;
+            try { data = JSON.parse(xhr.responseText); } catch (err) { data = null; }
+
+            if (data && data.success) {
+                setProgress(100, 'Upload complete');
+                showMessage('success', data.message, data.tokens_earned);
+                setTimeout(() => { window.location.href = data.redirect_url; }, 2000);
+                return;
+            }
+
+            if (data && data.errors) showFieldErrors(data.errors);
+            showMessage('error', (data && data.message) || describeFailure(xhr));
+            resetSubmitState();
+        };
+
+        xhr.onerror = function() {
+            showMessage('error', describeFailure(xhr));
+            resetSubmitState();
+        };
+
+        xhr.onabort = function() {
+            resetSubmitState();
+        };
+
+        xhr.send(new FormData(form));
     });
 
     cancelBtn.addEventListener('click', () => {

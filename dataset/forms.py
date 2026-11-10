@@ -1,6 +1,7 @@
 # dataset/forms.py
 import hashlib
 from django import forms
+from django.conf import settings
 from .models import Dataset
 
 # Define choices at module level so they can be accessed everywhere
@@ -136,6 +137,13 @@ class DatasetUploadForm(forms.ModelForm):
         file = self.cleaned_data.get('file')
         if not file:
             return file
+
+        # Reject oversized files before spending time hashing them.
+        max_size = settings.MAX_DATASET_UPLOAD_SIZE
+        if file.size > max_size:
+            raise forms.ValidationError(
+                f'File is too large. The maximum dataset size is {max_size // (1024 ** 3)} GB.'
+            )
 
         # --- Duplicate Check using SHA-256 Hashing ---
         hasher = hashlib.sha256()

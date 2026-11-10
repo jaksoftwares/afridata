@@ -31,4 +31,6 @@ echo "👤 Setting up predefined super admins..."
 python setup_admins.py
 
 echo "🚀 Starting Gunicorn server..."
-exec gunicorn afridata.wsgi:application --bind 0.0.0.0:8000 --limit-request-field_size 32768
+# --timeout: the default 30s kills uploads that are still arriving or being hashed
+# (a 2GB file on a slow link takes minutes). 900s covers the largest allowed upload.
+exec gunicorn afridata.wsgi:application --bind 0.0.0.0:8000 --limit-request-field_size 32768 --timeout 900

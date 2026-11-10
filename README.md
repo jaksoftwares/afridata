@@ -126,16 +126,13 @@ When you run `docker-compose up`, the `entrypoint.sh` automatically performs:
 
 ## 📧 Email & SMTP Configuration
 
-To prevent onboarding friction, AfriData handles emails differently depending on the `DEBUG` environment state:
+Emails (verification codes, password resets, contact submissions) are always sent through Gmail's SMTP server. Sending does **not** depend on `DEBUG`, so a deployment with `DEBUG=True` still delivers codes.
 
-### 1. Development Mode (`DEBUG=True`)
-* **No SMTP credentials required!**
-* Emails (such as password resets, token confirmations, and contact submissions) are routed to Django's **Console Backend**. 
-* Instead of being sent out to a real inbox, they will be **printed directly to your terminal standard output (stdout)**. Look at your running `runserver` window to find verification links.
+### Local development without SMTP
+* To print emails to the terminal instead of sending them, set `EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend` in your `.env`. Verification codes then appear in the `runserver` output.
 
-### 2. Production Mode (`DEBUG=False`)
-* The system utilizes Gmail's SMTP servers by default to send real emails to users.
-* To configure this, add the following variables to your `.env` file:
+### Required settings
+* To configure SMTP, add the following variables to your `.env` file (or the server environment):
   ```env
   EMAIL_HOST_USER=your-organization-email@gmail.com
   EMAIL_HOST_PASSWORD=your-google-app-password

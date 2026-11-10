@@ -266,11 +266,19 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 
-DATA_UPLOAD_MAX_MEMORY_SIZE = 524288000
-FILE_UPLOAD_MAX_MEMORY_SIZE = 524288000
+# Largest dataset file accepted (bytes). Enforced in DatasetUploadForm and the API.
+MAX_DATASET_UPLOAD_SIZE = env.int('MAX_DATASET_UPLOAD_SIZE', default=2 * 1024 * 1024 * 1024)  # 2 GB
+
+# Non-file request body limit. File parts are not counted against this.
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10 MB
+# Uploads above 5 MB stream to a temp file on disk instead of RAM.
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # 5 MB
 
 # Email Settings
-EMAIL_BACKEND = env('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend' if DEBUG else 'afridata.email_backend.Python313EmailBackend')
+# Always send real email unless EMAIL_BACKEND is set explicitly (e.g. to
+# django.core.mail.backends.console.EmailBackend for local printing).
+# Deliberately NOT tied to DEBUG: a debug-mode deploy must still send codes.
+EMAIL_BACKEND = env('EMAIL_BACKEND', default='afridata.email_backend.Python313EmailBackend')
 EMAIL_HOST = env('EMAIL_HOST', default='smtp.gmail.com')
 EMAIL_PORT = env.int('EMAIL_PORT', default=587)
 EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)

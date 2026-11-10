@@ -3,6 +3,7 @@ This file contains serializer classes that convert Django model instances to JSO
 '''
 # api/serializers.py
 from rest_framework import serializers
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from dataset.models import Dataset, Comment
 from .models import APIKey, APIUsage
@@ -60,10 +61,11 @@ class DatasetCreateSerializer(serializers.ModelSerializer):
                 "Only CSV and Excel files are allowed"
             )
         
-        # Check file size (max 50MB)
-        if value.size > 50 * 1024 * 1024:
+        # Check file size against the platform-wide dataset limit
+        max_size = settings.MAX_DATASET_UPLOAD_SIZE
+        if value.size > max_size:
             raise serializers.ValidationError(
-                "File size must be less than 50MB"
+                f"File size must be less than {max_size // (1024 ** 3)}GB"
             )
         
         return value
