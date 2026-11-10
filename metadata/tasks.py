@@ -383,7 +383,7 @@ def run_pipeline_task(
     }
 
     tmp_path = None
-    if source in ("csv", "excel"):
+    if source in ("csv", "excel", "json"):
         try:
             pipeline_kwargs["path"] = run.dataset.file.path
         except (NotImplementedError, AttributeError):

@@ -33,6 +33,7 @@ class RunStatus(models.TextChoices):
 class SourceType(models.TextChoices):
     CSV   = "csv",   "CSV"
     EXCEL = "excel", "Excel"
+    JSON  = "json",  "JSON / JSON Lines"
     SQL   = "sql",   "SQL"
 
 

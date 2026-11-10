@@ -45,9 +45,13 @@
                     <i class="fas fa-check-circle mr-3 text-lg"></i>
                     <span id="success-text" class="font-medium"></span>
                 </div>
-                <div id="error-message" class="hidden p-4 rounded-xl bg-red-50 text-red-800 border border-red-100 flex items-center shadow-sm">
-                    <i class="fas fa-exclamation-circle mr-3 text-lg"></i>
-                    <span id="error-text" class="font-medium"></span>
+                <div id="error-message" class="hidden p-4 rounded-xl bg-red-50 text-red-800 border border-red-100 flex flex-wrap items-center gap-3 shadow-sm">
+                    <i class="fas fa-exclamation-circle mr-1 text-lg"></i>
+                    <span id="error-text" class="font-medium flex-1 min-w-[200px]"></span>
+                    <button type="button" id="retry-upload-btn"
+                            class="hidden px-4 py-2 bg-red-600 text-white rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-red-700 transition-colors">
+                        <i class="fas fa-redo mr-2"></i>Try again
+                    </button>
                 </div>
                 <div id="token-reward-message" class="hidden p-5 rounded-xl token-reward text-white mt-4 flex items-center justify-between shadow-lg">
                     <div class="flex items-center">
@@ -60,14 +64,51 @@
 
 
 
-            <!-- Progress State -->
-            <div id="upload-progress" class="hidden mb-10 p-6 bg-brand-offwhite rounded-2xl border border-gray-100">
+            <!-- Progress State: shown while the file uploads and the server saves it -->
+            <div id="upload-progress" class="hidden mb-10 p-6 bg-brand-offwhite rounded-2xl border border-gray-100" aria-live="polite">
                 <div class="flex justify-between items-center mb-3">
                     <span id="progress-text" class="text-sm font-bold text-brand-blue uppercase tracking-wider">Uploading...</span>
                     <span class="text-brand-teal font-mono font-bold" id="progress-percent">0%</span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
                     <div id="progress-fill" class="bg-gradient-to-r from-brand-blue to-brand-teal h-full rounded-full progress-bar transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <div class="flex flex-wrap justify-between gap-2 text-xs text-gray-500 font-medium mt-3">
+                    <span id="progress-bytes">0 MB of 0 MB</span>
+                    <span id="progress-speed"></span>
+                    <span id="progress-eta"></span>
+                </div>
+                <ol id="progress-steps" class="mt-5 space-y-2 text-sm text-gray-500">
+                    <li data-step="upload" class="flex items-center gap-3"><i class="fas fa-circle-notch fa-spin text-brand-teal w-4"></i><span>Uploading file</span></li>
+                    <li data-step="save" class="flex items-center gap-3 opacity-50"><i class="far fa-circle w-4"></i><span>Verifying and saving</span></li>
+                    <li data-step="done" class="flex items-center gap-3 opacity-50"><i class="far fa-circle w-4"></i><span>Dataset published</span></li>
+                </ol>
+                <div class="mt-5 flex justify-end">
+                    <button type="button" id="cancel-upload-btn"
+                            class="px-5 py-2 border border-red-200 text-red-500 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-red-50 transition-colors">
+                        Cancel upload
+                    </button>
+                </div>
+            </div>
+
+            <!-- Success State: shown once the dataset is saved -->
+            <div id="upload-success" class="hidden mb-10 p-8 rounded-2xl border border-green-100 bg-green-50 text-center" aria-live="polite">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500 text-white flex items-center justify-center text-2xl">
+                    <i class="fas fa-check"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-brand-blue mb-2">Dataset published</h3>
+                <p class="text-gray-600 mb-1"><span id="success-dataset-title" class="font-bold"></span> is now live on AfriData.</p>
+                <p id="success-tokens" class="text-brand-teal font-bold mb-2"></p>
+                <p id="success-metadata" class="text-sm text-gray-500 mb-6"></p>
+                <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                    <a id="success-open-link" href="#"
+                       class="px-8 py-3 bg-brand-blue text-white rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-brand-blue/90 transition-all">
+                        View dataset
+                    </a>
+                    <a href="{% url 'upload_dataset' %}"
+                       class="px-8 py-3 border border-gray-200 text-gray-600 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-white transition-all">
+                        Upload another
+                    </a>
                 </div>
             </div>
 
@@ -169,8 +210,7 @@
                         <div class="text-[11px] text-center mt-4 border-t border-gray-100 pt-3">
                             <p class="font-bold text-gray-500 uppercase tracking-tighter mb-2">Maximum file size: 2GB</p>
                             <div class="flex flex-col gap-1 justify-center text-gray-500 font-medium">
-                                <p><span class="text-brand-teal font-bold uppercase tracking-wider mr-1">Allowed:</span> CSV, Excel (XLSX/XLS), PDF, TXT, JSON, XML, ZIP, YAML, Parquet</p>
-                                <p><span class="text-red-400 font-bold uppercase tracking-wider mr-1">Not Allowed:</span> Images (JPG/PNG), Videos, Audio, Executables (EXE/SH)</p>
+                                <p><span class="text-brand-teal font-bold uppercase tracking-wider mr-1">Allowed:</span> CSV, Excel (XLSX/XLS), PDF, TXT, JSON, JSON Lines (JSONL), XML, ZIP, YAML, Parquet</p>
                             </div>
                         </div>
                         <div id="file-error" class="text-red-500 text-xs mt-2 font-medium hidden"></div>
@@ -381,7 +421,7 @@
     // Validate file
     function validateFile(file) {
         const maxSize = 2 * 1024 * 1024 * 1024; // 2GB, matches MAX_DATASET_UPLOAD_SIZE on the server
-        const allowedExtensions = ['.csv', '.xlsx', '.xls', '.pdf', '.txt', '.json', '.xml', '.zip', '.yaml', '.yml', '.parquet'];
+        const allowedExtensions = ['.csv', '.xlsx', '.xls', '.pdf', '.txt', '.json', '.jsonl', '.xml', '.zip', '.yaml', '.yml', '.parquet'];
 
         if (file.size > maxSize) {
             return 'File is too large. The maximum dataset size is 2GB.';
@@ -402,7 +442,7 @@
             'csv': 'csv', 'xlsx': 'excel', 'xls': 'excel',
             'pdf': 'pdf', 'txt': 'txt', 'json': 'json',
             'xml': 'xml', 'zip': 'zip', 'yaml': 'yaml',
-            'yml': 'yaml', 'parquet': 'parquet'
+            'yml': 'yaml', 'parquet': 'parquet', 'jsonl': 'json'
         };
         return typeMap[extension] || '';
     }
@@ -489,77 +529,221 @@
         }
     }
 
-    // Show real upload progress (bytes sent), then a processing state while the server saves the file.
+    // ---------- Upload flow ----------
+    // idle -> uploading -> saving -> success
+    //                   -> failed (Try again)   -> cancelled (Try again)
+    // The form is never reloaded, so the user's details survive a failed attempt.
+    let uploadState = 'idle';
+    let uploadXhr = null;
+    let uploadStartedAt = 0;
+
+    const progressBytes = document.getElementById('progress-bytes');
+    const progressSpeed = document.getElementById('progress-speed');
+    const progressEta = document.getElementById('progress-eta');
+    const progressSteps = document.getElementById('progress-steps');
+    const cancelUploadBtn = document.getElementById('cancel-upload-btn');
+    const retryUploadBtn = document.getElementById('retry-upload-btn');
+    const uploadSuccess = document.getElementById('upload-success');
+
     function setProgress(percent, label) {
         progressFill.style.width = percent + '%';
         progressPercent.textContent = percent + '%';
         if (label) document.getElementById('progress-text').textContent = label;
     }
 
-    function resetSubmitState() {
+    // Byte size for display, e.g. "512 KB", "1.4 GB"
+    function formatBytes(bytes) {
+        if (!bytes || bytes < 0) return '0 B';
+        const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+        const value = bytes / Math.pow(1024, i);
+        return (i <= 1 ? value.toFixed(0) : value.toFixed(value >= 100 ? 0 : 1)) + ' ' + units[i];
+    }
+
+    function formatDuration(seconds) {
+        if (!isFinite(seconds) || seconds < 0) return '';
+        if (seconds < 60) return Math.max(1, Math.ceil(seconds)) + ' s';
+        if (seconds < 3600) return Math.floor(seconds / 60) + ' min ' + Math.ceil(seconds % 60) + ' s';
+        return Math.floor(seconds / 3600) + ' h ' + Math.floor((seconds % 3600) / 60) + ' min';
+    }
+
+    // Stage list: 0 = uploading, 1 = saving on the server
+    function setStage(active) {
+        progressSteps.querySelectorAll('li').forEach((li, i) => {
+            const icon = li.querySelector('i');
+            li.classList.toggle('opacity-50', i > active);
+            li.classList.toggle('text-brand-blue', i === active);
+            li.classList.toggle('font-bold', i === active);
+            if (i < active) icon.className = 'fas fa-check-circle text-green-500 w-4';
+            else if (i === active) icon.className = 'fas fa-circle-notch fa-spin text-brand-teal w-4';
+            else icon.className = 'far fa-circle w-4';
+        });
+    }
+
+    function resetProgressDetails() {
+        setProgress(0, 'Uploading...');
+        setStage(0);
+        progressBytes.textContent = '';
+        progressSpeed.textContent = '';
+        progressEta.textContent = '';
+        cancelUploadBtn.classList.remove('hidden');
+    }
+
+    // While a file is in flight: block the form, warn before leaving the page.
+    function setBusy(busy) {
+        submitBtn.disabled = busy;
+        fileUploadArea.classList.toggle('pointer-events-none', busy);
+        removeFileBtn.disabled = busy;
+        window.onbeforeunload = busy
+            ? function (e) { e.preventDefault(); return ''; }
+            : null;
+    }
+
+    function resetSubmitButton() {
         submitBtn.disabled = false;
         submitText.textContent = 'Upload';
-        progressContainer.classList.add('hidden');
-        setProgress(0, 'Uploading...');
     }
 
+    // Turn a failed request into a message the user can act on.
     function describeFailure(xhr) {
         if (xhr.status === 413) return 'This file is too large for the server to accept. The maximum is 2GB.';
-        if (xhr.status === 0) return 'The connection was lost during the upload. Check your connection and try again.';
-        if (xhr.status >= 500) return 'The server could not finish saving your file. Nothing was saved; please try again.';
-        // A redirect to the login page comes back as HTML, not JSON.
-        if (xhr.status === 200 || xhr.status === 302) return 'Your session may have expired. Please log in again and retry.';
-        return 'Upload failed. Please check the fields below and try again.';
+        if (xhr.status === 0) return 'The connection was lost during the upload. Check your connection and try again. Nothing was saved.';
+        if (xhr.status >= 500) return 'The server could not finish saving your file. Nothing was saved. Please try again in a moment.';
+        // An expired login redirects to the login page, which comes back as HTML rather than JSON.
+        if (xhr.status === 200 || xhr.status === 302) return 'Your session may have expired. Log in again, then retry. Your details are still here.';
+        return 'Upload failed. Check the highlighted fields and try again.';
     }
 
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
+    function showUploadFailure(message, canRetry) {
+        uploadState = 'failed';
+        hideProgressPanel();
+        resetSubmitButton();
+        showMessage('error', message);
+        retryUploadBtn.classList.toggle('hidden', !canRetry);
+    }
 
+    function hideProgressPanel() {
+        progressContainer.classList.add('hidden');
+    }
+
+    function showSuccess(data) {
+        uploadState = 'done';
+        uploadXhr = null;
+        setBusy(false);
+        hideProgressPanel();
+        hideMessage();
+        submitText.textContent = 'Published';
+
+        // Replace the form with the success state so the user can't submit twice.
+        form.classList.add('hidden');
+        document.getElementById('success-dataset-title').textContent = data.dataset_title || 'Your dataset';
+        document.getElementById('success-tokens').textContent =
+            data.tokens_earned > 0 ? 'You earned ' + data.tokens_earned + ' tokens for this upload.' : '';
+        document.getElementById('success-metadata').textContent = data.metadata_queued
+            ? 'Automatic metadata analysis has started. It will appear on the dataset page when it finishes.'
+            : 'You can add or edit detailed metadata from the dataset page at any time.';
+        document.getElementById('success-open-link').href = data.redirect_url;
+
+        uploadSuccess.classList.remove('hidden');
+        uploadSuccess.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function startUpload() {
         clearFieldErrors();
         hideMessage();
+        retryUploadBtn.classList.add('hidden');
 
-        submitBtn.disabled = true;
+        uploadState = 'uploading';
+        setBusy(true);
         submitText.textContent = 'Uploading...';
+        resetProgressDetails();
         progressContainer.classList.remove('hidden');
-        setProgress(0, 'Uploading...');
+        uploadStartedAt = Date.now();
 
         const xhr = new XMLHttpRequest();
+        uploadXhr = xhr;
         xhr.open('POST', window.location.href);
         xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 
-        xhr.upload.onprogress = function(evt) {
-            if (evt.lengthComputable) {
-                const pct = Math.round((evt.loaded / evt.total) * 100);
-                setProgress(pct, pct < 100 ? 'Uploading...' : 'Saving your dataset...');
+        // Real progress: bytes sent to the server, with average speed and time left.
+        xhr.upload.onprogress = function (evt) {
+            if (!evt.lengthComputable) return;
+            const pct = Math.round((evt.loaded / evt.total) * 100);
+            const elapsed = (Date.now() - uploadStartedAt) / 1000;
+            const speed = elapsed > 0 ? evt.loaded / elapsed : 0;
+            const remaining = speed > 0 ? (evt.total - evt.loaded) / speed : NaN;
+
+            progressBytes.textContent = formatBytes(evt.loaded) + ' of ' + formatBytes(evt.total);
+            progressSpeed.textContent = speed > 0 ? formatBytes(speed) + '/s' : '';
+            progressEta.textContent = pct < 100 && isFinite(remaining) ? formatDuration(remaining) + ' left' : '';
+
+            if (pct >= 100) {
+                // All bytes are sent. Cancelling now could leave a half-saved file, so hide cancel.
+                setStage(1);
+                cancelUploadBtn.classList.add('hidden');
+                progressEta.textContent = '';
+                setProgress(100, 'Saving your dataset...');
+            } else {
+                setProgress(pct, 'Uploading...');
             }
         };
 
-        xhr.onload = function() {
+        xhr.onload = function () {
+            uploadXhr = null;
             let data = null;
             try { data = JSON.parse(xhr.responseText); } catch (err) { data = null; }
 
             if (data && data.success) {
-                setProgress(100, 'Upload complete');
-                showMessage('success', data.message, data.tokens_earned);
-                setTimeout(() => { window.location.href = data.redirect_url; }, 2000);
+                showSuccess(data);
                 return;
             }
 
-            if (data && data.errors) showFieldErrors(data.errors);
-            showMessage('error', (data && data.message) || describeFailure(xhr));
-            resetSubmitState();
+            setBusy(false);
+            if (data && data.errors) {
+                // Validation problem: the user fixes the highlighted fields. No retry button.
+                showFieldErrors(data.errors);
+                showUploadFailure(data.message || 'Please correct the highlighted fields.', false);
+            } else {
+                // Server, proxy or session problem: the same file can be retried.
+                showUploadFailure((data && data.message) || describeFailure(xhr), true);
+            }
         };
 
-        xhr.onerror = function() {
-            showMessage('error', describeFailure(xhr));
-            resetSubmitState();
+        xhr.onerror = function () {
+            uploadXhr = null;
+            setBusy(false);
+            showUploadFailure(describeFailure(xhr), true);
         };
 
-        xhr.onabort = function() {
-            resetSubmitState();
+        xhr.onabort = function () {
+            uploadXhr = null;
+            setBusy(false);
+            uploadState = 'cancelled';
+            hideProgressPanel();
+            resetSubmitButton();
+            showMessage('error', 'Upload cancelled. Nothing was saved, and your details are still here.');
+            retryUploadBtn.classList.remove('hidden');
         };
 
         xhr.send(new FormData(form));
+    }
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (uploadState === 'uploading') return;
+        startUpload();
+    });
+
+    cancelUploadBtn.addEventListener('click', function () {
+        if (uploadXhr && confirm('Cancel this upload? The file will not be saved.')) {
+            uploadXhr.abort();
+        }
+    });
+
+    // Re-runs the normal submit path, so the form is validated again first.
+    retryUploadBtn.addEventListener('click', function () {
+        if (typeof form.requestSubmit === 'function') form.requestSubmit();
+        else form.dispatchEvent(new Event('submit', { cancelable: true }));
     });
 
     cancelBtn.addEventListener('click', () => {

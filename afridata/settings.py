@@ -26,7 +26,9 @@ if os.environ.get('GITHUB_ACTIONS') != 'true':
 SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env.bool('DEBUG', default=True)
+# Defaults to False so a deployment that forgets to set DEBUG never shows
+# developer tracebacks to users. Local development sets DEBUG=True in .env.
+DEBUG = env.bool('DEBUG', default=False)
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
 

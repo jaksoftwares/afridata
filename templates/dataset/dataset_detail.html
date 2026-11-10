@@ -262,7 +262,7 @@
                             <span>Generate AI Metadata</span>
                         </button>
                         {% else %}
-                        <a href="{% url 'login' %}?next={{ request.path }}" class="inline-flex items-center px-5 py-2.5 bg-brand-teal hover:bg-brand-teal-dark text-white text-xs font-bold rounded-xl shadow-sm hover:shadow transition-all space-x-2">
+                        <a href="{% url 'login_signup' %}?next={{ request.path }}" class="inline-flex items-center px-5 py-2.5 bg-brand-teal hover:bg-brand-teal-dark text-white text-xs font-bold rounded-xl shadow-sm hover:shadow transition-all space-x-2">
                             <i class="fas fa-sign-in-alt"></i>
                             <span>Sign in to Generate Metadata</span>
                         </a>
@@ -869,7 +869,9 @@ with open("model_weights{{ dataset.file.name|slice:'-4:' }}", "wb") as f:
                     // Start polling the status of the run
                     initiatePolling(data.run_id);
                 } else {
-                    throw new Error(data.error || 'Failed to start metadata generation.');
+                    throw Object.assign(new Error('metadata request failed'), {
+                        userMessage: data.error || "We couldn't start the metadata analysis. Please try again."
+                    });
                 }
             })
             .catch(error => {
@@ -880,7 +882,9 @@ with open("model_weights{{ dataset.file.name|slice:'-4:' }}", "wb") as f:
                 });
                 btn.innerHTML = originalContent;
                 if (errorDiv) {
-                    errorDiv.textContent = error.message || 'Failed to connect to the server.';
+                    // Only messages written for users are shown. Browser errors (network, parsing) are not.
+                    errorDiv.textContent = error.userMessage
+                        || "We couldn't reach the server. Check your connection and try again.";
                     errorDiv.classList.remove('hidden');
                 }
             });

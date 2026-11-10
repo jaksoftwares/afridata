@@ -22,6 +22,7 @@ SUPPORTED_FORMATS = {
     '.xlsx': 'Excel (XLSX)',
     '.xls': 'Excel (XLS)',
     '.json': 'JSON',
+    '.jsonl': 'JSON Lines',
     '.parquet': 'Parquet',
     '.txt': 'Text (TSV/Delimited)',
     '.xml': 'XML',
@@ -74,19 +75,27 @@ def load_excel(file_path):
         raise
 
 def load_json(file_path):
-    """Load JSON file"""
+    """
+    Load a JSON or JSONL file.
+
+    The layout is detected from the content (see pipeline_lib.json_reader), so a
+    JSON array, a single object and JSON Lines all load the same way. Every
+    column comes back as text, matching the CSV and Excel loaders, so the
+    pipeline's type inference treats all formats the same.
+    """
+    # Imported here so that importing the loader never requires pandas up front.
+    from pipeline_lib.json_reader import read_json_frame
+
     try:
-        # Handle both JSON files and JSONL (newline-delimited JSON)
-        with open(file_path, 'r') as f:
-            first_char = f.read(1)
-        
-        if first_char == '[':
-            # Array of objects: [{...}, {...}]
-            df = pl.read_json(file_path)
-        else:
-            # Newline-delimited JSON: {...}\n{...}
-            df = pl.read_ndjson(file_path)
-        
+        with open(file_path, 'rb') as f:
+            content = f.read()
+        pdf = read_json_frame(content)
+        df = pl.DataFrame({
+            col: [None if v is None or (isinstance(v, float) and v != v) else str(v)
+                  for v in pdf[col].tolist()]
+            for col in pdf.columns
+        }, schema={col: pl.Utf8 for col in pdf.columns})
+
         logger.info(f"Loaded JSON: {os.path.basename(file_path)}")
         return df
     except Exception as e:
@@ -239,7 +248,7 @@ def load_file(file_path, **kwargs):
             logger.error(f"Error loading Excel: {e}")
             raise
     
-    elif format_key == '.json':
+    elif format_key in ('.json', '.jsonl'):
         df = load_json(file_path)
     
     elif format_key == '.parquet':
@@ -310,7 +319,8 @@ def get_format_help():
         'CSV': 'Comma-separated values. Standard tabular format.',
         'Excel (XLSX)': 'Microsoft Excel format. Supports multiple sheets.',
         'Excel (XLS)': 'Legacy Excel format.',
-        'JSON': 'Array of objects or newline-delimited JSON.',
+        'JSON': 'Array of objects, a single object, or an object wrapping a list of records.',
+        'JSON Lines': 'One JSON object per line (JSONL / NDJSON).',
         'Parquet': 'Columnar storage format. Efficient for large datasets.',
         'Text (TSV/Delimited)': 'Tab-separated or custom delimiter. Specify delimiter in options.',
         'XML': 'XML format. Specify root element to extract data.',

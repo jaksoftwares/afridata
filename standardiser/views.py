@@ -2,6 +2,7 @@
 Django Views for Data Standardisation Workflow
 Handles internal dataset processing, results display, and downloads
 """
+from afridata.user_errors import log_exception, USER_MESSAGES
 import os
 import uuid
 import tempfile
@@ -168,14 +169,16 @@ def initiate_standardization(request, dataset_slug):
             return redirect('standardiser:standardisation_ready', job_id=job_id)
             
         except Exception as e:
-            job.mark_failed(str(e))
+            log_exception("initiate_standardization")
+            job.mark_failed(USER_MESSAGES["standardization"])
             return render(request, 'standardiser/error.html', {
-                'error': f'Standardization failed: {str(e)}'
+                'error': USER_MESSAGES["standardization"]
             }, status=500)
             
     except Exception as e:
+        log_exception("initiate_standardization")
         return render(request, 'standardiser/error.html', {
-            'error': f'Initialization failed: {str(e)}'
+            'error': USER_MESSAGES["standardization_prepare"]
         }, status=500)
 
 
@@ -283,11 +286,12 @@ def review_mappings(request, job_id):
         return redirect('standardiser:standardisation_ready', job_id=job_id)
     
     except Exception as e:
+        log_exception("review_mappings")
         return render(request, 'standardiser/review_mappings.html', {
             'job': job,
             'result': result,
             'form': form,
-            'error': f'Failed to save edits: {str(e)}'
+            'error': USER_MESSAGES["standardization_save"]
         }, status=500)
 
 
@@ -437,13 +441,14 @@ def download_file(request, job_id):
     
     except Exception as e:
         logger.error(f"Download error: {e}")
+        log_exception("download_file")
         return render(request, 'standardiser/error.html', {
-            'error': f'Download failed: {str(e)}'
+            'error': USER_MESSAGES["download_prepare"]
         }, status=500)
         return render(request, 'standardiser/download_choice.html', {
             'job': job,
             'form': form,
-            'error': f'Download failed: {str(e)}'
+            'error': USER_MESSAGES["download_prepare"]
         }, status=500)
 
 
@@ -553,8 +558,9 @@ def job_status_api(request, job_id):
         }, status=404)
     except Exception as e:
         logger.error(f"Error checking job status: {e}")
+        log_exception("job_status_api")
         return JsonResponse({
             'success': False,
-            'error': str(e)
+            'error': USER_MESSAGES["job_status"]
         }, status=500)
 

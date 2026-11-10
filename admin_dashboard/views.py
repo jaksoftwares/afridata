@@ -1,4 +1,5 @@
 # admin_dashboard/views.py
+from afridata.user_errors import log_exception, USER_MESSAGES
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import user_passes_test
@@ -334,7 +335,8 @@ def dataset_action(request, dataset_id):
             
         return JsonResponse({'success': False, 'error': 'Invalid action'})
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
+        log_exception("dataset_action")
+        return JsonResponse({'success': False, 'error': USER_MESSAGES["dataset_action"]})
 
 
 @user_passes_test(is_superuser)
@@ -365,7 +367,8 @@ def dataset_bulk_action(request):
             
         return JsonResponse({'success': True, 'message': f'Bulk action {action} completed for {len(dataset_ids)} datasets'})
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
+        log_exception("dataset_bulk_action")
+        return JsonResponse({'success': False, 'error': USER_MESSAGES["bulk_action"]})
 
 
 @user_passes_test(is_superuser)
@@ -518,7 +521,8 @@ def adjust_user_tokens(request, user_id):
         messages.success(request, f"Successfully adjusted {user.email}'s tokens by {amount}.")
         
     except (ValueError, ValidationError) as e:
-        messages.error(request, f"Error adjusting tokens: {str(e)}")
+        log_exception("adjust_user_tokens")
+        messages.error(request, USER_MESSAGES["token_adjust"])
     
     return redirect('admin_dashboard:user_detail', user_id=user_id)
 
@@ -597,7 +601,8 @@ def moderate_user(request, user_id):
         messages.success(request, f"Successfully applied {action_type} to {user.email}.")
         
     except ValidationError as e:
-        messages.error(request, f"Error applying moderation: {str(e)}")
+        log_exception("moderate_user")
+        messages.error(request, USER_MESSAGES["moderation"])
     
     return redirect('admin_dashboard:user_detail', user_id=user_id)
 
@@ -703,7 +708,8 @@ def system_settings(request):
             messages.success(request, f"Setting '{key}' updated successfully.")
             
         except Exception as e:
-            messages.error(request, f"Error updating setting: {str(e)}")
+            log_exception("system_settings")
+            messages.error(request, USER_MESSAGES["setting_save"])
         
         return redirect('admin_dashboard:system_settings')
     
@@ -820,7 +826,8 @@ def community_create_topic(request):
         )
         messages.success(request, f"Topic '{name}' created successfully.")
     except Exception as e:
-        messages.error(request, f"Error creating topic: {e}")
+        log_exception("community_create_topic")
+        messages.error(request, USER_MESSAGES["topic_create"])
         
     return redirect('admin_dashboard:community_management')
 
@@ -834,7 +841,8 @@ def community_delete_topic(request, topic_id):
         topic.delete()
         return JsonResponse({'success': True, 'message': f'Topic "{topic_name}" deleted.'})
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
+        log_exception("community_delete_topic")
+        return JsonResponse({'success': False, 'error': USER_MESSAGES["delete"]})
 
 @user_passes_test(is_superuser)
 @require_POST
@@ -845,7 +853,8 @@ def community_delete_thread(request, thread_id):
         thread.delete()
         return JsonResponse({'success': True, 'message': 'Thread deleted successfully.'})
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
+        log_exception("community_delete_thread")
+        return JsonResponse({'success': False, 'error': USER_MESSAGES["delete"]})
 
 @user_passes_test(is_superuser)
 @require_POST
@@ -856,7 +865,8 @@ def community_delete_post(request, post_id):
         post.delete()
         return JsonResponse({'success': True, 'message': 'Post deleted successfully.'})
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
+        log_exception("community_delete_post")
+        return JsonResponse({'success': False, 'error': USER_MESSAGES["delete"]})
 
 
 @user_passes_test(is_superuser)
@@ -920,7 +930,8 @@ def update_rate_limits(request):
         
         messages.success(request, "API rate limits updated successfully.")
     except Exception as e:
-        messages.error(request, f"Error updating API rate limits: {e}")
+        log_exception("update_rate_limits")
+        messages.error(request, USER_MESSAGES["rate_limits"])
         
     return redirect('admin_dashboard:api_management')
 
@@ -1022,7 +1033,8 @@ def delete_report(request, report_id):
         report.delete()
         messages.success(request, f"Report '{report_name}' deleted successfully.")
     except Exception as e:
-        messages.error(request, f"Error deleting report: {e}")
+        log_exception("delete_report")
+        messages.error(request, USER_MESSAGES["delete"])
     return redirect('admin_dashboard:reports')
 
 
@@ -1067,7 +1079,8 @@ def generate_report(request):
         messages.success(request, "Report generation started. You'll be notified when it's ready.")
         
     except Exception as e:
-        messages.error(request, f"Error generating report: {str(e)}")
+        log_exception("generate_report")
+        messages.error(request, USER_MESSAGES["report_generate"])
     
     return redirect('admin_dashboard:reports')
 
@@ -1480,7 +1493,8 @@ def create_notification(request):
         messages.success(request, "Notification created successfully.")
         
     except Exception as e:
-        messages.error(request, f"Error creating notification: {str(e)}")
+        log_exception("create_notification")
+        messages.error(request, USER_MESSAGES["notification_create"])
     
     return redirect('admin_dashboard:notifications')
 
@@ -1538,7 +1552,8 @@ def newsletter_campaigns(request):
                 except Exception as e:
                     campaign.status = 'draft'
                     campaign.save()
-                    messages.error(request, f"Failed to send emails: {str(e)}")
+                    log_exception("newsletter_campaigns")
+                    messages.error(request, USER_MESSAGES["email_campaign"])
             else:
                 messages.warning(request, "No active subscribers found. Campaign saved as draft.")
                 campaign.status = 'draft'

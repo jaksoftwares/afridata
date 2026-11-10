@@ -14,6 +14,7 @@ from django.utils import timezone
 from decimal import Decimal
 
 import requests
+from afridata.user_errors import USER_MESSAGES
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
@@ -76,7 +77,7 @@ def token(request):
         logger.error(f"Error generating M-Pesa token: {e}")
         context = {
             'token': None,
-            'error': str(e),
+            'error': USER_MESSAGES["payment_service"],
             'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
         return render(request, 'token.html', context)

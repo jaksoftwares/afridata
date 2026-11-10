@@ -17,6 +17,7 @@ urlpatterns = [
     # Email verification URLs
     path('verify-email/', views.verify_email, name='verify_email'),
     path('resend-verification/', views.resend_verification_email, name='resend_verification'),
+    path('verify-email/change-address/', views.change_verification_email, name='change_verification_email'),
 
     # Password Reset URLs
     path('password-reset/', auth_views.PasswordResetView.as_view(template_name='accounts/password_reset_form.html', success_url='/accounts/password-reset/done/', email_template_name='accounts/password_reset_email.html'), name='password_reset'),

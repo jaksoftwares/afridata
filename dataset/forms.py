@@ -11,7 +11,7 @@ DATASET_TYPE_CHOICES = [
     ('excel', 'Excel'),
     ('pdf', 'PDF'),
     ('txt', 'Text'),
-    ('json', 'JSON'),
+    ('json', 'JSON / JSON Lines'),
     ('xml', 'XML'),
     ('zip', 'ZIP Archive'),
     ('yaml', 'YAML'),
@@ -30,7 +30,7 @@ class DatasetUploadForm(forms.ModelForm):
                 'maxlength': '255'
             }),
             'file': forms.FileInput(attrs={
-                'accept': '.csv,.xlsx,.xls,.pdf,.txt,.json,.xml,.zip,.yaml,.yml,.parquet,.bin,.dat,.pt,.pkl,.h5,.safetensors,.onnx,.joblib',
+                'accept': '.csv,.xlsx,.xls,.pdf,.txt,.json,.jsonl,.xml,.zip,.yaml,.yml,.parquet,.bin,.dat,.pt,.pkl,.h5,.safetensors,.onnx,.joblib',
                 'style': 'display: none;'  # Hidden as we use custom upload area
             }),
             'cover_photo': forms.FileInput(attrs={
@@ -145,6 +145,7 @@ class DatasetUploadForm(forms.ModelForm):
                 f'File is too large. The maximum dataset size is {max_size // (1024 ** 3)} GB.'
             )
 
+
         # --- Duplicate Check using SHA-256 Hashing ---
         hasher = hashlib.sha256()
         for chunk in file.chunks(chunk_size=65536):
@@ -181,7 +182,7 @@ class DatasetUploadForm(forms.ModelForm):
                 'excel': ['.xlsx', '.xls'],
                 'pdf': ['.pdf'],
                 'txt': ['.txt'],
-                'json': ['.json'],
+                'json': ['.json', '.jsonl'],
                 'xml': ['.xml'],
                 'zip': ['.zip'],
                 'yaml': ['.yaml', '.yml'],
@@ -195,7 +196,18 @@ class DatasetUploadForm(forms.ModelForm):
                     f'Selected file type does not match the dataset type. '
                     f'Expected: {", ".join(expected_extensions)}, got: {file_extension}'
                 )
-        
+
+            # JSON-type uploads: check the start of the file now, so a CSV renamed to
+            # .json is refused here instead of failing later in the preview.
+            if dataset_type == 'json':
+                from pipeline_lib.json_reader import check_json_head
+                file.seek(0)
+                head = file.read(4096)
+                file.seek(0)
+                problem = check_json_head(head)
+                if problem:
+                    self.add_error('file', problem)
+
         return cleaned_data
 
         file = self.cleaned_data.get('file')

@@ -531,7 +531,7 @@ function checkHealth() {
             }
         })
         .catch(error => {
-            alert('Error checking API health: ' + error.message);
+            alert("We couldn't check the API health right now. Please try again.");
         })
         .finally(() => {
             button.disabled = false;

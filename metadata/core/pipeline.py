@@ -58,7 +58,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Supported source types
 # ---------------------------------------------------------------------------
-_VALID_SOURCES = frozenset({"csv", "excel", "sql"})
+_VALID_SOURCES = frozenset({"csv", "excel", "json", "sql"})
 
 
 # ---------------------------------------------------------------------------
@@ -350,12 +350,18 @@ class MetadataPipeline:
             ValueError:        Missing required arguments for the chosen source.
             FileNotFoundError: ``path`` does not exist (CSV/Excel).
         """
-        if self.source in ("csv", "excel"):
+        if self.source in ("csv", "excel", "json"):
             if not self.path:
                 raise ValueError(
                     f"MetadataPipeline: 'path' is required for source='{self.source}'."
                 )
-            if self.source == "csv":
+            if self.source == "json":
+                # JSON array, single object or JSON Lines: layout detected from content.
+                from pipeline_lib.json_reader import read_json_frame
+                with open(self.path, "rb") as fh:
+                    df = read_json_frame(fh.read())
+                self.logger.debug("Adapter: read JSON/JSONL from '%s'.", self.path)
+            elif self.source == "csv":
                 if 'encoding' in self.read_kwargs:
                     df = pd.read_csv(self.path, **self.read_kwargs)
                 else:
@@ -431,7 +437,7 @@ class MetadataPipeline:
         Returns:
             Augmented profile dict.
         """
-        if self.source in ("csv", "excel"):
+        if self.source in ("csv", "excel", "json"):
             return CsvExcelExtractor(
                 df,
                 source_format=self.source,

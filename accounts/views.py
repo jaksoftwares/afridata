@@ -1,3 +1,4 @@
+from afridata.user_errors import log_exception, USER_MESSAGES
 import io
 import json
 import logging
@@ -275,6 +276,15 @@ def process_signup(request):
         
         logger.debug(f"Extracted data - Email: {email}, Full name: {full_name}, Username: {username}")
         
+        # An unfinished earlier signup with this email: resume it instead of showing an error.
+        existing = CustomUser.objects.filter(email=email).first() if email else None
+        if existing is not None and not existing.is_verified:
+            request.session['verification_email'] = existing.email
+            if _resend_wait_seconds(existing) == 0:
+                _send_code_or_warn(request, existing)
+            messages.info(request, 'You started signing up with this email before. Enter the code we sent you to finish.')
+            return redirect('verify_email')
+
         # Validation
         errors = []
         field_errors = {}
@@ -386,13 +396,14 @@ def process_signup(request):
                     user_agent=request.META.get('HTTP_USER_AGENT', '')
                 )
                 
-                send_verification_email(user)
-                request.session['verification_email'] = user.email
-                logger.debug("Verification email sent, redirecting to verify_email")
+                created_user = user
                 
-                messages.success(request, f'Account created successfully! Please check your email inbox or spam folder for the verification code.')
-                return redirect('verify_email')
-                
+            # Sent after the account is saved, so a mail failure never undoes the signup.
+            _send_code_or_warn(request, created_user)
+            request.session['verification_email'] = created_user.email
+            messages.success(request, 'Account created! Enter the 6-digit code we sent to your email to finish.')
+            return redirect('verify_email')
+
         except IntegrityError as e:
             # Race condition caught
             logger.error(f"IntegrityError during signup: {str(e)}")
@@ -545,8 +556,10 @@ def home(request):
         'popular_terms': popular_terms,
         'featured_datasets': featured_datasets,
         'format_counts': format_counts,
+        # Shown once, right after email verification. Popped so it doesn't repeat.
+        'show_welcome': request.session.pop('show_welcome', False),
     }
-    
+
     return render(request, 'accounts/home.html', context)
 
 
@@ -705,7 +718,8 @@ def edit_profile_view(request):
                 return redirect('workspace')
                 
         except Exception as e:
-            messages.error(request, f'Error updating profile: {str(e)}')
+            log_exception("edit_profile_view")
+            messages.error(request, USER_MESSAGES["profile_save"])
     
     context = {
         'user': user,
@@ -816,73 +830,143 @@ def referrals_view(request):
     
     return render(request, 'accounts/referrals.html', context)
 
-def verify_email(request):
-    """View to handle email verification via 6-digit code."""
-    email = request.session.get('verification_email')
-    
-    if not email:
-        messages.error(request, 'No verification in progress. Please log in or sign up.')
-        return redirect('login_signup')
-        
+MAX_CODE_ATTEMPTS = 5
+RESEND_COOLDOWN_SECONDS = 60
+EMAIL_PATTERN = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+
+
+def _resend_wait_seconds(user):
+    """Seconds left before a new code may be sent to this user (0 means now)."""
+    token = EmailVerificationToken.objects.filter(user=user).first()
+    if token is None:
+        return 0
+    elapsed = (timezone.now() - token.created_at).total_seconds()
+    return max(0, int(RESEND_COOLDOWN_SECONDS - elapsed))
+
+
+def _send_code_or_warn(request, user):
+    """Send the code. If the mail server fails, tell the user how to recover instead of erroring."""
     try:
-        user = CustomUser.objects.get(email=email)
-    except CustomUser.DoesNotExist:  # type: ignore
-        messages.error(request, 'User not found.')
+        send_verification_email(user)
+        return True
+    except Exception:
+        logging.getLogger(__name__).exception("Verification email failed for user %s", user.pk)
+        messages.warning(
+            request,
+            "We couldn't send your code just now. Wait a moment, then tap Resend code.",
+        )
+        return False
+
+
+def verify_email(request):
+    """Check the 6-digit code. On success, log the user in and show the welcome screen."""
+    email = request.session.get('verification_email')
+    if not email:
+        messages.info(request, 'Log in or sign up to continue.')
         return redirect('login_signup')
-        
+
+    user = CustomUser.objects.filter(email=email).first()
+    if user is None:
+        request.session.pop('verification_email', None)
+        messages.error(request, 'We could not find that account. Please sign up again.')
+        return redirect('login_signup')
+
     if user.is_verified:
+        request.session.pop('verification_email', None)
         messages.info(request, 'Your email is already verified. You can log in.')
         return redirect('login_signup')
-        
+
     if request.method == 'POST':
         code = request.POST.get('code', '').strip()
-        
-        try:
-            token = EmailVerificationToken.objects.get(user=user)
-            
-            if not token.is_valid():
-                messages.error(request, 'Verification code has expired. Please request a new one.')
-            elif token.code == code:
-                # Success
-                user.is_verified = True
-                user.save(update_fields=['is_verified'])
-                token.delete()
-                
-                # Log the user in
-                login(request, user)
-                
-                # Clean up session
-                if 'verification_email' in request.session:
-                    del request.session['verification_email']
-                    
-                messages.success(request, 'Your email has been successfully verified!')
-                return redirect('home')
+        token = EmailVerificationToken.objects.filter(user=user).first()
+
+        if token is None:
+            messages.error(request, 'No code is active for this account. Tap Resend code to get one.')
+        elif not token.is_valid():
+            messages.error(request, 'This code has expired. Tap Resend code to get a new one.')
+        elif token.attempts >= MAX_CODE_ATTEMPTS:
+            messages.error(request, 'Too many incorrect attempts. Tap Resend code to get a new one.')
+        elif token.code == code:
+            user.is_verified = True
+            user.save(update_fields=['is_verified'])
+            token.delete()
+
+            login(request, user)
+            request.session.pop('verification_email', None)
+            request.session['show_welcome'] = True
+            messages.success(request, 'Your email has been verified. Welcome to AfriData!')
+            return redirect('home')
+        else:
+            token.attempts += 1
+            token.save(update_fields=['attempts'])
+            left = MAX_CODE_ATTEMPTS - token.attempts
+            if left <= 0:
+                messages.error(request, 'Too many incorrect attempts. Tap Resend code to get a new one.')
             else:
-                messages.error(request, 'Invalid verification code.')
-                
-        except EmailVerificationToken.DoesNotExist:  # type: ignore
-            messages.error(request, 'No verification code found. Please request a new one.')
-            
-    return render(request, 'accounts/verify_email.html', {'email': email, 'page_title': 'Verify Email'})
+                messages.error(
+                    request,
+                    f'That code is incorrect. {left} attempt{"s" if left != 1 else ""} left.',
+                )
+
+    return render(request, 'accounts/verify_email.html', {
+        'email': email,
+        'page_title': 'Verify Email',
+        'resend_wait': _resend_wait_seconds(user),
+    })
+
 
 @require_POST
 def resend_verification_email(request):
-    """Resend the verification email to the user."""
+    """Send a new code. A cooldown stops the inbox from being flooded."""
     email = request.session.get('verification_email')
-    
     if not email:
-        return JsonResponse({'error': 'No verification in progress.'}, status=400)
-        
-    try:
-        user = CustomUser.objects.get(email=email)
-        if user.is_verified:
-            return JsonResponse({'error': 'User is already verified.'}, status=400)
-            
-        send_verification_email(user)
-        messages.success(request, 'A new verification code has been sent to your email.')
-        # If it's an AJAX request we can return JSON, otherwise redirect
+        messages.info(request, 'Log in or sign up to continue.')
+        return redirect('login_signup')
+
+    user = CustomUser.objects.filter(email=email).first()
+    if user is None or user.is_verified:
+        request.session.pop('verification_email', None)
+        messages.info(request, 'Your email is already verified. You can log in.')
+        return redirect('login_signup')
+
+    wait = _resend_wait_seconds(user)
+    if wait > 0:
+        messages.info(request, f'Please wait {wait} seconds before requesting another code.')
         return redirect('verify_email')
-    except CustomUser.DoesNotExist:  # type: ignore
-        return JsonResponse({'error': 'User not found.'}, status=404)
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+
+    if _send_code_or_warn(request, user):
+        messages.success(request, f'A new code was sent to {user.email}. Check your spam folder if it is not in your inbox.')
+    return redirect('verify_email')
+
+
+@require_POST
+def change_verification_email(request):
+    """Let someone who typed the wrong address fix it before they verify."""
+    current = request.session.get('verification_email')
+    if not current:
+        messages.info(request, 'Log in or sign up to continue.')
+        return redirect('login_signup')
+
+    user = CustomUser.objects.filter(email=current).first()
+    if user is None or user.is_verified:
+        request.session.pop('verification_email', None)
+        messages.info(request, 'Your email is already verified. You can log in.')
+        return redirect('login_signup')
+
+    new_email = request.POST.get('new_email', '').strip().lower()
+    if not re.match(EMAIL_PATTERN, new_email):
+        messages.error(request, 'Please enter a valid email address.')
+        return redirect('verify_email')
+    if new_email == user.email:
+        messages.info(request, 'That is already the address on this account.')
+        return redirect('verify_email')
+    if CustomUser.objects.filter(email=new_email).exclude(pk=user.pk).exists():
+        messages.error(request, 'Another account already uses that email address.')
+        return redirect('verify_email')
+
+    user.email = new_email
+    user.save(update_fields=['email'])
+    request.session['verification_email'] = new_email
+    if _send_code_or_warn(request, user):
+        messages.success(request, f'We sent a new code to {new_email}.')
+    return redirect('verify_email')

@@ -1,5 +1,6 @@
 # dataset/views.py
 # pyrefly: ignore-all-errors  # Django ORM/request false positives — no django-stubs support in Pyrefly yet
+from afridata.user_errors import log_exception, USER_MESSAGES
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, Http404, JsonResponse
 from django.contrib.auth.decorators import login_required
@@ -14,6 +15,7 @@ from accounts.models import CustomUser, UserProfile
 import pandas as pd
 import numpy as np
 import io
+from pipeline_lib.json_reader import read_json_frame, JsonReadError
 from django.views.decorators.csrf import csrf_exempt
 from .forms import DatasetUploadForm, DatasetEditForm
 import json
@@ -104,6 +106,9 @@ def dataset_detail(request, slug):
                         df = pd.read_csv(io.BytesIO(file_content))
             elif dataset.dataset_type == 'excel':
                 df = pd.read_excel(io.BytesIO(file_content))
+            elif dataset.dataset_type == 'json':
+                # JSON array, single object or JSON Lines: layout detected from content.
+                df = read_json_frame(file_content)
             else:
                 # Try CSV as fallback
                 try:
@@ -220,8 +225,9 @@ def dataset_detail(request, slug):
                     }
     
     except Exception as e:
-        error_message = f"Error reading dataset file: {str(e)}"
-        print(f"Error reading dataset file: {e}")
+        # A JSON error names the bad line, which the user can fix. Anything else gets a plain message.
+        error_message = str(e) if isinstance(e, JsonReadError) else USER_MESSAGES["file_read"]
+        log_exception("reading dataset file for the detail page")
         # Handle file reading errors gracefully
         preview_data = []
         columns = []
@@ -304,6 +310,8 @@ def dataset_preview(request, slug):
                 df = pd.read_csv(io.BytesIO(file_content))
             elif dataset.dataset_type == 'excel':
                 df = pd.read_excel(io.BytesIO(file_content))
+            elif dataset.dataset_type == 'json':
+                df = read_json_frame(file_content)
             else:
                 df = pd.read_csv(io.BytesIO(file_content))
             
@@ -345,7 +353,8 @@ def dataset_preview(request, slug):
         print(f"Error reading dataset file: {e}")
         context = {
             'dataset': dataset,
-            'error_message': 'Unable to load dataset preview',
+            # A JsonReadError message says what is wrong with the file (e.g. "Line 3 is not valid JSON").
+            'error_message': str(e) if isinstance(e, JsonReadError) else 'Unable to load dataset preview',
             'author_name': dataset.author.get_full_name() or dataset.author.username,
         }
         return render(request, 'dataset/dataset_preview.html', context)
@@ -524,9 +533,13 @@ def upload_dataset(request):
             dataset.save()
             
             # Trigger metadata AI engine asynchronously if supported
+            metadata_queued = False
             if dataset.dataset_type in ['csv', 'excel', 'parquet', 'json']:
                 try:
-                    source = SourceType.EXCEL if dataset.dataset_type == 'excel' else SourceType.CSV
+                    source = {
+                        'excel': SourceType.EXCEL,
+                        'json': SourceType.JSON,
+                    }.get(dataset.dataset_type, SourceType.CSV)
                     run = PipelineRun.objects.create(
                         dataset=dataset,
                         source=source,
@@ -546,6 +559,7 @@ def upload_dataset(request):
                         },
                         daemon=True
                     ).start()
+                    metadata_queued = True
                 except Exception as e:
                     # Log error but don't fail upload
                     import logging
@@ -567,6 +581,8 @@ def upload_dataset(request):
                     'message': f'Dataset uploaded successfully! You earned {upload_bonus} tokens.',
                     'dataset_id': dataset.pk,
                     'tokens_earned': upload_bonus,
+                    'dataset_title': dataset.title,
+                    'metadata_queued': metadata_queued,
                     'redirect_url': reverse('dataset_detail', kwargs={'slug': dataset.slug})
 
                 })
@@ -869,8 +885,8 @@ def generate_metadata(request, slug):
         import logging
         logging.getLogger(__name__).exception("Failed to trigger manual metadata pipeline: %s", e)
         return JsonResponse({
-            'success': False, 
-            'error': f'Failed to trigger metadata pipeline: {str(e)}'
+            'success': False,
+            'error': USER_MESSAGES["metadata_start"]
         }, status=500)
 
 @login_required

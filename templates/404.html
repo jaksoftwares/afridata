@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page not found - AfriData</title>
+    <style>
+        :root { --blue: #0B4F6C; --teal: #1B998B; --bg: #F7FAFC; --text: #4A5568; }
+        * { box-sizing: border-box; }
+        body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px; background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; }
+        .card { max-width: 480px; width: 100%; background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 40px 32px; text-align: center; box-shadow: 0 16px 40px -12px rgba(0,0,0,.08); }
+        .code { font-size: 14px; font-weight: 700; letter-spacing: .12em; color: var(--teal); text-transform: uppercase; margin-bottom: 8px; }
+        h1 { margin: 0 0 12px; font-size: 26px; color: var(--blue); }
+        p { margin: 0 0 24px; line-height: 1.6; }
+        .actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+        a.btn { display: inline-block; padding: 12px 22px; border-radius: 10px; font-weight: 700; font-size: 14px; text-decoration: none; }
+        a.primary { background: var(--blue); color: #fff; }
+        a.secondary { border: 1px solid #d1d5db; color: var(--text); }
+    </style>
+</head>
+<body>
+    <main class="card">
+        <div class="code">Error 404</div>
+        <h1>We can't find that page</h1>
+        <p>The link may be out of date, or the page may have moved. Check the address, or head back to AfriData.</p>
+        <div class="actions">
+            <a class="btn primary" href="/">Go to the home page</a>
+            <a class="btn secondary" href="javascript:history.back()">Go back</a>
+        </div>
+    </main>
+</body>
+</html>

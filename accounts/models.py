@@ -248,7 +248,9 @@ class EmailVerificationToken(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='verification_token')
     code = models.CharField(max_length=6)
     created_at = models.DateTimeField(auto_now_add=True)
-    
+    # Wrong guesses against this code. Reaching the limit forces a new code.
+    attempts = models.PositiveSmallIntegerField(default=0)
+
     def is_valid(self):
         # Valid for 24 hours
         from datetime import timedelta

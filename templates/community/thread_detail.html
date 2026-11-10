@@ -288,7 +288,7 @@
                     <h4 class="text-xl font-bold text-gray-900 mb-2">Join the Discussion</h4>
                     <p class="text-gray-600 mb-6 max-w-md">You need to have an account and be logged in to post replies or vote on comments.</p>
                     <div class="flex gap-4">
-                        <a href="{% url 'login' %}?next={{ request.path }}" class="bg-blue-600 text-white hover:bg-blue-700 font-bold py-2.5 px-6 rounded-xl transition-colors shadow-sm">Log In</a>
+                        <a href="{% url 'login_signup' %}?next={{ request.path }}" class="bg-blue-600 text-white hover:bg-blue-700 font-bold py-2.5 px-6 rounded-xl transition-colors shadow-sm">Log In</a>
                         <a href="{% url 'register' %}" class="bg-white text-gray-800 hover:bg-gray-50 border border-gray-300 font-bold py-2.5 px-6 rounded-xl transition-colors shadow-sm">Register</a>
                     </div>
                 </div>
