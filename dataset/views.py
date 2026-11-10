@@ -17,6 +17,9 @@ import numpy as np
 import io
 from django.conf import settings
 from . import chunked_upload
+from dataset.preview import read_preview_frame, PreviewUnavailable, PREVIEW_ROWS
+from django.http import FileResponse
+import os
 from pipeline_lib.json_reader import read_json_frame, JsonReadError
 from django.views.decorators.csrf import csrf_exempt
 from .forms import DatasetUploadForm, DatasetEditForm
@@ -86,40 +89,14 @@ def dataset_detail(request, slug):
     columns = []
     graph_data = None
     error_message = None
+    is_sample = False
     
     try:
         # Read dataset file for preview
         if dataset.file:
             # Reset file pointer to beginning
-            dataset.file.seek(0)
-            file_content = dataset.file.read()
-            
-            # Determine file type and read accordingly
-            if dataset.dataset_type == 'unstructured':
-                # Skip pandas parsing for unstructured data
-                df = pd.DataFrame()
-            elif dataset.dataset_type == 'csv':
-                try:
-                    df = pd.read_csv(io.BytesIO(file_content), encoding='utf-8')
-                except Exception:
-                    try:
-                        df = pd.read_csv(io.BytesIO(file_content), encoding='latin-1')
-                    except Exception:
-                        df = pd.read_csv(io.BytesIO(file_content))
-            elif dataset.dataset_type == 'excel':
-                df = pd.read_excel(io.BytesIO(file_content))
-            elif dataset.dataset_type == 'json':
-                # JSON array, single object or JSON Lines: layout detected from content.
-                df = read_json_frame(file_content)
-            else:
-                # Try CSV as fallback
-                try:
-                    df = pd.read_csv(io.BytesIO(file_content), encoding='utf-8')
-                except Exception:
-                    try:
-                        df = pd.read_csv(io.BytesIO(file_content), encoding='latin-1')
-                    except Exception:
-                        df = pd.read_csv(io.BytesIO(file_content))
+            # Bounded read: a few thousand rows at most, however large the file is.
+            df, is_sample = read_preview_frame(dataset)
             
             if not df.empty:
                 # Get columns
@@ -228,13 +205,16 @@ def dataset_detail(request, slug):
     
     except Exception as e:
         # A JSON error names the bad line, which the user can fix. Anything else gets a plain message.
-        error_message = str(e) if isinstance(e, JsonReadError) else USER_MESSAGES["file_read"]
+        error_message = str(e) if isinstance(e, (JsonReadError, PreviewUnavailable)) else USER_MESSAGES["file_read"]
         log_exception("reading dataset file for the detail page")
         # Handle file reading errors gracefully
         preview_data = []
         columns = []
         graph_data = None
     
+    if graph_data and is_sample:
+        graph_data['insight_label'] = f"{graph_data['insight_label']} (based on the first {PREVIEW_ROWS:,} rows)"
+
     # Get comments (top 5 by upvotes)
     comments = Comment.objects.filter(
         dataset=dataset
@@ -302,20 +282,7 @@ def dataset_preview(request, slug):
     
     try:
         if dataset.file:
-            # Reset file pointer to beginning
-            dataset.file.seek(0)
-            file_content = dataset.file.read()
-            
-            if dataset.dataset_type == 'unstructured':
-                df = pd.DataFrame()
-            elif dataset.dataset_type == 'csv':
-                df = pd.read_csv(io.BytesIO(file_content))
-            elif dataset.dataset_type == 'excel':
-                df = pd.read_excel(io.BytesIO(file_content))
-            elif dataset.dataset_type == 'json':
-                df = read_json_frame(file_content)
-            else:
-                df = pd.read_csv(io.BytesIO(file_content))
+            df, is_sample = read_preview_frame(dataset)
             
             columns = df.columns.tolist()
             
@@ -344,6 +311,7 @@ def dataset_preview(request, slug):
                 'has_previous': has_previous,
                 'has_next': has_next,
                 'total_rows': total_rows,
+                'is_sample': is_sample,
                 'start_row': start_idx + 1,
                 'end_row': min(end_idx, total_rows),
                 'author_name': dataset.author.get_full_name() or dataset.author.username,
@@ -356,7 +324,7 @@ def dataset_preview(request, slug):
         context = {
             'dataset': dataset,
             # A JsonReadError message says what is wrong with the file (e.g. "Line 3 is not valid JSON").
-            'error_message': str(e) if isinstance(e, JsonReadError) else 'Unable to load dataset preview',
+            'error_message': str(e) if isinstance(e, (JsonReadError, PreviewUnavailable)) else 'Unable to load dataset preview',
             'author_name': dataset.author.get_full_name() or dataset.author.username,
         }
         return render(request, 'dataset/dataset_preview.html', context)
@@ -501,17 +469,16 @@ def download_dataset(request, slug):
 
 
 def serve_file(dataset):
-    """Helper function to serve the dataset file"""
+    """Stream the dataset file to the browser in pieces, so large files never sit in memory."""
     if dataset.file:
-        dataset.file.seek(0)
-        response = HttpResponse(
-            dataset.file.read(), 
-            content_type='application/octet-stream'
+        filename = os.path.basename(dataset.file.name)
+        return FileResponse(
+            dataset.file.open('rb'),
+            as_attachment=True,
+            filename=filename,
+            content_type='application/octet-stream',
         )
-        response['Content-Disposition'] = f'attachment; filename="{dataset.file.name}"'
-        return response
-    else:
-        raise Http404("File not found")
+    raise Http404("File not found")
 
 
 @login_required
@@ -647,9 +614,7 @@ def home(request):
     total_views = Dataset.objects.aggregate(Sum('views'))['views__sum'] or 0
     
     # Get trending datasets (most downloaded in the last week)
-    trending_datasets = Dataset.objects.select_related('author').annotate(
-        recent_growth=Count('id')
-    ).order_by('-downloads', '-views')[:3]
+    trending_datasets = trending_service.trending_datasets(3)
     
     # Get top categories with counts
     all_datasets = Dataset.objects.all()
@@ -716,6 +681,7 @@ def home(request):
     return render(request, 'accounts/home.html', context)'''
 
 
+from dataset import trending as trending_service
 def dataset_list(request):
     """View to return dataset title, author name, downloads, views with search and filtering"""
     datasets = Dataset.objects.select_related('author').all()
@@ -723,6 +689,7 @@ def dataset_list(request):
     # Handle search
     search_query = request.GET.get('search', '')
     if search_query:
+        trending_service.log_search(search_query, request.user)  # feeds 'most searched' trending
         from django.db.models import Case, When, IntegerField, Value
         datasets = datasets.annotate(
             search_relevance=Case(

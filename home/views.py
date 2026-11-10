@@ -77,6 +77,8 @@ def get_recommended_datasets(request):
     
     return recommended, recommended_source
 
+from dataset import trending as trending_service
+
 def default_home(request):
     """
     Enhanced default homepage view with dynamic data.
@@ -108,9 +110,7 @@ def default_home(request):
     
     # Get trending datasets (most viewed/downloaded recently)
     one_week_ago = timezone.now() - timedelta(days=7)
-    trending_datasets = Dataset.objects.select_related('author').annotate(
-        popularity=Count('views') + Count('downloads')
-    ).order_by('-views', '-downloads')[:3]
+    trending_datasets = trending_service.trending_datasets(3)
     
     # Get popular topics from all datasets
     all_datasets = Dataset.objects.all()
@@ -165,6 +165,9 @@ def default_home(request):
                         'Egypt Tourism', 'Ethiopia Demographics']
         popular_terms.extend(default_terms)
     
+    # Real searched terms first, then the computed defaults.
+    popular_terms = trending_service.top_terms_for_display(popular_terms)
+
     context = {
         # Statistics
         'total_datasets': stats['total_datasets'] or 0,

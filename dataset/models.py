@@ -265,3 +265,12 @@ class Referral(models.Model):
     
     def __str__(self) -> str:
         return f"{self.referrer.username} referred {self.referred_user.username}"  # pyrefly: ignore[missing-attribute]
+
+class SearchEvent(models.Model):
+    """One search made on the datasets page. Feeds the 'most searched' part of trending."""
+    term = models.CharField(max_length=100, db_index=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='search_events')
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    def __str__(self) -> str:
+        return self.term

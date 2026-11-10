@@ -462,6 +462,7 @@ def process_signup(request):
 
 
 
+from dataset import trending as trending_service
 @login_required
 def home(request):
     """Comprehensive home page view with all necessary data"""
@@ -494,9 +495,7 @@ def home(request):
     total_views = Dataset.objects.aggregate(Sum('views'))['views__sum'] or 0
     
     # Trending datasets (most downloaded in the last week)
-    trending_datasets = Dataset.objects.select_related('author').annotate(
-        recent_growth=Count('id')
-    ).order_by('-downloads', '-views')[:3]
+    trending_datasets = trending_service.trending_datasets(3)
     
     # Get top categories with counts
     all_datasets = Dataset.objects.all()

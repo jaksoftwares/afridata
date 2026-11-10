@@ -137,7 +137,11 @@
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div class="pagination-info">
           <span class="font-medium">Showing rows {{ start_row|floatformat:0 }} to {{ end_row|floatformat:0 }}</span>
+          {% if is_sample %}
+          <span class="text-gray-500">of the first {{ total_rows|floatformat:0 }} rows. This is a preview sample of a larger file. Download it for the full data.</span>
+          {% else %}
           <span class="text-gray-500">of {{ total_rows|floatformat:0 }} total</span>
+          {% endif %}
           <div class="mt-1">
             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700">
               Page {{ current_page }} of {{ total_pages }}
