@@ -22,6 +22,9 @@
     // Text formats compress well in the browser; binary formats (Excel, Parquet, ZIP) don't.
     const COMPRESSIBLE = /\.(csv|tsv|txt|json|jsonl|ndjson|xml|ya?ml)$/i;
     const MAX_ATTEMPTS = 5;
+    const STALL_MS = 30000;        // no bytes for this long => the part is abandoned and retried
+    const RESPONSE_MS = 60000;     // time allowed for the server to answer after the last byte
+    const SPEED_WINDOW_MS = 10000; // speed is measured over the last 10 s, not since the start
     const STORE_PREFIX = 'afridata-upload:';
 
     // An error whose message is written for the user. `retryable` marks problems
@@ -109,18 +112,33 @@
         throw new UploadProblem(messageFor(0), true);
     }
 
-    // Send one part. Reports the bytes sent so far. Resolves once the server has the part.
-    function sendPart(url, blob, signal, onBytes) {
+    // Send one part. Reports bytes sent so far. Resolves once the server has the part.
+    // A part that stops making progress for stallMs is abandoned and reported as retryable,
+    // so a silently stuck connection can't hold the upload for hours.
+    function sendPart(url, blob, signal, onBytes, stallMs) {
         return new Promise(function (resolve, reject) {
             const xhr = new XMLHttpRequest();
+            let watchdog = null;
+            let stalled = false;
+            function arm(ms) {
+                clearTimeout(watchdog);
+                watchdog = setTimeout(function () { stalled = true; xhr.abort(); }, ms);
+            }
             xhr.open('PUT', url);
             xhr.setRequestHeader('X-CSRFToken', csrfToken());
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
             xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+            arm(stallMs);
             xhr.upload.onprogress = function (e) {
+                arm(stallMs);
                 if (e.lengthComputable) onBytes(e.loaded);
             };
+            xhr.upload.onload = function () {
+                // Everything has been sent; now wait for the server to answer.
+                arm(RESPONSE_MS);
+            };
             xhr.onload = function () {
+                clearTimeout(watchdog);
                 let data = null;
                 try { data = JSON.parse(xhr.responseText); } catch (e) { data = null; }
                 if (xhr.status === 200 && data && data.success) {
@@ -130,8 +148,12 @@
                     reject(new UploadProblem((data && data.message) || messageFor(xhr.status), retryable));
                 }
             };
-            xhr.onerror = function () { reject(new UploadProblem(messageFor(0), true)); };
-            xhr.onabort = function () { reject(abortError()); };
+            xhr.onerror = function () { clearTimeout(watchdog); reject(new UploadProblem(messageFor(0), true)); };
+            xhr.onabort = function () {
+                clearTimeout(watchdog);
+                if (stalled) reject(new UploadProblem('The connection stopped responding.', true));
+                else reject(abortError());
+            };
             if (signal) {
                 if (signal.aborted) { xhr.abort(); return; }
                 signal.addEventListener('abort', function () { xhr.abort(); }, { once: true });
@@ -196,10 +218,19 @@
         const inFlight = new Map();
         let finished = 0;
         arrived.forEach(function (index) { finished += partBytes(index); });
+        // Recent samples of bytes-sent, so the speed reflects the link now, not the first seconds.
+        const samples = [];
         function report() {
             let loaded = finished;
             inFlight.forEach(function (bytes) { loaded += bytes; });
-            options.onProgress(Math.min(loaded, file.size), file.size);
+            loaded = Math.min(loaded, file.size);
+            const now = Date.now();
+            samples.push([now, loaded]);
+            while (samples.length > 2 && now - samples[0][0] > SPEED_WINDOW_MS) samples.shift();
+            const oldest = samples[0];
+            const span = (now - oldest[0]) / 1000;
+            const speed = span > 0 ? (loaded - oldest[1]) / span : 0;
+            options.onProgress(loaded, file.size, speed);
         }
         report();
 
@@ -211,6 +242,21 @@
         // A failure in one part stops the others, so the user isn't left with half-sent work.
         const stop = new AbortController();
         if (signal) signal.addEventListener('abort', function () { stop.abort(); }, { once: true });
+
+        let limit = MAX_PARALLEL;  // parts allowed in flight right now
+        let okStreak = 0;
+        let running = 0;
+        async function gate() {
+            while (running >= limit) await wait(200, stop.signal);
+            running++;
+        }
+        function backOff() {
+            okStreak = 0;
+            limit = Math.max(1, limit - 1);
+        }
+        function creepUp() {
+            if (++okStreak >= 5 && limit < MAX_PARALLEL) { limit++; okStreak = 0; }
+        }
 
         async function sendOne(index) {
             const blob = file.slice(index * partSize, index * partSize + partBytes(index));
@@ -226,9 +272,10 @@
                     await sendPart(options.partUrl(uploadId, index), body, stop.signal, function (bytes) {
                         inFlight.set(index, bytes * ratio);
                         report();
-                    });
+                    }, options.stallMs || STALL_MS);
                     inFlight.delete(index);
                     finished += partBytes(index);
+                    creepUp();
                     report();
                     return;
                 } catch (err) {
@@ -236,13 +283,19 @@
                     report();
                     if (isAbort(err)) throw err;
                     if (!err.retryable) throw err;
+                    backOff();
                     if (attempt >= MAX_ATTEMPTS) {
                         throw new UploadProblem(
                             'The connection keeps dropping. Your progress is saved: press Upload again to continue.',
                             true
                         );
                     }
-                    await wait(Math.min(1000 * Math.pow(2, attempt - 1), 15000), stop.signal);
+                    const pause = Math.min(1000 * Math.pow(2, attempt - 1), 15000);
+                    if (options.onStatus) {
+                        options.onStatus('Slow connection. Retrying part ' + (index + 1) + ' of ' + total +
+                            ' (attempt ' + (attempt + 1) + ' of ' + MAX_ATTEMPTS + ')...');
+                    }
+                    await wait(pause, stop.signal);
                 }
             }
         }
@@ -251,11 +304,14 @@
         async function worker() {
             while (next < pending.length) {
                 const index = pending[next++];
+                await gate();
                 try {
                     await sendOne(index);
                 } catch (err) {
                     stop.abort();
                     throw err;
+                } finally {
+                    running--;
                 }
             }
         }
