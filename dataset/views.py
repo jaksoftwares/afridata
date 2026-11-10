@@ -682,12 +682,46 @@ def home(request):
 
 
 from dataset import trending as trending_service
+LICENSE_KEYWORDS = {
+    "cc": "creative",
+    "gpl": "gpl",
+    "odb": "open database",
+}
+FORMAT_CHOICES = [
+    ("csv", "CSV"), ("excel", "Excel"), ("json", "JSON"), ("parquet", "Parquet"),
+    ("xml", "XML"), ("yaml", "YAML"), ("txt", "Text"), ("pdf", "PDF"),
+]
+LICENSE_CHOICES = [
+    ("cc", "Creative Commons"), ("gpl", "GPL"), ("odb", "Open Database"),
+]
+RATING_CHOICES = [("", "Any rating"), ("3", "3 stars and up"), ("4", "4 stars and up"), ("4.5", "4.5 stars and up")]
+CATEGORY_SHORTCUTS = [
+    ("Trending", "trending", "fas fa-fire-alt text-brand-amber"),
+    ("Agriculture", "agriculture", "fas fa-seedling text-brand-green"),
+    ("Finance", "finance", "fas fa-chart-line"),
+    ("Healthcare", "healthcare", "fas fa-user-md"),
+    ("Education", "education", "fas fa-graduation-cap"),
+]
+SORT_CHOICES = [
+    ("relevance", "Most relevant"), ("recent", "Newest"), ("downloads", "Most downloaded"),
+    ("rating", "Highest rated"), ("tokens_asc", "Lowest token cost"), ("tokens_desc", "Highest token cost"),
+]
+
+
+def _float_or_none(value):
+    try:
+        return float(value) if value not in (None, "") else None
+    except (TypeError, ValueError):
+        return None
+
+
 def dataset_list(request):
-    """View to return dataset title, author name, downloads, views with search and filtering"""
+    """Browse datasets. Every filter on the page is applied here."""
     datasets = Dataset.objects.select_related('author').all()
-    
-    # Handle search
-    search_query = request.GET.get('search', '')
+    get = request.GET
+
+    # Search across title, topics, description and author.
+    search_query = get.get('search', '').strip()
     if search_query:
         trending_service.log_search(search_query, request.user)  # feeds 'most searched' trending
         from django.db.models import Case, When, IntegerField, Value
@@ -705,53 +739,83 @@ def dataset_list(request):
             Q(bio__icontains=search_query) |  # type: ignore
             Q(topics__icontains=search_query) |  # type: ignore
             Q(author__username__icontains=search_query)
-        ).order_by('-search_relevance')
-    
-    # Handle category filter
-    category = request.GET.get('category', '')
-    if category and category != 'all':
+        )
+
+    # Category chips. "Trending" is the blended list from dataset/trending.py.
+    category = get.get('category', '').strip().lower()
+    if category == 'trending':
+        trending_ids = [d.pk for d in trending_service.trending_datasets(60)]
+        datasets = datasets.filter(pk__in=trending_ids)
+    elif category and category != 'all':
         datasets = datasets.filter(topics__icontains=category)
-    
-    # Handle format filter
-    format_filter = request.GET.get('format', '')
-    if format_filter:
-        datasets = datasets.filter(dataset_type=format_filter)
-    
-    # Handle premium filter
-    premium_filter = request.GET.get('premium', '')
-    if premium_filter == 'true':
-        datasets = datasets.filter(is_premium=True)
-    elif premium_filter == 'false':
-        datasets = datasets.filter(is_premium=False)
-    
-    # Handle quality tier filter
-    quality_filter = request.GET.get('quality', '')
-    if quality_filter:
-        datasets = datasets.filter(quality_tier=quality_filter)
-    
-    # Handle sorting
-    sort_by = request.GET.get('sort', 'relevance')
+
+    # File formats: any number can be ticked.
+    valid_formats = {value for value, _ in FORMAT_CHOICES}
+    selected_formats = [f for f in get.getlist('format') if f in valid_formats]
+    if selected_formats:
+        datasets = datasets.filter(dataset_type__in=selected_formats)
+
+    # Licences: any number can be ticked.
+    selected_licenses = [key for key in get.getlist('license') if key in LICENSE_KEYWORDS]
+    if selected_licenses:
+        licence_q = Q()
+        for key in selected_licenses:
+            licence_q |= Q(dataset_license__icontains=LICENSE_KEYWORDS[key])
+        datasets = datasets.filter(licence_q)
+
+    # File size range, in MB.
+    min_size = _float_or_none(get.get('min_size'))
+    max_size = _float_or_none(get.get('max_size'))
+    if min_size is not None:
+        datasets = datasets.filter(file_size_mb__gte=min_size)
+    if max_size is not None:
+        datasets = datasets.filter(file_size_mb__lte=max_size)
+
+    # Minimum rating (0 to 5).
+    min_rating = _float_or_none(get.get('min_rating'))
+    if min_rating:
+        datasets = datasets.filter(rating__gte=min_rating)
+
+    # Sorting.
+    sort_by = get.get('sort', 'relevance')
     if sort_by == 'downloads':
-        datasets = datasets.order_by('-downloads')
+        datasets = datasets.order_by('-downloads', '-views')
     elif sort_by == 'recent':
         datasets = datasets.order_by('-created_at')
     elif sort_by == 'rating':
-        datasets = datasets.order_by('-rating')
+        datasets = datasets.order_by('-rating', '-downloads')
     elif sort_by == 'tokens_asc':
-        datasets = datasets.order_by('token_cost')
+        datasets = datasets.order_by('token_cost', '-downloads')
     elif sort_by == 'tokens_desc':
-        datasets = datasets.order_by('-token_cost')
-    else:  # relevance (default)
-        if search_query:
-            datasets = datasets.order_by('-search_relevance', '-views', '-downloads')
-        else:
-            datasets = datasets.order_by('-views', '-downloads')
-    
-    # Pagination
-    paginator = Paginator(datasets, 12)  # Show 12 datasets per page
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    
+        datasets = datasets.order_by('-token_cost', '-downloads')
+    elif search_query:
+        datasets = datasets.order_by('-search_relevance', '-views', '-downloads')
+    else:
+        datasets = datasets.order_by('-views', '-downloads')
+
+    # Pagination, keeping every other filter in the links.
+    paginator = Paginator(datasets, 12)
+    page_obj = paginator.get_page(get.get('page'))
+    filter_params = get.copy()
+    filter_params.pop('page', None)
+    filter_query = filter_params.urlencode()
+
+    # Chips that show what is applied, each removing one filter.
+    active_filters = []
+    if search_query:
+        active_filters.append({'label': f'Search: "{search_query}"', 'remove': 'search'})
+    if category and category != 'all':
+        active_filters.append({'label': f'Topic: {category.title()}', 'remove': 'category'})
+    for value, label in FORMAT_CHOICES:
+        if value in selected_formats:
+            active_filters.append({'label': label, 'remove': 'format', 'value': value})
+    for key in selected_licenses:
+        active_filters.append({'label': {'cc': 'Creative Commons', 'gpl': 'GPL', 'odb': 'Open Database'}[key], 'remove': 'license', 'value': key})
+    if min_size is not None or max_size is not None:
+        active_filters.append({'label': f"Size {get.get('min_size') or '0'}-{get.get('max_size') or 'any'} MB", 'remove': 'size'})
+    if min_rating:
+        active_filters.append({'label': f'Rating {min_rating:g}+', 'remove': 'min_rating'})
+
     dataset_data = []
     for dataset in page_obj:
         dataset_data.append({
@@ -778,13 +842,25 @@ def dataset_list(request):
     context = {
         'datasets': dataset_data,
         'page_obj': page_obj,
+        'total_count': paginator.count,
         'search_query': search_query,
         'current_category': category,
-        'current_format': format_filter,
+        'selected_formats': selected_formats,
+        'selected_licenses': selected_licenses,
+        'min_size': get.get('min_size', ''),
+        'max_size': get.get('max_size', ''),
+        'min_rating': get.get('min_rating', ''),
         'current_sort': sort_by,
-        'current_premium': premium_filter,
-        'current_quality': quality_filter,
+        'format_choices': FORMAT_CHOICES,
+        'license_choices': LICENSE_CHOICES,
+        'rating_choices': RATING_CHOICES,
+        'category_shortcuts': CATEGORY_SHORTCUTS,
+        'sort_choices': SORT_CHOICES,
+        'active_filters': active_filters,
+        'filter_query': filter_query,
     }
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render(request, 'dataset/_dataset_results.html', context)
     return render(request, 'dataset/dataset_list.html', context)
 
 

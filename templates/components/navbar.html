@@ -1,11 +1,11 @@
 {% load static %}
 <!-- Mobile Menu Backdrop -->
 <div id="mobileMenuBackdrop" onclick="toggleMobileMenu()"
-    class="fixed inset-0 bg-brand-blue/20 backdrop-blur-md z-40 hidden transition-all duration-500 opacity-0"></div>
+    class="fixed inset-0 bg-brand-blue/20 backdrop-blur-md z-[55] hidden transition-all duration-500 opacity-0"></div>
 
 <!-- Mobile Menu Drawer -->
 <div id="mobileMenu"
-    class="mobile-menu fixed inset-y-0 left-0 w-80 bg-white/95 backdrop-blur-xl shadow-[20px_0_60px_-15px_rgba(0,0,0,0.1)] z-50 md:hidden flex flex-col transform -translate-x-full transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1)">
+    class="mobile-menu fixed inset-y-0 left-0 w-80 bg-white/95 backdrop-blur-xl shadow-[20px_0_60px_-15px_rgba(0,0,0,0.1)] z-[60] md:hidden flex flex-col transform -translate-x-full transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1)">
     <!-- Header in Drawer -->
     <div class="p-6 border-b border-gray-100/50 flex justify-between items-center bg-brand-offwhite/30">
         <a href="{% url 'home' %}" class="flex items-center no-underline">
@@ -208,8 +208,23 @@
             {% endif %}
         </nav>
 
+        <!-- Mobile quick actions (phones only; the drawer holds the full menu) -->
+        <div class="md:hidden flex items-center gap-2 ml-auto mr-2">
+            {% if user.is_authenticated %}
+            <a href="{% url 'upload_dataset' %}" aria-label="Upload a dataset"
+                class="flex items-center justify-center w-11 h-11 rounded-xl bg-brand-blue text-white no-underline hover:no-underline shadow-sm">
+                <i class="fas fa-cloud-upload-alt text-lg"></i>
+            </a>
+            {% else %}
+            <a href="{% url 'login_signup' %}?mode=login"
+                class="flex items-center h-11 px-3 text-sm font-semibold text-gray-700 no-underline hover:no-underline">Log in</a>
+            <a href="{% url 'login_signup' %}?mode=signup"
+                class="flex items-center h-11 px-4 rounded-xl bg-brand-teal text-white text-sm font-semibold no-underline hover:no-underline shadow-sm">Sign up</a>
+            {% endif %}
+        </div>
+
         <!-- Mobile Menu Button -->
-        <button onclick="toggleMobileMenu()"
+        <button onclick="toggleMobileMenu()" aria-label="Open menu" aria-controls="mobileMenu"
             class="md:hidden flex items-center justify-center w-11 h-11 text-gray-500 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all border-0 cursor-pointer shadow-sm">
             <i class="fas fa-bars text-lg"></i>
         </button>

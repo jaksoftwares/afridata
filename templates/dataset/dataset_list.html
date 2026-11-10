@@ -1,486 +1,323 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Dataset Library - Browse All Datasets - AfriData{% endblock %}
+{% block title %}Datasets - AfriData{% endblock %}
 
 {% block header_class %}gradient-header{% endblock %}
 
 {% block header_content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative overflow-hidden">
-    <!-- Subtle Background Elements -->
-    <div class="absolute inset-0 z-0 pointer-events-none">
-        <div class="absolute top-[-20%] left-[-10%] w-[40%] h-[70%] bg-brand-teal/10 blur-[100px] rounded-full"></div>
-    </div>
-
-    <div class="relative z-10 text-center">
-        <h1 class="text-4xl md:text-6xl font-bold mb-6 !text-white tracking-tight font-title">Datasets</h1>
-        <p class="text-xl text-brand-offwhite/80 mb-10 font-light max-w-2xl mx-auto brand-body">Explore, analyze, and share quality data.</p>
-        
-        <!-- Horizontal Discovery Chips -->
-        <div class="flex items-center justify-center space-x-3 overflow-x-auto pb-4 no-scrollbar max-w-4xl mx-auto">
-            <a href="?category=trending" class="whitespace-nowrap px-6 py-2.5 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 text-white text-xs font-bold uppercase tracking-widest transition-all">
-                <i class="fas fa-fire-alt mr-2 text-brand-amber"></i> Trending
-            </a>
-            <a href="?category=agriculture" class="whitespace-nowrap px-6 py-2.5 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 text-white text-xs font-bold uppercase tracking-widest transition-all">
-                <i class="fas fa-seedling mr-2 text-brand-green"></i> Agriculture
-            </a>
-            <a href="?category=finance" class="whitespace-nowrap px-6 py-2.5 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 text-white text-xs font-bold uppercase tracking-widest transition-all">
-                <i class="fas fa-chart-line mr-2 text-brand-blue"></i> Finance
-            </a>
-            <a href="?category=healthcare" class="whitespace-nowrap px-6 py-2.5 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 text-white text-xs font-bold uppercase tracking-widest transition-all">
-                <i class="fas fa-user-md mr-2 text-red-400"></i> Healthcare
-            </a>
-            <a href="?category=education" class="whitespace-nowrap px-6 py-2.5 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 text-white text-xs font-bold uppercase tracking-widest transition-all">
-                <i class="fas fa-graduation-cap mr-2 text-blue-400"></i> Education
-            </a>
-        </div>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-6 md:pt-16 md:pb-10 text-center">
+    <h1 class="text-3xl md:text-5xl font-bold !text-white tracking-tight font-title">Datasets</h1>
+    <p class="mt-3 text-base md:text-lg text-white/80 max-w-2xl mx-auto">Explore, analyse and share quality African data.</p>
+</div>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+    <!-- Category shortcuts: scroll sideways on phones, centred on wide screens -->
+    <div class="flex gap-2 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap sm:justify-center">
+        {% for label, value, icon in category_shortcuts %}
+        <a href="?category={{ value }}"
+           class="shrink-0 inline-flex items-center h-10 px-4 rounded-full text-sm font-semibold no-underline hover:no-underline transition-colors
+                  {% if current_category == value %}bg-white text-brand-blue{% else %}bg-white/10 text-white border border-white/20 hover:bg-white/20{% endif %}">
+            <i class="{{ icon }} mr-2 opacity-80"></i>{{ label }}
+        </a>
+        {% endfor %}
     </div>
 </div>
 {% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 relative z-30">
-    <!-- Main Discovery Interface -->
-    <div class="flex flex-col lg:flex-row gap-10">
-        <!-- Professional Filter Sidebar -->
-        <aside class="w-full lg:w-72 flex-shrink-0 space-y-8">
-            <!-- Sidebar Header (Mobile Toggle etc) -->
-            <div class="lg:hidden flex items-center justify-between mb-6 p-4 bg-white rounded-2xl shadow-sm border border-gray-100">
-                <span class="text-xs font-bold uppercase tracking-widest text-gray-400">Filters</span>
-                <button id="mobileFilterToggle" class="text-brand-blue p-2">
-                    <i class="fas fa-sliders-h"></i>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10">
+    <form id="filterForm" method="GET" action="{% url 'dataset_list' %}"
+          class="lg:grid lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-10 lg:items-start">
+        <input type="hidden" name="category" id="categoryInput" value="{{ current_category }}">
+
+        <!-- Toolbar: search, sort and (on phones) the filter button -->
+        <div class="lg:col-span-2 flex flex-col sm:flex-row gap-3 mb-6">
+            <div class="relative flex-1">
+                <label for="datasetLiveSearch" class="sr-only">Search datasets</label>
+                <i class="fas fa-search pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="search" id="datasetLiveSearch" name="search" value="{{ search_query }}"
+                       placeholder="Search by title, topic, description or author"
+                       autocomplete="off"
+                       class="w-full h-12 pl-11 pr-12 rounded-xl border border-gray-200 bg-white text-[15px] text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-brand-teal/15 focus:border-brand-teal">
+                <span id="datasetSearchLoading" class="hidden absolute right-4 top-1/2 -translate-y-1/2 text-brand-teal" aria-hidden="true">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </span>
+            </div>
+            <div class="flex gap-3">
+                <label class="sr-only" for="sortSelect">Sort by</label>
+                <select id="sortSelect" name="sort"
+                        class="flex-1 sm:flex-none h-12 pl-4 pr-10 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 focus:outline-none focus:ring-4 focus:ring-brand-teal/15 focus:border-brand-teal">
+                    {% for value, label in sort_choices %}
+                    <option value="{{ value }}" {% if current_sort == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <button type="button" id="openFilters"
+                        class="lg:hidden h-12 px-4 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 inline-flex items-center gap-2"
+                        aria-controls="filterPanel" aria-expanded="false">
+                    <i class="fas fa-sliders-h"></i> Filters
+                    <span id="filterCount" class="hidden min-w-[1.5rem] h-6 px-1.5 rounded-full bg-brand-teal text-white text-xs leading-6 text-center"></span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Filters: a sidebar on desktop, a full-screen sheet on phones -->
+        <aside id="filterPanel"
+               class="hidden lg:block fixed inset-0 z-[70] bg-white overflow-y-auto p-5 lg:static lg:z-auto lg:p-0 lg:overflow-visible lg:bg-transparent"
+               aria-label="Filter datasets">
+            <div class="flex items-center justify-between mb-5 lg:hidden">
+                <h2 class="text-lg font-bold text-gray-900">Filters</h2>
+                <button type="button" id="closeFilters" aria-label="Close filters"
+                        class="w-11 h-11 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center">
+                    <i class="fas fa-times"></i>
                 </button>
             </div>
 
-            <div id="filterSidebar" class="hidden lg:block space-y-8 lg:sticky lg:top-8 transition-all">
-                <!-- Search & Tags -->
-                <div class="space-y-4">
-                    <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Search Keywords</h4>
-                    <div class="relative group">
-                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-brand-teal text-xs transition-colors"></i>
-                        <input type="text" form="mainFilterForm" name="search" value="{{ search_query }}" placeholder="Filter by tags..." class="w-full pl-10 pr-4 py-3 bg-white border border-gray-100 rounded-xl text-xs font-medium focus:ring-2 focus:ring-brand-teal/20 transition-all">
+            <div class="space-y-7 lg:sticky lg:top-24 lg:bg-white lg:rounded-2xl lg:border lg:border-gray-200 lg:p-6">
+                <fieldset>
+                    <legend class="text-sm font-bold text-gray-900 mb-3">File format</legend>
+                    <div class="grid grid-cols-2 lg:grid-cols-1 gap-2.5">
+                        {% for value, label in format_choices %}
+                        <label class="flex items-center gap-3 min-h-[44px] lg:min-h-0 text-sm text-gray-700 cursor-pointer">
+                            <input type="checkbox" name="format" value="{{ value }}" {% if value in selected_formats %}checked{% endif %}
+                                   class="w-5 h-5 rounded border-gray-300 text-brand-teal focus:ring-brand-teal/30">
+                            {{ label }}
+                        </label>
+                        {% endfor %}
                     </div>
-                </div>
+                </fieldset>
 
-                <!-- File Size -->
-                <div class="space-y-4">
-                    <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">File Size (MB)</h4>
-                    <div class="flex items-center space-x-2">
-                        <input type="number" form="mainFilterForm" name="min_size" placeholder="Min" class="w-full px-3 py-2.5 bg-white border border-gray-100 rounded-lg text-xs font-medium">
-                        <span class="text-gray-300 text-[10px] uppercase font-bold">TO</span>
-                        <input type="number" form="mainFilterForm" name="max_size" placeholder="Max" class="w-full px-3 py-2.5 bg-white border border-gray-100 rounded-lg text-xs font-medium">
+                <fieldset>
+                    <legend class="text-sm font-bold text-gray-900 mb-3">Licence</legend>
+                    <div class="space-y-2.5">
+                        {% for value, label in license_choices %}
+                        <label class="flex items-center gap-3 min-h-[44px] lg:min-h-0 text-sm text-gray-700 cursor-pointer">
+                            <input type="checkbox" name="license" value="{{ value }}" {% if value in selected_licenses %}checked{% endif %}
+                                   class="w-5 h-5 rounded border-gray-300 text-brand-teal focus:ring-brand-teal/30">
+                            {{ label }}
+                        </label>
+                        {% endfor %}
                     </div>
-                </div>
+                </fieldset>
 
-                <!-- File Types -->
-                <div class="space-y-4">
-                    <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">File Types</h4>
-                    <div class="space-y-2">
-                        <label class="flex items-center group cursor-pointer">
-                            <input type="checkbox" form="mainFilterForm" name="format" value="csv" class="w-4 h-4 rounded border-gray-200 text-brand-teal focus:ring-brand-teal/20">
-                            <span class="ml-3 text-xs font-medium text-gray-600 group-hover:text-brand-blue transition-colors uppercase">CSV</span>
-                        </label>
-                        <label class="flex items-center group cursor-pointer">
-                            <input type="checkbox" form="mainFilterForm" name="format" value="json" class="w-4 h-4 rounded border-gray-200 text-brand-teal focus:ring-brand-teal/20">
-                            <span class="ml-3 text-xs font-medium text-gray-600 group-hover:text-brand-blue transition-colors uppercase">JSON</span>
-                        </label>
-                        <label class="flex items-center group cursor-pointer">
-                            <input type="checkbox" form="mainFilterForm" name="format" value="sqlite" class="w-4 h-4 rounded border-gray-200 text-brand-teal focus:ring-brand-teal/20">
-                            <span class="ml-3 text-xs font-medium text-gray-600 group-hover:text-brand-blue transition-colors uppercase">SQLite</span>
-                        </label>
-                        <label class="flex items-center group cursor-pointer">
-                            <input type="checkbox" form="mainFilterForm" name="format" value="parquet" class="w-4 h-4 rounded border-gray-200 text-brand-teal focus:ring-brand-teal/20">
-                            <span class="ml-3 text-xs font-medium text-gray-600 group-hover:text-brand-blue transition-colors uppercase">Parquet</span>
-                        </label>
-                        <label class="flex items-center group cursor-pointer">
-                            <input type="checkbox" form="mainFilterForm" name="format" value="bigquery" class="w-4 h-4 rounded border-gray-200 text-brand-teal focus:ring-brand-teal/20">
-                            <span class="ml-3 text-xs font-medium text-gray-600 group-hover:text-brand-blue transition-colors uppercase">BigQuery</span>
-                        </label>
+                <fieldset>
+                    <legend class="text-sm font-bold text-gray-900 mb-3">File size (MB)</legend>
+                    <div class="flex items-center gap-2">
+                        <label class="sr-only" for="minSize">Minimum size in MB</label>
+                        <input type="number" id="minSize" name="min_size" min="0" step="any" value="{{ min_size }}" placeholder="Min"
+                               class="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-teal/30">
+                        <span class="text-gray-400 text-sm">to</span>
+                        <label class="sr-only" for="maxSize">Maximum size in MB</label>
+                        <input type="number" id="maxSize" name="max_size" min="0" step="any" value="{{ max_size }}" placeholder="Max"
+                               class="w-full h-11 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-teal/30">
                     </div>
-                </div>
+                </fieldset>
 
-                <!-- Licenses -->
-                <div class="space-y-4">
-                    <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Licenses</h4>
-                    <div class="space-y-2">
-                        <label class="flex items-center group cursor-pointer">
-                            <input type="checkbox" form="mainFilterForm" name="license" value="cc" class="w-4 h-4 rounded border-gray-200 text-brand-teal focus:ring-brand-teal/20">
-                            <span class="ml-3 text-xs font-medium text-gray-600 group-hover:text-brand-blue uppercase">Creative Commons</span>
+                <fieldset>
+                    <legend class="text-sm font-bold text-gray-900 mb-3">Minimum rating</legend>
+                    <div class="space-y-2.5">
+                        {% for value, label in rating_choices %}
+                        <label class="flex items-center gap-3 min-h-[44px] lg:min-h-0 text-sm text-gray-700 cursor-pointer">
+                            <input type="radio" name="min_rating" value="{{ value }}" {% if min_rating == value %}checked{% endif %}
+                                   class="w-5 h-5 border-gray-300 text-brand-teal focus:ring-brand-teal/30">
+                            {{ label }}
                         </label>
-                        <label class="flex items-center group cursor-pointer">
-                            <input type="checkbox" form="mainFilterForm" name="license" value="gpl" class="w-4 h-4 rounded border-gray-200 text-brand-teal focus:ring-brand-teal/20">
-                            <span class="ml-3 text-xs font-medium text-gray-600 group-hover:text-brand-blue uppercase">GPL</span>
-                        </label>
-                        <label class="flex items-center group cursor-pointer">
-                            <input type="checkbox" form="mainFilterForm" name="license" value="odb" class="w-4 h-4 rounded border-gray-200 text-brand-teal focus:ring-brand-teal/20">
-                            <span class="ml-3 text-xs font-medium text-gray-600 group-hover:text-brand-blue uppercase">Open Database</span>
-                        </label>
+                        {% endfor %}
                     </div>
-                </div>
+                </fieldset>
 
-                <!-- Usability Rating -->
-                <div class="space-y-4">
-                    <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Usability Rating</h4>
-                    <div class="space-y-2">
-                        <label class="flex items-center group cursor-pointer">
-                            <input type="radio" form="mainFilterForm" name="usability" value="8" class="w-4 h-4 border-gray-200 text-brand-teal focus:ring-brand-teal/20">
-                            <span class="ml-3 text-xs font-medium text-gray-600">8.00 or higher</span>
-                        </label>
-                        <label class="flex items-center group cursor-pointer">
-                            <input type="radio" form="mainFilterForm" name="usability" value="9" class="w-4 h-4 border-gray-200 text-brand-teal focus:ring-brand-teal/20">
-                            <span class="ml-3 text-xs font-medium text-gray-600">9.00 or higher</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="pt-6">
-                    <form id="mainFilterForm" method="GET" action="{% url 'dataset_list' %}" class="space-y-3">
-                        <button type="submit" class="w-full py-4 bg-brand-blue text-white rounded-xl text-xs font-bold uppercase tracking-widest shadow-xl hover:bg-brand-blue/90 transition-all">
-                            Apply Filters
-                        </button>
-                        <a href="{% url 'dataset_list' %}" class="block w-full py-4 bg-white text-gray-400 border border-gray-100 rounded-xl text-xs font-bold uppercase tracking-widest text-center hover:bg-gray-50 transition-all">
-                            Clear All
-                        </a>
-                    </form>
+                <div class="flex items-center justify-between gap-3">
+                    <button type="button" data-clear-all class="text-sm font-semibold text-brand-teal hover:underline h-11">Clear all filters</button>
+                    <button type="submit" class="lg:hidden h-11 px-6 rounded-xl bg-brand-blue text-white font-semibold">Show results</button>
                 </div>
             </div>
         </aside>
 
-        <!-- Dataset Grid Content -->
-        <div class="flex-1">
-            <!-- Dedicated Dataset Search -->
-            <div class="mb-8">
-                <div class="relative group shadow-sm rounded-2xl">
-                    <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-                        <i class="fas fa-search text-gray-400 group-focus-within:text-brand-blue text-lg transition-colors"></i>
-                    </div>
-                    <input type="text" id="datasetLiveSearch" placeholder="Search datasets by title, topic, keyword, organization, or description..." 
-                           class="w-full pl-14 pr-12 py-4.5 bg-white border border-gray-200 rounded-2xl text-[15px] text-gray-900 font-medium focus:ring-4 focus:ring-brand-blue/10 focus:border-brand-blue transition-all outline-none shadow-sm" autocomplete="off">
-                    <div class="absolute inset-y-0 right-0 pr-4 flex items-center gap-2">
-                        <div id="datasetSearchLoading" class="hidden pointer-events-none">
-                            <i class="fas fa-spinner fa-spin text-brand-blue"></i>
-                        </div>
-                        <button type="button" id="clearDatasetSearch" class="hidden text-gray-400 hover:text-red-500 transition-colors focus:outline-none w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
+        <!-- Results -->
+        <section class="min-w-0" aria-label="Dataset results">
+            {% include 'dataset/_dataset_results.html' %}
+        </section>
+    </form>
 
-            <!-- Active Filters & Result Count -->
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-6">
-                <div class="flex items-center space-x-4">
-                    <h2 class="text-xl font-bold text-gray-900 font-title">Datasets</h2>
-                    <div class="h-4 w-px bg-gray-200"></div>
-                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest" id="datasetCountDisplay">
-                        Showing <span id="currentDatasetCount">{{ page_obj.paginator.count }}</span> datasets
-                    </p>
-                </div>
-                
-                <div class="flex items-center gap-3">
-                    <div class="flex bg-brand-offwhite p-1 rounded-xl">
-                        <button type="button" id="gridView" class="p-2 rounded-lg transition-all view-toggle active-view" title="Grid View">
-                            <i class="fas fa-th-large text-xs"></i>
-                        </button>
-                        <button type="button" id="listView" class="p-2 rounded-lg transition-all view-toggle text-gray-400 hover:text-brand-blue" title="List View">
-                            <i class="fas fa-list text-xs"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="datasetContainer" class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {% for dataset in datasets %}
-        <div class="group card-fancy !p-0 overflow-hidden flex flex-col border-2 border-transparent hover:border-brand-teal/20 transition-all duration-300 cursor-pointer" onclick="window.location.href=`{% url 'dataset_detail' dataset.slug %}`">
-
-            <!-- Dataset Cover Image -->
-            <div class="aspect-video w-full relative overflow-hidden bg-gray-100">
-                <img src="{{ dataset.cover_photo }}" 
-                     alt="Dataset Cover" 
-                     class="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700">
-                
-                <!-- Overlay Gradient -->
-                <div class="absolute inset-0 bg-gradient-to-t from-gray-900/60 via-transparent to-transparent"></div>
-                
-                <!-- Format Badge -->
-                <div class="absolute top-4 right-4 z-10 flex items-center space-x-2">
-                    <span class="bg-white/95 backdrop-blur-sm text-brand-blue text-[9px] font-bold px-2.5 py-1.5 rounded-lg border border-white/20 shadow-lg uppercase tracking-wider">
-                        <i class="fas fa-file-code mr-1.5 opacity-50"></i> {{ dataset.dataset_type|default:"Data" }}
-                    </span>
-                    {% if dataset.is_premium %}
-                    <span class="bg-brand-amber text-white text-[9px] font-bold px-2.5 py-1.5 rounded-lg shadow-lg uppercase tracking-wider">
-                        <i class="fas fa-crown"></i>
-                    </span>
-                    {% endif %}
-                </div>
-
-                <!-- Technical Specs Overlays -->
-                <div class="absolute bottom-4 left-4 flex items-center space-x-3 text-white">
-                    <div class="flex items-center text-[10px] font-bold drop-shadow-md">
-                         <i class="far fa-eye mr-1.5 opacity-80"></i> {{ dataset.views|default:"0" }}
-                    </div>
-                </div>
-            </div>
-
-            <div class="p-8 pb-10 flex-1">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex items-center space-x-2">
-                        <div class="w-5 h-5 rounded-full bg-brand-blue text-white flex items-center justify-center text-[8px] font-bold border border-white/20">
-                            {{ dataset.author_name|first|upper }}
-                        </div>
-                        <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{{ dataset.author_name }}</span>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <span class="bg-brand-green/10 text-brand-green text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-widest">
-                            Usability {% if dataset.metadata_quality_score %}{% widthratio dataset.metadata_quality_score 1 100 %}{% else %}97{% endif %}%
-                        </span>
-                    </div>
-                </div>
-
-                <h3 class="text-xl font-bold mb-3 group-hover:text-brand-blue transition-colors line-clamp-2 leading-tight font-title">{{ dataset.title }}</h3>
-                <p class="text-gray-500 text-xs mb-8 leading-relaxed line-clamp-2">{% if dataset.bio %}{{ dataset.bio }}{% else %}Curated African datasets optimized for research.{% endif %}</p>
-                
-                <div class="flex flex-wrap gap-2 mb-8">
-                    {% for topic in dataset.topics|slice:":3" %}
-                    <span class="bg-gray-50 text-gray-500 text-[9px] font-bold px-2.5 py-1 rounded-md border border-gray-100">{{ topic }}</span>
-                    {% endfor %}
-                </div>
-
-                <div class="flex items-center justify-between pt-6 border-t border-gray-100 mt-auto">
-                    <div class="flex items-center space-x-4">
-                        <div class="flex flex-col">
-                            <span class="text-[8px] uppercase tracking-widest text-gray-400 font-bold mb-0.5">Size</span>
-                            <span class="text-[10px] font-bold text-brand-blue">{{ dataset.file_size_mb|floatformat:1 }} MB</span>
-                        </div>
-                        <div class="h-6 w-px bg-gray-100"></div>
-                        <div class="flex flex-col">
-                            <span class="text-[8px] uppercase tracking-widest text-gray-400 font-bold mb-0.5">Access</span>
-                            <span class="text-[10px] font-bold text-brand-blue tabular-nums">{{ dataset.downloads }} users</span>
-                        </div>
-                    </div>
-                    
-                    <a href="{% url 'dataset_detail' dataset.slug %}" class="w-10 h-10 rounded-full bg-brand-offwhite text-brand-blue flex items-center justify-center hover:bg-brand-blue hover:text-white transition-all">
-
-                        <i class="fas fa-arrow-right text-xs"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
-        {% empty %}
-        <div class="col-span-full py-24 text-center">
-            <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-brand-offwhite text-gray-300 text-4xl mb-6">
-                <i class="fas fa-search"></i>
-            </div>
-            <h3 class="text-2xl font-bold text-gray-900 mb-2">No Matching Datasets</h3>
-            <p class="text-gray-500 max-w-sm mx-auto mb-10">Adjust your filters or try searching for broader terms in the Pan-African metadata database.</p>
-            <a href="{% url 'dataset_list' %}" class="btn-primary !px-10 !py-4 shadow-xl">Reset Search</a>
-        </div>
-        {% endfor %}
-            </div>
-
-            <!-- Pagination -->
-            {% if page_obj.has_other_pages %}
-            <div class="mt-12 flex justify-center">
-                <nav class="inline-flex bg-white rounded-2xl shadow-xl p-2 border border-gray-100 gap-1">
-                    {% if page_obj.has_previous %}
-                    <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_category %}category={{ current_category }}&{% endif %}{% if current_format %}format={{ current_format }}&{% endif %}{% if current_premium %}premium={{ current_premium }}&{% endif %}{% if current_quality %}quality={{ current_quality }}&{% endif %}{% if current_sort %}sort={{ current_sort }}&{% endif %}page={{ page_obj.previous_page_number }}" 
-                       class="p-4 rounded-xl text-gray-400 hover:bg-brand-offwhite hover:text-brand-blue transition-all">
-                        <i class="fas fa-chevron-left text-xs"></i>
-                    </a>
-                    {% endif %}
-
-                    <div class="flex items-center px-6 text-sm font-bold text-gray-500 uppercase tracking-widest border-x border-gray-50 whitespace-nowrap">
-                        <span>Page {{ page_obj.number }} <span class="mx-2 text-gray-200">/</span> {{ page_obj.paginator.num_pages }}</span>
-                    </div>
-
-                    {% if page_obj.has_next %}
-                    <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_category %}category={{ current_category }}&{% endif %}{% if current_format %}format={{ current_format }}&{% endif %}{% if current_premium %}premium={{ current_premium }}&{% endif %}{% if current_quality %}quality={{ current_quality }}&{% endif %}{% if current_sort %}sort={{ current_sort }}&{% endif %}page={{ page_obj.next_page_number }}" 
-                       class="p-4 rounded-xl text-gray-400 hover:bg-brand-offwhite hover:text-brand-blue transition-all">
-                        <i class="fas fa-chevron-right text-xs"></i>
-                    </a>
-                    {% endif %}
-                </nav>
-            </div>
-            {% endif %}
-
-            <!-- Discovery CTA -->
-            <div class="mt-20 mb-12 p-10 rounded-[2rem] bg-brand-blue relative overflow-hidden text-center">
-                <div class="absolute inset-0 z-0 opacity-20 bg-[radial-gradient(circle_at_top_right,_var(--brand-teal)_0,_transparent_60%)]"></div>
-                <div class="relative z-10">
-                    <h3 class="text-xl md:text-2xl font-bold text-white mb-2 font-title">Didn't find what you were looking for?</h3>
-                    <p class="text-brand-offwhite/60 mb-6 max-w-lg mx-auto text-xs brand-body">Explore all datasets to see what's new in African research.</p>
-                    <a href="{% url 'dataset_list' %}" class="inline-flex items-center px-6 py-3 bg-white text-brand-blue rounded-xl text-xs font-bold hover:bg-brand-teal hover:text-white transition-all shadow-xl">
-                        Explore all datasets
-                    </a>
-                </div>
-            </div>
-        </div>
+    <!-- Discovery call to action -->
+    <div class="mt-16 p-8 md:p-10 rounded-3xl bg-brand-blue text-center">
+        <h3 class="text-xl md:text-2xl font-bold text-white font-title">Have data to share?</h3>
+        <p class="mt-2 text-white/70 max-w-lg mx-auto">Publish a dataset, help other researchers, and earn tokens for every upload.</p>
+        <a href="{% url 'upload_dataset' %}"
+           class="mt-6 inline-flex items-center h-12 px-7 rounded-xl bg-white text-brand-blue font-semibold no-underline hover:no-underline hover:bg-brand-teal hover:text-white transition-colors">
+            Upload a dataset
+        </a>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_css %}
 <style>
-    .view-toggle.active-view {
-        background: white;
-        color: var(--brand-blue);
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* List layout: each card becomes a row. Stacks again on narrow screens. */
+    #resultsRegion.list-view #datasetContainer { grid-template-columns: minmax(0, 1fr); }
+    @media (min-width: 640px) {
+        #resultsRegion.list-view .dataset-card { flex-direction: row; }
+        #resultsRegion.list-view .dataset-cover { width: 14rem; aspect-ratio: auto; flex-shrink: 0; }
+        #resultsRegion.list-view .dataset-body { min-width: 0; }
     }
-    
-    /* List view transitions */
-    .list-view-active .card-fancy {
-        flex-direction: row !important;
-        max-width: 100% !important;
-    }
-    .list-view-active .card-fancy > div:first-child {
-        flex: 1;
-    }
-    .list-view-active .card-fancy > div:last-child {
-        width: 180px;
-        border-top: 0 !important;
-        border-left: 1px solid rgba(0,0,0,0.05);
-        flex-direction: column;
-        justify-content: center;
-    }
+
+    .view-toggle.is-active { background: #fff; color: #0B4F6C; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+    #resultsRegion.is-loading { opacity: .5; pointer-events: none; }
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const gridViewBtn = document.getElementById('gridView');
-        const listViewBtn = document.getElementById('listView');
-        const container = document.getElementById('datasetContainer');
-        const mobileFilterToggle = document.getElementById('mobileFilterToggle');
-        const filterSidebar = document.getElementById('filterSidebar');
+(function () {
+    const form = document.getElementById('filterForm');
+    const search = document.getElementById('datasetLiveSearch');
+    const panel = document.getElementById('filterPanel');
+    const openBtn = document.getElementById('openFilters');
+    const closeBtn = document.getElementById('closeFilters');
+    const loading = document.getElementById('datasetSearchLoading');
+    const VIEW_KEY = 'dataset_view';
+    let timer = null;
+    let requestId = 0;
 
-        if (mobileFilterToggle) {
-            mobileFilterToggle.addEventListener('click', () => {
-                filterSidebar.classList.toggle('hidden');
-            });
-        }
+    // ---------- Filter panel (phones) ----------
+    function setPanel(open) {
+        panel.classList.toggle('hidden', !open);
+        openBtn.setAttribute('aria-expanded', String(open));
+        document.body.classList.toggle('overflow-hidden', open);
+    }
+    openBtn.addEventListener('click', () => setPanel(true));
+    closeBtn.addEventListener('click', () => setPanel(false));
 
-        function setView(view) {
-            if (view === 'list') {
-                container.classList.add('list-view-active');
-                container.classList.remove('md:grid-cols-2');
-                container.classList.add('grid-cols-1');
-                listViewBtn.classList.add('active-view');
-                gridViewBtn.classList.remove('active-view');
-                gridViewBtn.classList.add('text-gray-400');
-            } else {
-                container.classList.remove('list-view-active');
-                container.classList.add('md:grid-cols-2');
-                container.classList.remove('grid-cols-1');
-                gridViewBtn.classList.add('active-view');
-                listViewBtn.classList.remove('active-view');
-                listViewBtn.classList.add('text-gray-400');
-            }
-            localStorage.setItem('dataset_view', view);
-        }
+    // Count applied filters on the button, so a phone user can see the sheet has settings.
+    function updateFilterCount() {
+        let n = form.querySelectorAll('input[name="format"]:checked, input[name="license"]:checked').length;
+        if (form.querySelector('input[name="min_rating"]:checked')?.value) n++;
+        if (form.min_size.value || form.max_size.value) n++;
+        const badge = document.getElementById('filterCount');
+        badge.textContent = n;
+        badge.classList.toggle('hidden', n === 0);
+    }
 
-        gridViewBtn.addEventListener('click', () => setView('grid'));
-        listViewBtn.addEventListener('click', () => setView('list'));
+    // ---------- Results: refresh in place, keep the URL in step ----------
+    function currentParams() {
+        const params = new URLSearchParams();
+        new FormData(form).forEach((value, key) => {
+            if (String(value).trim() !== '') params.append(key, String(value).trim());
+        });
+        return params;
+    }
 
-        // Load preference
-        const savedView = localStorage.getItem('dataset_view');
-        if (savedView) setView(savedView);
+    function refresh(pushHistory = true) {
+        const params = currentParams();
+        const url = form.action + (params.toString() ? '?' + params.toString() : '');
+        const id = ++requestId;
+        const region = document.getElementById('resultsRegion');
+        region.classList.add('is-loading');
+        loading.classList.remove('hidden');
+        updateFilterCount();
 
-        // Live Search Logic
-        const datasetLiveSearch = document.getElementById('datasetLiveSearch');
-        const clearDatasetSearch = document.getElementById('clearDatasetSearch');
-        const datasetSearchLoading = document.getElementById('datasetSearchLoading');
-        const currentDatasetCount = document.getElementById('currentDatasetCount');
-        
-        let liveSearchTimer;
-        
-        if (datasetLiveSearch) {
-            // Check if there is a search param in the URL initially to prefill
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.has('search')) {
-                datasetLiveSearch.value = urlParams.get('search');
-                if (datasetLiveSearch.value.trim() !== '') {
-                    clearDatasetSearch.classList.remove('hidden');
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
+            .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+            .then(html => {
+                if (id !== requestId) return; // a newer search has started; ignore this one
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const fresh = doc.getElementById('resultsRegion');
+                if (fresh) document.getElementById('resultsRegion').replaceWith(fresh);
+                if (pushHistory) window.history.pushState({}, '', url);
+                applyView(localStorage.getItem(VIEW_KEY) || 'grid');
+            })
+            .catch(() => {
+                // Keep the results on screen and say what happened, instead of failing silently.
+                const note = document.createElement('p');
+                note.className = 'mb-4 text-sm text-red-600';
+                note.setAttribute('role', 'alert');
+                note.textContent = "We couldn't update the results. Check your connection and try again.";
+                document.getElementById('resultsRegion').prepend(note);
+            })
+            .finally(() => {
+                if (id === requestId) {
+                    loading.classList.add('hidden');
+                    const r = document.getElementById('resultsRegion');
+                    if (r) r.classList.remove('is-loading');
                 }
-            }
+            });
+    }
 
-            datasetLiveSearch.addEventListener('input', function() {
-                const query = this.value;
-                
-                if (query.trim() !== '') {
-                    clearDatasetSearch.classList.remove('hidden');
-                } else {
-                    clearDatasetSearch.classList.add('hidden');
-                }
-                
-                clearTimeout(liveSearchTimer);
-                datasetSearchLoading.classList.remove('hidden');
-                
-                liveSearchTimer = setTimeout(() => {
-                    performLiveSearch(query);
-                }, 400);
-            });
-            
-            clearDatasetSearch.addEventListener('click', function() {
-                datasetLiveSearch.value = '';
-                this.classList.add('hidden');
-                datasetSearchLoading.classList.remove('hidden');
-                performLiveSearch('');
-            });
-            
-            function performLiveSearch(query) {
-                // Get current URL and params
-                const url = new URL(window.location.href);
-                if (query.trim() === '') {
-                    url.searchParams.delete('search');
-                } else {
-                    url.searchParams.set('search', query);
-                }
-                
-                // Fetch new HTML
-                fetch(url, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => response.text())
-                .then(html => {
-                    datasetSearchLoading.classList.add('hidden');
-                    
-                    // Parse the returned HTML
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-                    
-                    const newContainer = doc.getElementById('datasetContainer');
-                    const newCount = doc.getElementById('currentDatasetCount');
-                    const newPagination = doc.querySelector('.mt-12.flex.justify-center');
-                    
-                    if (newContainer) {
-                        container.innerHTML = newContainer.innerHTML;
-                    }
-                    if (newCount && currentDatasetCount) {
-                        currentDatasetCount.innerText = newCount.innerText;
-                    }
-                    
-                    // Handle pagination block
-                    const currentPagination = document.querySelector('.mt-12.flex.justify-center');
-                    if (newPagination && currentPagination) {
-                        currentPagination.innerHTML = newPagination.innerHTML;
-                    } else if (newPagination && !currentPagination) {
-                        container.insertAdjacentHTML('afterend', `<div class="mt-12 flex justify-center">${newPagination.innerHTML}</div>`);
-                    } else if (!newPagination && currentPagination) {
-                        currentPagination.remove();
-                    }
-                    
-                    // Update URL without page reload
-                    window.history.pushState({}, '', url);
-                })
-                .catch(err => {
-                    console.error('Live search error:', err);
-                    datasetSearchLoading.classList.add('hidden');
-                });
-            }
+    function scheduleRefresh(delay) {
+        clearTimeout(timer);
+        timer = setTimeout(() => refresh(true), delay);
+    }
+
+    // Search as the user types (debounced); filters apply when changed.
+    search.addEventListener('input', () => scheduleRefresh(400));
+    form.addEventListener('change', (event) => {
+        if (event.target.name === 'sort' || event.target.name === 'format' ||
+            event.target.name === 'license' || event.target.name === 'min_rating' ||
+            event.target.name === 'min_size' || event.target.name === 'max_size') {
+            scheduleRefresh(150);
         }
     });
+    form.addEventListener('submit', (event) => { event.preventDefault(); refresh(true); });
+
+    // ---------- Chips, clear-all and layout toggle (inside the results, so use delegation) ----------
+    document.addEventListener('click', (event) => {
+        const remove = event.target.closest('[data-remove]');
+        if (remove) {
+            clearOne(remove.dataset.remove, remove.dataset.value);
+            refresh(true);
+            return;
+        }
+        if (event.target.closest('[data-clear-all]')) {
+            clearAll();
+            refresh(true);
+            return;
+        }
+        const view = event.target.closest('[data-view]');
+        if (view) {
+            localStorage.setItem(VIEW_KEY, view.dataset.view);
+            applyView(view.dataset.view);
+        }
+    });
+
+    function clearOne(name, value) {
+        if (name === 'search') search.value = '';
+        else if (name === 'category') document.getElementById('categoryInput').value = '';
+        else if (name === 'format' || name === 'license') {
+            form.querySelectorAll(`input[name="${name}"][value="${value}"]`).forEach(el => el.checked = false);
+        } else if (name === 'size') { form.min_size.value = ''; form.max_size.value = ''; }
+        else if (name === 'min_rating') {
+            form.querySelectorAll('input[name="min_rating"]').forEach(el => el.checked = el.value === '');
+        }
+    }
+
+    function clearAll() {
+        search.value = '';
+        document.getElementById('categoryInput').value = '';
+        form.querySelectorAll('input[type="checkbox"]').forEach(el => el.checked = false);
+        form.querySelectorAll('input[name="min_rating"]').forEach(el => el.checked = el.value === '');
+        form.min_size.value = '';
+        form.max_size.value = '';
+        form.sort.value = 'relevance';
+    }
+
+    function applyView(view) {
+        const region = document.getElementById('resultsRegion');
+        if (!region) return;
+        region.classList.toggle('list-view', view === 'list');
+        region.querySelectorAll('[data-view]').forEach(btn => {
+            const active = btn.dataset.view === view;
+            btn.classList.toggle('is-active', active);
+            btn.setAttribute('aria-pressed', String(active));
+        });
+    }
+
+    // Back and forward buttons: reload the state from the URL.
+    window.addEventListener('popstate', () => window.location.reload());
+
+    applyView(localStorage.getItem(VIEW_KEY) || 'grid');
+    updateFilterCount();
+})();
 </script>
 {% endblock %}

@@ -26,9 +26,9 @@
     <!-- Dataset Cover Image Background -->
     <div class="absolute inset-0 z-0 pointer-events-none">
         {% if dataset %}
-        <img src="{{ dataset.get_cover_photo_url }}" alt="Background" class="w-full h-full object-cover opacity-20">
+        <img src="{{ dataset.get_cover_photo_url }}" alt="" class="w-full h-full object-cover opacity-10 md:opacity-20">
         {% else %}
-        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=800&h=400" alt="Background" class="w-full h-full object-cover opacity-20">
+        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=800&h=400" alt="" class="w-full h-full object-cover opacity-10 md:opacity-20">
         {% endif %}
         <div class="absolute inset-0 bg-gradient-to-r from-brand-blue via-brand-blue/80 to-transparent"></div>
         <div class="absolute top-[-20%] right-[-10%] w-[40%] h-[70%] bg-white/10 blur-[100px] rounded-full mix-blend-overlay"></div>
@@ -891,4 +891,4 @@ with open("model_weights{{ dataset.file.name|slice:'-4:' }}", "wb") as f:
         });
     });
   </script>
-{% endblock %}
+{% endblock %}

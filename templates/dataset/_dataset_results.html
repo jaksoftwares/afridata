@@ -1,0 +1,108 @@
+<!-- Results area. Rendered in full on page load, and returned alone for live refreshes. -->
+<div id="resultsRegion" class="min-w-0 transition-opacity duration-200">
+
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <p class="text-sm text-gray-500" aria-live="polite">
+            <span id="currentDatasetCount" class="font-semibold text-gray-900">{{ total_count }}</span>
+            dataset{{ total_count|pluralize }}
+            {% if search_query %}matching &ldquo;{{ search_query }}&rdquo;{% endif %}
+        </p>
+        <div class="inline-flex items-center bg-white border border-gray-200 rounded-xl p-1" role="group" aria-label="Result layout">
+            <button type="button" data-view="grid" aria-label="Grid view" title="Grid view"
+                    class="view-toggle w-11 h-11 rounded-lg flex items-center justify-center text-gray-500 hover:text-brand-blue">
+                <i class="fas fa-th-large"></i>
+            </button>
+            <button type="button" data-view="list" aria-label="List view" title="List view"
+                    class="view-toggle w-11 h-11 rounded-lg flex items-center justify-center text-gray-500 hover:text-brand-blue">
+                <i class="fas fa-list"></i>
+            </button>
+        </div>
+    </div>
+
+    {% if active_filters %}
+    <div class="flex flex-wrap items-center gap-2 mb-6">
+        {% for f in active_filters %}
+        <button type="button" data-remove="{{ f.remove }}" data-value="{{ f.value|default:'' }}"
+                class="inline-flex items-center gap-2 h-9 px-3 rounded-full bg-brand-teal/10 text-brand-blue text-sm font-medium hover:bg-brand-teal/20">
+            {{ f.label }}
+            <i class="fas fa-times text-xs" aria-hidden="true"></i>
+            <span class="sr-only">Remove filter</span>
+        </button>
+        {% endfor %}
+        <button type="button" data-clear-all class="h-9 px-2 text-sm font-semibold text-brand-teal hover:underline">Clear all</button>
+    </div>
+    {% endif %}
+
+    {% if datasets %}
+    <div id="datasetContainer" class="dataset-grid grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+        {% for dataset in datasets %}
+        <a href="{% url 'dataset_detail' dataset.slug %}"
+           class="dataset-card group flex flex-col bg-white rounded-2xl border border-gray-200 overflow-hidden no-underline hover:no-underline hover:border-brand-teal/50 hover:shadow-lg transition-all duration-200">
+            <div class="dataset-cover relative aspect-video bg-gray-100 overflow-hidden">
+                <img src="{{ dataset.cover_photo }}" alt="" loading="lazy"
+                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                <span class="absolute top-3 left-3 bg-white/95 text-brand-blue text-xs font-bold px-2.5 py-1 rounded-md uppercase tracking-wide shadow-sm">
+                    {{ dataset.dataset_type|default:"Data" }}
+                </span>
+                {% if dataset.is_premium %}
+                <span class="absolute top-3 right-3 bg-brand-amber text-white text-xs font-bold px-2.5 py-1 rounded-md shadow-sm">Premium</span>
+                {% endif %}
+            </div>
+
+            <div class="dataset-body flex flex-col flex-1 p-5">
+                <p class="text-xs text-gray-500 truncate">{{ dataset.author_name }}</p>
+                <h3 class="mt-1 text-lg font-bold text-gray-900 leading-snug line-clamp-2 group-hover:text-brand-blue">{{ dataset.title }}</h3>
+                <p class="mt-2 text-sm text-gray-500 leading-relaxed line-clamp-2">{{ dataset.bio }}</p>
+
+                {% if dataset.topics %}
+                <div class="mt-3 flex flex-wrap gap-1.5">
+                    {% for topic in dataset.topics|slice:":3" %}
+                    <span class="text-xs text-gray-600 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded-md">{{ topic }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="mt-auto pt-4 flex items-center justify-between gap-3 text-sm text-gray-500 border-t border-gray-100">
+                    <span title="Downloads"><i class="fas fa-download text-xs mr-1"></i>{{ dataset.downloads }}</span>
+                    <span title="Rating">
+                        {% if dataset.rating %}<i class="fas fa-star text-brand-amber text-xs mr-1"></i>{{ dataset.rating|floatformat:1 }}{% else %}New{% endif %}
+                    </span>
+                    <span class="font-semibold text-brand-blue">
+                        {% if dataset.is_premium %}{{ dataset.premium_price_usd|default:"Premium" }}{% elif dataset.token_cost %}{{ dataset.token_cost }} tokens{% else %}Free{% endif %}
+                    </span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-16 px-6 bg-white rounded-2xl border border-dashed border-gray-300">
+        <div class="mx-auto w-16 h-16 rounded-full bg-brand-offwhite text-gray-400 flex items-center justify-center text-2xl mb-5">
+            <i class="fas fa-search"></i>
+        </div>
+        <h3 class="text-xl font-bold text-gray-900">No datasets match these filters</h3>
+        <p class="mt-2 text-gray-500 max-w-md mx-auto">Try a broader search, remove a filter, or check the spelling of your search.</p>
+        <button type="button" data-clear-all class="mt-6 inline-flex items-center h-11 px-6 rounded-xl bg-brand-blue text-white font-semibold hover:bg-brand-blue/90">
+            Clear all filters
+        </button>
+    </div>
+    {% endif %}
+
+    {% if page_obj.has_other_pages %}
+    <nav class="mt-10 flex items-center justify-center gap-2" aria-label="Pagination">
+        {% if page_obj.has_previous %}
+        <a href="?{% if filter_query %}{{ filter_query }}&{% endif %}page={{ page_obj.previous_page_number }}"
+           class="inline-flex items-center h-11 px-4 rounded-xl border border-gray-200 bg-white text-gray-700 hover:border-brand-teal no-underline hover:no-underline">
+            <i class="fas fa-chevron-left mr-2 text-xs"></i> Previous
+        </a>
+        {% endif %}
+        <span class="px-3 text-sm text-gray-500">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+        <a href="?{% if filter_query %}{{ filter_query }}&{% endif %}page={{ page_obj.next_page_number }}"
+           class="inline-flex items-center h-11 px-4 rounded-xl border border-gray-200 bg-white text-gray-700 hover:border-brand-teal no-underline hover:no-underline">
+            Next <i class="fas fa-chevron-right ml-2 text-xs"></i>
+        </a>
+        {% endif %}
+    </nav>
+    {% endif %}
+</div>
