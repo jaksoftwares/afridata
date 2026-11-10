@@ -15,6 +15,8 @@ from accounts.models import CustomUser, UserProfile
 import pandas as pd
 import numpy as np
 import io
+from django.conf import settings
+from . import chunked_upload
 from pipeline_lib.json_reader import read_json_frame, JsonReadError
 from django.views.decorators.csrf import csrf_exempt
 from .forms import DatasetUploadForm, DatasetEditForm
@@ -516,7 +518,18 @@ def serve_file(dataset):
 def upload_dataset(request):
     """Handle dataset upload via regular form submission and AJAX with token rewards"""
     if request.method == 'POST':
-        form = DatasetUploadForm(request.POST, request.FILES)
+        upload_id = request.POST.get('upload_id', '')
+        files = request.FILES
+        if upload_id and 'file' not in request.FILES:
+            # A chunked upload: the parts are already on disk. Hand the completed file to the form.
+            try:
+                staged = chunked_upload.open_completed(request.user, upload_id)
+            except chunked_upload.ChunkedUploadError as exc:
+                return JsonResponse({'success': False, 'message': str(exc)}, status=400)
+            files = request.FILES.copy()
+            files['file'] = staged
+
+        form = DatasetUploadForm(request.POST, files)
         if form.is_valid():
             dataset = form.save(commit=False)
             dataset.author = request.user
@@ -531,6 +544,8 @@ def upload_dataset(request):
             # Calculate token cost based on file size
             dataset.token_cost = dataset.calculate_token_cost()
             dataset.save()
+            if upload_id:
+                chunked_upload.discard(upload_id)  # the file now lives with the dataset
             
             # Trigger metadata AI engine asynchronously if supported
             metadata_queued = False
@@ -605,7 +620,12 @@ def upload_dataset(request):
     else:
         form = DatasetUploadForm()
    
-    return render(request, 'dataset/upload.html', {'form': form})
+    return render(request, 'dataset/upload.html', {
+        'form': form,
+        # The browser switches to parts for files at or above this size.
+        'chunk_threshold': settings.CHUNKED_UPLOAD_THRESHOLD,
+        'chunk_part_size': settings.CHUNKED_UPLOAD_PART_SIZE,
+    })
 
 '''
 @login_required

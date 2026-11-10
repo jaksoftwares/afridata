@@ -1,5 +1,6 @@
 import environ
 import os
+import sys
 import dj_database_url
 
 #defining a custom user model instead of default auth.User
@@ -122,6 +123,12 @@ DATABASES = {
         conn_max_age=600,
     )
 }
+
+# Test runs use a file database rather than SQLite's in-memory one. The browser tests'
+# live server handles requests in parallel threads, and an in-memory SQLite database
+# can't be shared safely between them. Production uses MySQL and is not affected.
+if 'test' in sys.argv and DATABASES['default']['ENGINE'].endswith('sqlite3'):
+    DATABASES['default'].setdefault('TEST', {})['NAME'] = str(BASE_DIR / 'test_db.sqlite3')
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -257,6 +264,11 @@ SCHEMA_REGISTRY_FILE = BASE_DIR / 'schema_registry.json'
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "appdata"
 
+# Upload temp files live on the same disk as the media folder. Django can then
+# move the finished 2GB file into place instead of copying all of it.
+FILE_UPLOAD_TEMP_DIR = MEDIA_ROOT / "tmp"
+(FILE_UPLOAD_TEMP_DIR).mkdir(parents=True, exist_ok=True)
+
 # Celery — used by recommendations/tasks.py to refresh cached recommendations
 # asynchronously whenever a UserInteraction is saved/deleted (see signals.py).
 # Requires a running broker (default: local Redis) in any environment where
@@ -270,6 +282,11 @@ CELERY_RESULT_SERIALIZER = 'json'
 
 # Largest dataset file accepted (bytes). Enforced in DatasetUploadForm and the API.
 MAX_DATASET_UPLOAD_SIZE = env.int('MAX_DATASET_UPLOAD_SIZE', default=2 * 1024 * 1024 * 1024)  # 2 GB
+
+# Files at or above this size are sent in parallel, resumable parts.
+# A part must stay under DATA_UPLOAD_MAX_MEMORY_SIZE (10 MB) to be read in one go.
+CHUNKED_UPLOAD_THRESHOLD = env.int('CHUNKED_UPLOAD_THRESHOLD', default=25 * 1024 * 1024)  # 25 MB
+CHUNKED_UPLOAD_PART_SIZE = env.int('CHUNKED_UPLOAD_PART_SIZE', default=8 * 1024 * 1024)  # 8 MB
 
 # Non-file request body limit. File parts are not counted against this.
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10 MB

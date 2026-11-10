@@ -64,8 +64,12 @@
 
 
 
-            <!-- Progress State: shown while the file uploads and the server saves it -->
-            <div id="upload-progress" class="hidden mb-10 p-6 bg-brand-offwhite rounded-2xl border border-gray-100" aria-live="polite">
+            <!-- Status overlay: progress, success and failure appear on top of the page,
+                 so they are seen wherever the user is when they press Upload -->
+            <div id="upload-overlay" class="hidden fixed inset-0 z-[9998] bg-brand-blue/60 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-modal="true">
+            <div class="w-full max-w-xl bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-h-[90vh] overflow-y-auto">
+            <!-- Progress State: the file uploads and the server saves it -->
+            <div id="upload-progress" class="hidden" aria-live="polite">
                 <div class="flex justify-between items-center mb-3">
                     <span id="progress-text" class="text-sm font-bold text-brand-blue uppercase tracking-wider">Uploading...</span>
                     <span class="text-brand-teal font-mono font-bold" id="progress-percent">0%</span>
@@ -91,8 +95,8 @@
                 </div>
             </div>
 
-            <!-- Success State: shown once the dataset is saved -->
-            <div id="upload-success" class="hidden mb-10 p-8 rounded-2xl border border-green-100 bg-green-50 text-center" aria-live="polite">
+            <!-- Success State: the dataset is saved -->
+            <div id="upload-success" class="hidden text-center" aria-live="polite">
                 <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500 text-white flex items-center justify-center text-2xl">
                     <i class="fas fa-check"></i>
                 </div>
@@ -110,6 +114,25 @@
                         Upload another
                     </a>
                 </div>
+            </div>
+
+            <!-- Failure State: a problem with the form, a lost connection, a server error or a cancelled upload -->
+            <div id="upload-failure" class="hidden text-center" role="alert">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500 text-white flex items-center justify-center text-2xl">
+                    <i class="fas fa-exclamation"></i>
+                </div>
+                <h3 id="failure-title" class="text-2xl font-bold text-brand-blue mb-2">Upload not completed</h3>
+                <p id="failure-text" class="text-gray-600 mb-6"></p>
+                <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                    <button type="button" id="failure-retry-btn" class="px-8 py-3 bg-brand-blue text-white rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-brand-blue/90 transition-all">
+                        <i class="fas fa-redo mr-2"></i>Try again
+                    </button>
+                    <button type="button" id="failure-close-btn" class="px-8 py-3 border border-gray-200 text-gray-600 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-white transition-all">
+                        Back to the form
+                    </button>
+                </div>
+            </div>
+            </div>
             </div>
 
             <!-- Main Form -->
@@ -336,7 +359,12 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'dataset/js/chunked_upload.js' %}"></script>
 <script>
+    // Files at or above this size are sent in resumable parts (see chunked_upload.js).
+    const CHUNK_THRESHOLD = {{ chunk_threshold|default:9007199254740991 }};
+    const CHUNK_START = "{% url 'chunked_upload_start' %}";
+    const CHUNK_BASE = CHUNK_START.slice(0, -'start/'.length);
     // File upload handling
     const fileInput = document.getElementById('id_file');
     const fileUploadArea = document.getElementById('file-upload-area');
@@ -544,6 +572,37 @@
     const cancelUploadBtn = document.getElementById('cancel-upload-btn');
     const retryUploadBtn = document.getElementById('retry-upload-btn');
     const uploadSuccess = document.getElementById('upload-success');
+    const uploadOverlay = document.getElementById('upload-overlay');
+    const uploadFailure = document.getElementById('upload-failure');
+    const failureTitle = document.getElementById('failure-title');
+    const failureText = document.getElementById('failure-text');
+    const failureRetryBtn = document.getElementById('failure-retry-btn');
+    const failureCloseBtn = document.getElementById('failure-close-btn');
+
+    // Show one status panel on top of the page. The user sees it wherever they are.
+    function showStatus(panel) {
+        [progressContainer, uploadSuccess, uploadFailure].forEach(p => p.classList.toggle('hidden', p !== panel));
+        uploadOverlay.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+    }
+
+    function hideStatus() {
+        uploadOverlay.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }
+
+    // Back to the form. If a field needs fixing, scroll to the first one.
+    failureCloseBtn.addEventListener('click', function () {
+        hideStatus();
+        const firstError = document.querySelector('[id$="-error"]:not(.hidden)');
+        if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    failureRetryBtn.addEventListener('click', function () {
+        hideStatus();
+        if (typeof form.requestSubmit === 'function') form.requestSubmit();
+        else form.dispatchEvent(new Event('submit', { cancelable: true }));
+    });
 
     function setProgress(percent, label) {
         progressFill.style.width = percent + '%';
@@ -616,14 +675,16 @@
 
     function showUploadFailure(message, canRetry) {
         uploadState = 'failed';
-        hideProgressPanel();
         resetSubmitButton();
-        showMessage('error', message);
-        retryUploadBtn.classList.toggle('hidden', !canRetry);
+        failureTitle.textContent = canRetry ? 'Upload not completed' : 'Please check the form';
+        failureText.textContent = message;
+        failureRetryBtn.classList.toggle('hidden', !canRetry);
+        showStatus(uploadFailure);
+        (canRetry ? failureRetryBtn : failureCloseBtn).focus();
     }
 
     function hideProgressPanel() {
-        progressContainer.classList.add('hidden');
+        hideStatus();
     }
 
     function showSuccess(data) {
@@ -644,8 +705,7 @@
             : 'You can add or edit detailed metadata from the dataset page at any time.';
         document.getElementById('success-open-link').href = data.redirect_url;
 
-        uploadSuccess.classList.remove('hidden');
-        uploadSuccess.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        showStatus(uploadSuccess);
     }
 
     function startUpload() {
@@ -657,9 +717,61 @@
         setBusy(true);
         submitText.textContent = 'Uploading...';
         resetProgressDetails();
-        progressContainer.classList.remove('hidden');
+        showStatus(progressContainer);
         uploadStartedAt = Date.now();
 
+        const file = fileInput.files[0];
+        if (file && file.size >= CHUNK_THRESHOLD) {
+            startChunkedUpload(file);
+        } else {
+            sendForm(new FormData(form), null);
+        }
+    }
+
+    // Large files: send the file in parts, then send the form (without the file) so the
+    // server validates and saves it. The parts already on the server are reused on retry.
+    function startChunkedUpload(file) {
+        const controller = new AbortController();
+        uploadXhr = { abort: function () { controller.abort(); } }; // the Cancel button calls this
+        setStage(0);
+        ChunkedUpload.upload(file, {
+            startUrl: CHUNK_START,
+            statusUrl: function (id) { return CHUNK_BASE + id + '/'; },
+            partUrl: function (id, index) { return CHUNK_BASE + id + '/' + index + '/'; },
+            signal: controller.signal,
+            onProgress: function (loaded, total) {
+                const pct = Math.round((loaded / total) * 100);
+                const elapsed = (Date.now() - uploadStartedAt) / 1000;
+                const speed = elapsed > 0 ? loaded / elapsed : 0;
+                const remaining = speed > 0 ? (total - loaded) / speed : NaN;
+                progressBytes.textContent = formatBytes(loaded) + ' of ' + formatBytes(total);
+                progressSpeed.textContent = speed > 0 ? formatBytes(speed) + '/s' : '';
+                progressEta.textContent = pct < 100 && isFinite(remaining) ? formatDuration(remaining) + ' left' : '';
+                setProgress(pct, 'Uploading...');
+            },
+        }).then(function (uploadId) {
+            uploadXhr = null;
+            setStage(1);
+            cancelUploadBtn.classList.add('hidden');
+            progressEta.textContent = '';
+            setProgress(100, 'Saving your dataset...');
+            const body = new FormData(form);
+            body.delete('file');
+            body.append('upload_id', uploadId);
+            sendForm(body, file);
+        }).catch(function (err) {
+            uploadXhr = null;
+            setBusy(false);
+            if (err && err.name === 'AbortError') {
+                uploadState = 'cancelled';
+                showUploadFailure('Upload cancelled. Your progress is saved, so pressing Upload again continues from where it stopped.', true);
+                return;
+            }
+            showUploadFailure((err && err.message) || "The upload couldn't be completed. Please try again.", true);
+        });
+    }
+
+    function sendForm(body, file) {
         const xhr = new XMLHttpRequest();
         uploadXhr = xhr;
         xhr.open('POST', window.location.href);
@@ -694,6 +806,7 @@
             try { data = JSON.parse(xhr.responseText); } catch (err) { data = null; }
 
             if (data && data.success) {
+                if (file) ChunkedUpload.forget(file);
                 showSuccess(data);
                 return;
             }
@@ -718,14 +831,11 @@
         xhr.onabort = function () {
             uploadXhr = null;
             setBusy(false);
+            showUploadFailure('Upload cancelled. Nothing was saved, and your details are still here.', true);
             uploadState = 'cancelled';
-            hideProgressPanel();
-            resetSubmitButton();
-            showMessage('error', 'Upload cancelled. Nothing was saved, and your details are still here.');
-            retryUploadBtn.classList.remove('hidden');
         };
 
-        xhr.send(new FormData(form));
+        xhr.send(body);
     }
 
     form.addEventListener('submit', function (e) {

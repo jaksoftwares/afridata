@@ -1,6 +1,7 @@
 #dataset/urls.py
 from django.urls import path
 from . import views
+from . import chunked_views
 
 urlpatterns = [
     # Dataset listing and browsing
@@ -8,7 +9,10 @@ urlpatterns = [
     
     # Dataset upload
     path('upload/', views.upload_dataset, name='upload_dataset'),
-    
+    path('upload/chunks/start/', chunked_views.chunked_upload_start, name='chunked_upload_start'),
+    path('upload/chunks/<str:upload_id>/', chunked_views.chunked_upload_status, name='chunked_upload_status'),
+    path('upload/chunks/<str:upload_id>/<int:index>/', chunked_views.chunked_upload_part, name='chunked_upload_part'),
+
     # User profile tokens
     path('tokens/history/', views.token_history, name='token_history'),
     

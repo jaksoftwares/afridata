@@ -85,3 +85,5 @@ test-results/
 .env
 .env.*
 !.env.example
+test_db.sqlite3
+test_db.sqlite3-journal
