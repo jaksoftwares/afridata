@@ -19,6 +19,8 @@
     'use strict';
 
     const MAX_PARALLEL = 4;
+    // Text formats compress well in the browser; binary formats (Excel, Parquet, ZIP) don't.
+    const COMPRESSIBLE = /\.(csv|tsv|txt|json|jsonl|ndjson|xml|ya?ml)$/i;
     const MAX_ATTEMPTS = 5;
     const STORE_PREFIX = 'afridata-upload:';
 
@@ -138,6 +140,12 @@
         });
     }
 
+    // Compress one part as its own gzip member, so the server can rebuild the file part by part.
+    async function gzipBlob(blob) {
+        const compressed = blob.stream().pipeThrough(new CompressionStream('gzip'));
+        return new Response(compressed).blob();
+    }
+
     function wait(ms, signal) {
         return new Promise(function (resolve, reject) {
             if (signal && signal.aborted) { reject(abortError()); return; }
@@ -166,12 +174,18 @@
             }
         }
         if (!uploadId) {
-            info = await postJson(options.startUrl, { filename: file.name, size: file.size }, signal);
+            const wantGzip = typeof CompressionStream === 'function' && COMPRESSIBLE.test(file.name);
+            info = await postJson(
+                options.startUrl,
+                { filename: file.name, size: file.size, encoding: wantGzip ? 'gzip' : 'raw' },
+                signal
+            );
             uploadId = info.upload_id;
             remember(file, uploadId);
         }
 
         const partSize = info.part_size;
+        const gzip = info.encoding === 'gzip';
         const total = info.total_parts;
         const arrived = new Set(info.received);
         const partBytes = function (index) {
@@ -199,13 +213,18 @@
         if (signal) signal.addEventListener('abort', function () { stop.abort(); }, { once: true });
 
         async function sendOne(index) {
+            const blob = file.slice(index * partSize, index * partSize + partBytes(index));
+            // Compress once, so a retry doesn't compress the part again.
+            const body = gzip ? await gzipBlob(blob) : blob;
+            // Progress counts the original file's bytes, so the speed and time left are real
+            // for the user. Bytes actually sent are scaled to match.
+            const ratio = body.size ? blob.size / body.size : 1;
             for (let attempt = 1; ; attempt++) {
                 inFlight.set(index, 0);
                 report();
-                const blob = file.slice(index * partSize, index * partSize + partBytes(index));
                 try {
-                    await sendPart(options.partUrl(uploadId, index), blob, stop.signal, function (bytes) {
-                        inFlight.set(index, bytes);
+                    await sendPart(options.partUrl(uploadId, index), body, stop.signal, function (bytes) {
+                        inFlight.set(index, bytes * ratio);
                         report();
                     });
                     inFlight.delete(index);

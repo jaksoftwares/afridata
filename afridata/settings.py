@@ -291,7 +291,7 @@ MAX_DATASET_UPLOAD_SIZE = env.int('MAX_DATASET_UPLOAD_SIZE', default=2 * 1024 * 
 
 # Files at or above this size are sent in parallel, resumable parts.
 # A part must stay under DATA_UPLOAD_MAX_MEMORY_SIZE (10 MB) to be read in one go.
-CHUNKED_UPLOAD_THRESHOLD = env.int('CHUNKED_UPLOAD_THRESHOLD', default=25 * 1024 * 1024)  # 25 MB
+CHUNKED_UPLOAD_THRESHOLD = env.int('CHUNKED_UPLOAD_THRESHOLD', default=5 * 1024 * 1024)  # 5 MB
 CHUNKED_UPLOAD_PART_SIZE = env.int('CHUNKED_UPLOAD_PART_SIZE', default=8 * 1024 * 1024)  # 8 MB
 
 # Non-file request body limit. File parts are not counted against this.

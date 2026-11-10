@@ -1,22 +1,35 @@
 """
 Resumable, parallel uploads for large dataset files.
 
-A large file is sent as numbered parts, several at a time. Each part is written
-straight into its place in one staging file, so nothing is copied when the
-upload completes. Parts that arrive are recorded by marker files, so an upload
-can resume after a dropped connection or a page reload.
+A large file is sent as numbered parts, several at a time. Parts can be sent
+two ways, chosen when the upload starts:
+
+* "raw": each part is written straight into its place in one pre-sized staging
+  file. Nothing is copied when the upload completes.
+* "gzip": text files are compressed in the browser, part by part. Each part is
+  kept as its own gzip member, and the file is rebuilt when the upload completes.
+  A CSV or JSON file often shrinks several times over, so far fewer bytes cross
+  a slow connection.
+
+Parts that arrive are recorded by marker files, so an upload can resume after a
+dropped connection or a page reload.
 
 Staging layout (under FILE_UPLOAD_TEMP_DIR/chunked/<upload_id>/):
-    meta.json     owner, filename, size, part size, creation time
-    data.part     the file, pre-sized, filled in place
-    received/<n>  an empty marker for each part that has arrived
+    meta.json       owner, filename, size, part size, encoding, creation time
+    data.part       the file (raw uploads: filled in place; gzip: rebuilt on completion)
+    parts/<n>.gz    one compressed part (gzip uploads only)
+    received/<n>    an empty marker for each part that has arrived
+    assembled       present once a gzip upload has been rebuilt into data.part
 
 Every message raised here is written for the user, so it can be shown as is.
 """
+import gzip
 import json
+import os
 import re
 import shutil
 import uuid
+import zlib
 from datetime import datetime, timedelta, timezone as dt_timezone
 from math import ceil
 from pathlib import Path
@@ -27,6 +40,9 @@ from django.core.files import File
 _UPLOAD_ID = re.compile(r"[0-9a-f]{32}")
 NOT_FOUND = "This upload could not be found. Please choose the file again."
 STALE_AFTER = timedelta(hours=48)
+ENCODINGS = ("raw", "gzip")
+# A compressed part can be slightly larger than its source if the data doesn't compress.
+GZIP_OVERHEAD = 4096
 
 
 class ChunkedUploadError(Exception):
@@ -53,6 +69,7 @@ def _load_meta(folder: Path, user) -> dict:
     if meta.get("owner_id") != user.pk:
         # Same message as a missing upload, so one user can't probe another's uploads.
         raise ChunkedUploadError(NOT_FOUND)
+    meta.setdefault("encoding", "raw")  # uploads started before compression existed
     return meta
 
 
@@ -68,7 +85,7 @@ def _remove_stale_uploads() -> None:
             shutil.rmtree(folder, ignore_errors=True)
 
 
-def start(user, filename: str, size: int, part_size: int) -> dict:
+def start(user, filename: str, size: int, part_size: int, encoding: str = "raw") -> dict:
     """Begin an upload. Returns the id and the part layout the browser should follow."""
     filename = (filename or "").strip()
     if not filename:
@@ -80,13 +97,18 @@ def start(user, filename: str, size: int, part_size: int) -> dict:
         raise ChunkedUploadError(
             f"File is too large. The maximum dataset size is {max_size // (1024 ** 3)} GB."
         )
+    if encoding not in ENCODINGS:
+        encoding = "raw"
 
     _remove_stale_uploads()
     upload_id = uuid.uuid4().hex
     folder = _root() / upload_id
     (folder / "received").mkdir(parents=True)
-    with open(folder / "data.part", "wb") as fh:
-        fh.truncate(size)  # reserve the space up front; parts fill it in any order
+    if encoding == "gzip":
+        (folder / "parts").mkdir()
+    else:
+        with open(folder / "data.part", "wb") as fh:
+            fh.truncate(size)  # reserve the space up front; parts fill it in any order
     total = ceil(size / part_size)
     meta = {
         "owner_id": user.pk,
@@ -94,10 +116,11 @@ def start(user, filename: str, size: int, part_size: int) -> dict:
         "size": size,
         "part_size": part_size,
         "total_parts": total,
+        "encoding": encoding,
         "created_at": datetime.now(dt_timezone.utc).isoformat(),
     }
     (folder / "meta.json").write_text(json.dumps(meta), encoding="utf-8")
-    return {"upload_id": upload_id, "part_size": part_size, "total_parts": total}
+    return {"upload_id": upload_id, "part_size": part_size, "total_parts": total, "encoding": encoding}
 
 
 def status(user, upload_id: str) -> dict:
@@ -108,6 +131,7 @@ def status(user, upload_id: str) -> dict:
         "upload_id": upload_id,
         "part_size": meta["part_size"],
         "total_parts": meta["total_parts"],
+        "encoding": meta["encoding"],
         "received": received,
     }
 
@@ -118,13 +142,52 @@ def write_part(user, upload_id: str, index: int, data: bytes) -> None:
     total, part_size, size = meta["total_parts"], meta["part_size"], meta["size"]
     if not 0 <= index < total:
         raise ChunkedUploadError("That part of the file doesn't belong to this upload.")
-    expected = min(part_size, size - index * part_size)
-    if len(data) != expected:
-        raise ChunkedUploadError("A part of the file arrived incomplete. It will be sent again.")
-    with open(folder / "data.part", "r+b") as fh:
-        fh.seek(index * part_size)
-        fh.write(data)
+
+    if meta["encoding"] == "gzip":
+        if not data[:2] == b"\x1f\x8b":
+            raise ChunkedUploadError("A part of the file arrived damaged. It will be sent again.")
+        if len(data) > part_size + GZIP_OVERHEAD:
+            raise ChunkedUploadError("A part of the file arrived larger than expected. It will be sent again.")
+        target = folder / "parts" / f"{index}.gz"
+        tmp = target.with_suffix(".tmp")
+        tmp.write_bytes(data)
+        os.replace(tmp, target)  # a half-written part never counts as received
+    else:
+        expected = min(part_size, size - index * part_size)
+        if len(data) != expected:
+            raise ChunkedUploadError("A part of the file arrived incomplete. It will be sent again.")
+        with open(folder / "data.part", "r+b") as fh:
+            fh.seek(index * part_size)
+            fh.write(data)
     (folder / "received" / str(index)).touch()
+
+
+def _rebuild_gzip(folder: Path, meta: dict) -> None:
+    """Decompress the parts, in order, into data.part. Each part is its own gzip member."""
+    total = meta["total_parts"]
+    written = 0
+    with open(folder / "data.part", "wb") as out:
+        for index in range(total):
+            part = folder / "parts" / f"{index}.gz"
+            try:
+                with open(part, "rb") as src, gzip.GzipFile(fileobj=src) as members:
+                    while True:
+                        block = members.read(1024 * 1024)
+                        if not block:
+                            break
+                        out.write(block)
+                        written += len(block)
+            except (OSError, EOFError, ValueError, zlib.error):
+                # Only this part is bad: forget it, so the browser sends it again.
+                part.unlink(missing_ok=True)
+                (folder / "received" / str(index)).unlink(missing_ok=True)
+                raise ChunkedUploadError(
+                    "A part of the file was damaged in transit. Press Upload again and it will be sent again."
+                )
+    if written != meta["size"]:
+        raise ChunkedUploadError("The file didn't reassemble correctly. Please choose it again.")
+    shutil.rmtree(folder / "parts", ignore_errors=True)
+    (folder / "assembled").touch()
 
 
 class StagedUpload(File):
@@ -187,6 +250,8 @@ def open_completed(user, upload_id: str) -> StagedUpload:
             f"{missing} part{'s' if missing != 1 else ''} of the file didn't arrive. "
             "Press Upload again and the transfer will continue from where it stopped."
         )
+    if meta["encoding"] == "gzip" and not (folder / "assembled").exists():
+        _rebuild_gzip(folder, meta)
     return StagedUpload(folder / "data.part", meta["filename"], meta["size"])
 
 

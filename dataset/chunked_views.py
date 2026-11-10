@@ -26,11 +26,12 @@ def chunked_upload_start(request):
         body = json.loads(request.body or b'{}')
         filename = str(body.get('filename', ''))
         size = int(body.get('size', 0))
+        encoding = str(body.get('encoding', 'raw'))
     except (ValueError, TypeError, AttributeError):
         return _error('Please choose a file to upload.')
 
     try:
-        result = chunked_upload.start(request.user, filename, size, settings.CHUNKED_UPLOAD_PART_SIZE)
+        result = chunked_upload.start(request.user, filename, size, settings.CHUNKED_UPLOAD_PART_SIZE, encoding)
     except ChunkedUploadError as exc:
         return _error(exc)
     return JsonResponse({'success': True, **result})
@@ -55,7 +56,7 @@ def chunked_upload_part(request, upload_id, index):
         declared = int(request.META.get('CONTENT_LENGTH') or 0)
     except ValueError:
         return _error('That part could not be read. It will be sent again.')
-    if declared > settings.CHUNKED_UPLOAD_PART_SIZE:
+    if declared > settings.CHUNKED_UPLOAD_PART_SIZE + chunked_upload.GZIP_OVERHEAD:
         return _error('That part is larger than expected. It will be sent again.', status=413)
 
     # read() rather than request.body: body-size checks don't apply to a single part.
