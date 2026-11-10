@@ -1,4 +1,6 @@
 """Login, logout, redirects and password reset, through the real views."""
+from unittest import skip
+
 from django.contrib.auth import get_user_model
 from django.core import mail
 from django.test import TestCase
@@ -51,6 +53,7 @@ class LoginTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("Password is required", response.context["field_errors"]["password"])
 
+    @skip("Email verification is switched off. Unverified accounts log in directly; see tests_signup_direct.")
     def test_unverified_user_is_sent_to_verification_and_not_logged_in(self):
         User.objects.create_user(username="bob", email="bob@example.com", password=PASSWORD, is_verified=False)
         response = self.login(email="bob@example.com")

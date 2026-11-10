@@ -181,10 +181,15 @@ def authenticate_login(request):
     
     if user is not None:
         if user.is_active:
+            # DISABLED (email verification is switched off for now). To restore, uncomment:
+            # if not user.is_verified:
+            #     request.session['verification_email'] = user.email
+            #     messages.warning(request, 'Please verify your email address to access your account.')
+            #     return redirect('verify_email')
+            # Accounts stuck in the old verification step get in with their password, and are marked verified.
             if not user.is_verified:
-                request.session['verification_email'] = user.email
-                messages.warning(request, 'Please verify your email address to access your account.')
-                return redirect('verify_email')
+                user.is_verified = True
+                user.save(update_fields=['is_verified'])
                 
             login(request, user)
             
@@ -276,14 +281,15 @@ def process_signup(request):
         
         logger.debug(f"Extracted data - Email: {email}, Full name: {full_name}, Username: {username}")
         
-        # An unfinished earlier signup with this email: resume it instead of showing an error.
-        existing = CustomUser.objects.filter(email=email).first() if email else None
-        if existing is not None and not existing.is_verified:
-            request.session['verification_email'] = existing.email
-            if _resend_wait_seconds(existing) == 0:
-                _send_code_or_warn(request, existing)
-            messages.info(request, 'You started signing up with this email before. Enter the code we sent you to finish.')
-            return redirect('verify_email')
+        # DISABLED (email verification is switched off for now). To restore, uncomment:
+        # # An unfinished earlier signup with this email: resume it instead of showing an error.
+        # existing = CustomUser.objects.filter(email=email).first() if email else None
+        # if existing is not None and not existing.is_verified:
+        #     request.session['verification_email'] = existing.email
+        #     if _resend_wait_seconds(existing) == 0:
+        #         _send_code_or_warn(request, existing)
+        #     messages.info(request, 'You started signing up with this email before. Enter the code we sent you to finish.')
+        #     return redirect('verify_email')
 
         # Validation
         errors = []
@@ -294,7 +300,7 @@ def process_signup(request):
         elif not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
             field_errors['email'] = 'Please enter a valid email address.'
         elif CustomUser.objects.filter(email=email).exists():
-            field_errors['email'] = 'An account with this email already exists.'
+            field_errors['email'] = 'An account with this email already exists. If you signed up before, log in instead.'
         
         if not password:
             field_errors['password'] = 'Password is required.'
@@ -396,13 +402,23 @@ def process_signup(request):
                     user_agent=request.META.get('HTTP_USER_AGENT', '')
                 )
                 
+                # Email verification is switched off for now: the account is active straight away.
+                user.is_verified = True
+                user.save(update_fields=['is_verified'])
                 created_user = user
                 
-            # Sent after the account is saved, so a mail failure never undoes the signup.
-            _send_code_or_warn(request, created_user)
-            request.session['verification_email'] = created_user.email
-            messages.success(request, 'Account created! Enter the 6-digit code we sent to your email to finish.')
-            return redirect('verify_email')
+            # DISABLED (email verification is switched off for now). To restore, comment out the
+            # login block below and uncomment these lines:
+            # # Sent after the account is saved, so a mail failure never undoes the signup.
+            # _send_code_or_warn(request, created_user)
+            # request.session['verification_email'] = created_user.email
+            # messages.success(request, 'Account created! Enter the 6-digit code we sent to your email to finish.')
+            # return redirect('verify_email')
+
+            login(request, created_user)
+            request.session['show_welcome'] = True
+            messages.success(request, 'Welcome to AfriData! Your account is ready.')
+            return redirect('home')
 
         except IntegrityError as e:
             # Race condition caught
