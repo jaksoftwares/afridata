@@ -230,6 +230,12 @@ LOGGING = {
             'level': 'INFO',
             'propagate': True,
         },
+        # Per-part upload timings, written to the console (container or server logs).
+        'afridata.uploads': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
     },
 }
 

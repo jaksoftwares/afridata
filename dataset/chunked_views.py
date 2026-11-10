@@ -1,5 +1,7 @@
 """HTTP endpoints for resumable chunked uploads. The logic lives in dataset/chunked_upload.py."""
 import json
+import logging
+import time
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -8,6 +10,8 @@ from django.views.decorators.http import require_http_methods
 
 from . import chunked_upload
 from .chunked_upload import ChunkedUploadError
+
+logger = logging.getLogger('afridata.uploads')
 
 
 def _error(message, status=400):
@@ -55,9 +59,17 @@ def chunked_upload_part(request, upload_id, index):
         return _error('That part is larger than expected. It will be sent again.', status=413)
 
     # read() rather than request.body: body-size checks don't apply to a single part.
+    started = time.monotonic()
     data = request.read()
+    received = time.monotonic()
     try:
         chunked_upload.write_part(request.user, upload_id, index, data)
     except ChunkedUploadError as exc:
         return _error(exc, status=404 if 'could not be found' in str(exc) else 400)
+    # Timing per part: shows whether the time goes to the network in front of the app
+    # (proxy, hosting) or to the app itself (reading and writing the part).
+    logger.info(
+        "part upload id=%s index=%s bytes=%s read_s=%.3f write_s=%.3f",
+        upload_id[:8], index, len(data), received - started, time.monotonic() - received,
+    )
     return JsonResponse({'success': True, 'index': index})
